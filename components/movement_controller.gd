@@ -43,8 +43,8 @@ func execute_command(cmd: PlayerCommand.Type) -> bool:
 		action_started.emit(cmd, previous_state, new_state, duration)
 		_complete_smooth_command(cmd, new_state, duration)
 	else:
-		action_completed.emit(cmd, new_state)
 		is_busy = false
+		action_completed.emit(cmd, new_state)
 
 	return true
 
@@ -94,5 +94,5 @@ func _clone_state(state: GridState) -> GridState:
 
 func _complete_smooth_command(cmd: PlayerCommand.Type, new_state: GridState, duration: float) -> void:
 	await get_tree().create_timer(duration).timeout
-	action_completed.emit(cmd, new_state)
 	is_busy = false
+	action_completed.emit(cmd, new_state)

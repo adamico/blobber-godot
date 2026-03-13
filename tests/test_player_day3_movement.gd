@@ -98,16 +98,18 @@ func test_scripted_sequence_yields_expected_final_state() -> void:
 	assert_eq(player.global_position, Vector3(1.0, 0.0, 0.0))
 
 
-func test_execute_command_rejects_while_busy() -> void:
+func test_execute_command_queues_one_command_while_busy() -> void:
 	var player := _spawn_player()
 
 	player.movement_controller.is_busy = true
 	var before_cell := player.grid_state.cell
 	var before_facing := player.grid_state.facing
 
-	var executed := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var accepted := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var dropped := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
 
-	assert_false(executed)
+	assert_true(accepted)
+	assert_false(dropped)
 	assert_eq(player.grid_state.cell, before_cell)
 	assert_eq(player.grid_state.facing, before_facing)
 
@@ -136,16 +138,18 @@ func test_smooth_mode_turn_reaches_expected_facing_and_yaw() -> void:
 	assert_eq(player.rotation_degrees.y, -270.0)
 
 
-func test_smooth_mode_rejects_overlap_while_busy() -> void:
+func test_smooth_mode_queues_overlap_and_executes_in_order() -> void:
 	var player := _spawn_player(true, 0.06, 0.04)
 
 	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	var overlap_execute := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
+	var queued_execute := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
+	var dropped_execute := player.execute_command(PlayerCommand.Type.TURN_LEFT)
 
-	assert_false(overlap_execute)
+	assert_true(queued_execute)
+	assert_false(dropped_execute)
 	await _wait_until_not_busy(player)
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
-	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)
+	assert_eq(player.grid_state.facing, GridDefinitions.Facing.EAST)
 
 
 func test_snap_and_smooth_modes_match_for_scripted_sequence() -> void:

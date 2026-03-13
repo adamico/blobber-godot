@@ -45,14 +45,16 @@ func test_input_action_turn_right_updates_facing_only() -> void:
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.EAST)
 
 
-func test_smooth_input_rejects_overlap_while_busy() -> void:
+func test_smooth_input_queues_overlap_and_preserves_order() -> void:
 	var player := _spawn_player()
 	player.movement_config.smooth_mode = true
 	player.movement_config.step_duration = 0.06
+	player.movement_config.turn_duration = 0.04
 
 	_press_action(player, &"move_forward")
 	var during_busy_cell := player.grid_state.cell
 	_press_action(player, &"turn_right")
+	_press_action(player, &"turn_left")
 
 	assert_true(player.movement_controller.is_busy)
 	assert_eq(player.grid_state.cell, during_busy_cell)
@@ -60,4 +62,4 @@ func test_smooth_input_rejects_overlap_while_busy() -> void:
 
 	await _wait_until_not_busy(player)
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
-	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)
+	assert_eq(player.grid_state.facing, GridDefinitions.Facing.EAST)

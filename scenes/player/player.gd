@@ -13,6 +13,7 @@ const INVALID_COMMAND := -1
 var grid_state: GridState
 var movement_controller: MovementController
 var _active_tween: Tween
+var _queued_command: int = INVALID_COMMAND
 
 
 func _ready() -> void:
@@ -34,6 +35,12 @@ func _ready() -> void:
 
 
 func execute_command(cmd: PlayerCommand.Type) -> bool:
+    if movement_controller == null:
+        return false
+
+    if movement_controller.is_busy:
+        return _enqueue_command(cmd)
+
     return movement_controller.execute_command(cmd)
 
 
@@ -112,6 +119,8 @@ func _on_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> voi
             rotation_degrees.y,
         ])
 
+    _drain_queued_command()
+
 
 func _set_yaw(value: float) -> void:
     rotation_degrees.y = value
@@ -143,6 +152,23 @@ func _find_pressed_action(event: InputEvent) -> StringName:
             return action
 
     return StringName()
+
+
+func _enqueue_command(cmd: PlayerCommand.Type) -> bool:
+    if _queued_command != INVALID_COMMAND:
+        return false
+
+    _queued_command = int(cmd)
+    return true
+
+
+func _drain_queued_command() -> void:
+    if _queued_command == INVALID_COMMAND:
+        return
+
+    var queued_cmd := _queued_command
+    _queued_command = INVALID_COMMAND
+    movement_controller.execute_command(queued_cmd as PlayerCommand.Type)
 
 
 func _command_for_action(action: StringName) -> int:
