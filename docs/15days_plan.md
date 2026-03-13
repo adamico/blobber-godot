@@ -36,9 +36,10 @@ Exit criteria: headless test run passes reliably on repeat and reports no resour
 11. Day 11: Scene transition input isolation shell.
 Deliverables: placeholder inventory/combat/town scenes that pause exploration command processing.
 Exit criteria: entering any placeholder scene guarantees zero movement until return to exploration.
-12. Day 12: Skipped (deferred).
-Deliverables: none for this cycle; config preset/tuning workflow deferred to post-Day 13.
-Exit criteria: decision documented and no Day 12-only blockers remain for build-readiness work.
+12. Day 12: Config presets and tuning workflow.
+Deliverables: snap and smooth config presets exposed for quick swap in inspector/testing scene.
+Exit criteria: presets can be switched without code edits and pass full movement regression script.
+Status: completed on 2026-03-13. Presets and workflow documented in `docs/day12_presets.md`.
 13. Day 13: Build-readiness checks.
 Deliverables: clean startup flow, stable scene ownership, reproducible run instructions.
 Exit criteria: fresh open-and-run works without manual fixes and reaches exploration scene first try.
@@ -67,6 +68,7 @@ Day 13 execution checklist:
 14. Day 14: Compliance rehearsal and checklist lock.
 Deliverables: explicit jam-rule compliance checklist for first-person exploration, square-grid full steps, and cardinal turns.
 Exit criteria: each checklist item is demonstrated in-engine and signed off in notes.
+Status: completed on 2026-03-13. Checklist locked in `docs/day14_compliance_checklist.md`.
 15. Day 15: Freeze template and handoff package.
 Deliverables: stable prep template snapshot, concise technical README, prioritized post-jam-start backlog.
 Exit criteria: template is ready to branch at jam start with no blocker defects in movement/view core.

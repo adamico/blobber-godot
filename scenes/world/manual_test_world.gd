@@ -3,6 +3,9 @@ extends Node3D
 @export var occupancy_wall_layer := 0
 @export var auto_align_gridmap_visual := true
 @export var show_debug_panel := false
+@export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
+@export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
+@export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
 
 const INVENTORY_OVERLAY_PATH := "res://scenes/inventory/inventory_placeholder.tscn"
 const COMBAT_OVERLAY_PATH := "res://scenes/combat/combat_placeholder.tscn"
@@ -11,6 +14,8 @@ const TOWN_OVERLAY_PATH := "res://scenes/town/town_placeholder.tscn"
 const OVERLAY_INVENTORY := &"inventory"
 const OVERLAY_COMBAT := &"combat"
 const OVERLAY_TOWN := &"town"
+const PRESET_SNAP := &"snap"
+const PRESET_SMOOTH := &"smooth"
 
 var _occupancy: GridOccupancyMap
 var _active_overlay: Control
@@ -27,6 +32,7 @@ var _active_overlay_kind: StringName = StringName()
 func _ready() -> void:
 	_add_light()
 	_add_floor()
+	apply_movement_preset(active_movement_preset)
 
 	# Defer to ensure all children (including Player) have finished _ready().
 	_wire_occupancy.call_deferred()
@@ -151,6 +157,48 @@ func _set_exploration_active(is_active: bool) -> void:
 		_player.resume_exploration_commands()
 	else:
 		_player.pause_exploration_commands()
+
+
+func apply_movement_preset(preset_name: String = "") -> bool:
+	if _player == null:
+		return false
+
+	var selected_name := preset_name if not preset_name.is_empty() else active_movement_preset
+	var preset_key := selected_name.strip_edges().to_lower()
+	var selected_path := preset_smooth_path
+
+	if preset_key == PRESET_SNAP:
+		selected_path = preset_snap_path
+		active_movement_preset = "Snap"
+	else:
+		selected_path = preset_smooth_path
+		active_movement_preset = "Smooth"
+
+	var selected_preset := load(selected_path) as MovementConfig
+
+	if selected_preset == null:
+		return false
+
+	if _player.movement_config == null:
+		_player.movement_config = MovementConfig.new()
+
+	_copy_movement_config_values(selected_preset, _player.movement_config)
+	if _player.movement_controller != null:
+		_player.movement_controller.movement_config = _player.movement_config
+	if _player.grid_state != null:
+		_player._apply_canonical_transform()
+
+	return true
+
+
+func _copy_movement_config_values(source: MovementConfig, target: MovementConfig) -> void:
+	target.cell_size = source.cell_size
+	target.smooth_mode = source.smooth_mode
+	target.step_duration = source.step_duration
+	target.turn_duration = source.turn_duration
+	target.blocked_feedback_enabled = source.blocked_feedback_enabled
+	target.blocked_bump_distance = source.blocked_bump_distance
+	target.blocked_bump_duration = source.blocked_bump_duration
 
 
 func _scene_for_overlay(kind: StringName) -> PackedScene:
