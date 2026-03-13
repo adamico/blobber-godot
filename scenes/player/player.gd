@@ -2,12 +2,12 @@ class_name Player
 extends Node3D
 
 @export var movement_config: MovementConfig
-@export var eye_eight:= 0.6
+@export var eye_height := 0.6
 
 var grid_state: GridState
 
 
-func _read() -> void:
+func _ready() -> void:
     if movement_config == null:
         movement_config = MovementConfig.new()
     grid_state = GridState.new(Vector2i.ZERO, GridDefinitions.Facing.NORTH)
