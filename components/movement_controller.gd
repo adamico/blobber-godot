@@ -1,8 +1,11 @@
 class_name MovementController
 extends Node
 
+const MovementOutcomeData := preload("res://models/movement_outcome.gd")
+
 signal action_started(cmd: PlayerCommand.Type, previous_state: GridState, new_state: GridState, duration: float)
 signal action_completed(cmd: PlayerCommand.Type, new_state: GridState)
+signal movement_outcome(outcome)
 
 var grid_state: GridState
 var movement_config: MovementConfig
@@ -14,11 +17,14 @@ func execute_command(cmd: PlayerCommand.Type) -> bool:
 	if is_busy or grid_state == null:
 		return false
 
+	var previous_state := _clone_state(grid_state)
+
 	if not _is_command_passable(cmd):
+		_emit_outcome(cmd, MovementOutcomeData.TYPE_BLOCKED, MovementOutcomeData.PHASE_DECISION, previous_state, previous_state, 0.0)
 		return false
 
 	is_busy = true
-	var previous_state := _clone_state(grid_state)
+	var outcome_type := _outcome_type_for_command(cmd)
 
 	match cmd:
 		PlayerCommand.Type.STEP_FORWARD:
@@ -38,12 +44,14 @@ func execute_command(cmd: PlayerCommand.Type) -> bool:
 
 	var new_state := _clone_state(grid_state)
 	var duration := _command_duration(cmd)
+	_emit_outcome(cmd, outcome_type, MovementOutcomeData.PHASE_START, previous_state, new_state, duration)
 
 	if _is_smooth_mode_enabled() and duration > 0.0:
 		action_started.emit(cmd, previous_state, new_state, duration)
-		_complete_smooth_command(cmd, new_state, duration)
+		_complete_smooth_command(cmd, previous_state, new_state, outcome_type, duration)
 	else:
 		is_busy = false
+		_emit_outcome(cmd, outcome_type, MovementOutcomeData.PHASE_COMPLETE, previous_state, new_state, duration)
 		action_completed.emit(cmd, new_state)
 
 	return true
@@ -92,7 +100,34 @@ func _clone_state(state: GridState) -> GridState:
 	return GridState.new(state.cell, state.facing)
 
 
-func _complete_smooth_command(cmd: PlayerCommand.Type, new_state: GridState, duration: float) -> void:
+func _complete_smooth_command(
+	cmd: PlayerCommand.Type,
+	previous_state: GridState,
+	new_state: GridState,
+	outcome_type: String,
+	duration: float
+) -> void:
 	await get_tree().create_timer(duration).timeout
 	is_busy = false
+	_emit_outcome(cmd, outcome_type, MovementOutcomeData.PHASE_COMPLETE, previous_state, new_state, duration)
 	action_completed.emit(cmd, new_state)
+
+
+func _outcome_type_for_command(cmd: PlayerCommand.Type) -> String:
+	match cmd:
+		PlayerCommand.Type.TURN_LEFT, PlayerCommand.Type.TURN_RIGHT:
+			return MovementOutcomeData.TYPE_TURNED
+		_:
+			return MovementOutcomeData.TYPE_MOVED
+
+
+func _emit_outcome(
+	cmd: PlayerCommand.Type,
+	outcome_type: String,
+	phase: String,
+	state_before: GridState,
+	state_after: GridState,
+	duration: float
+) -> void:
+	var outcome := MovementOutcomeData.new(cmd, outcome_type, phase, state_before, state_after, duration)
+	movement_outcome.emit(outcome)
