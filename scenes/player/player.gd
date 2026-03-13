@@ -8,13 +8,18 @@ extends Node3D
 
 const INVALID_COMMAND := -1
 
+@onready var _camera: Camera3D = $Camera3D
+
 var grid_state: GridState
 var movement_controller: MovementController
 var _active_tween: Tween
 
+
 func _ready() -> void:
     if movement_config == null:
         movement_config = MovementConfig.new()
+
+    _sync_camera_height()
 
     grid_state = GridState.new(Vector2i.ZERO, GridDefinitions.Facing.NORTH)
     _apply_canonical_transform()
@@ -57,7 +62,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func _apply_canonical_transform() -> void:
     var world_pos := GridMapper.cell_to_world(grid_state.cell, movement_config.cell_size, 0.0)
     global_position = world_pos
-    rotation_degrees.y = grid_state.facing * 90.0
+    rotation_degrees.y = -float(grid_state.facing) * 90.0
+    _sync_camera_height()
 
 
 func _on_action_started(_cmd: PlayerCommand.Type, previous_state: GridState, new_state: GridState, duration: float) -> void:
@@ -69,8 +75,8 @@ func _on_action_started(_cmd: PlayerCommand.Type, previous_state: GridState, new
 
     var start_pos := GridMapper.cell_to_world(previous_state.cell, movement_config.cell_size, 0.0)
     var target_pos := GridMapper.cell_to_world(new_state.cell, movement_config.cell_size, 0.0)
-    var start_yaw := float(previous_state.facing) * 90.0
-    var target_yaw := _resolve_target_yaw(start_yaw, float(new_state.facing) * 90.0)
+    var start_yaw := -float(previous_state.facing) * 90.0
+    var target_yaw := _resolve_target_yaw(start_yaw, -float(new_state.facing) * 90.0)
 
     global_position = start_pos
     rotation_degrees.y = start_yaw
@@ -100,6 +106,12 @@ func _on_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> voi
 
 func _set_yaw(value: float) -> void:
     rotation_degrees.y = value
+
+
+func _sync_camera_height() -> void:
+    if _camera == null:
+        return
+    _camera.position.y = eye_height
 
 
 func _resolve_target_yaw(start_yaw: float, base_target_yaw: float) -> float:

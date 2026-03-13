@@ -19,9 +19,9 @@ func test_yaw_is_cardinal_for_all_facings() -> void:
 
     var expected_yaw_by_facing: Dictionary = {
         GridDefinitions.Facing.NORTH: 0.0,
-        GridDefinitions.Facing.EAST: 90.0,
-        GridDefinitions.Facing.SOUTH: 180.0,
-        GridDefinitions.Facing.WEST: 270.0,
+        GridDefinitions.Facing.EAST: -90.0,
+        GridDefinitions.Facing.SOUTH: -180.0,
+        GridDefinitions.Facing.WEST: -270.0,
     }
 
     for facing in expected_yaw_by_facing.keys():

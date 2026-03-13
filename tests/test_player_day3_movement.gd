@@ -133,7 +133,7 @@ func test_smooth_mode_turn_reaches_expected_facing_and_yaw() -> void:
 	assert_true(player.movement_controller.is_busy)
 	await _wait_until_not_busy(player)
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.WEST)
-	assert_eq(player.rotation_degrees.y, 270.0)
+	assert_eq(player.rotation_degrees.y, -270.0)
 
 
 func test_smooth_mode_rejects_overlap_while_busy() -> void:

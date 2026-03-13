@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://ci5c4s13iefpr"]
+
+[ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="1"]
+[ext_resource type="Script" uid="uid://ckj8u3iqlgkw0" path="res://scenes/world/debug_world_builder.gd" id="2"]
+[ext_resource type="Script" uid="uid://djfta4awucv1" path="res://resources/movement_config.gd" id="3_1cgsu"]
+
+[sub_resource type="Resource" id="Resource_sqegf"]
+script = ExtResource("3_1cgsu")
+smooth_mode = true
+metadata/_custom_type_script = "uid://djfta4awucv1"
+
+[node name="ManualTestWorld" type="Node3D" unique_id=1276884268]
+
+[node name="DebugWorld" type="Node3D" parent="." unique_id=1352228884]
+script = ExtResource("2")
+
+[node name="Player" parent="." unique_id=1354958968 instance=ExtResource("1")]
+movement_config = SubResource("Resource_sqegf")
