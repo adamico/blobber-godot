@@ -152,7 +152,7 @@ func _set_yaw(value: float) -> void:
 func _sync_camera_height() -> void:
     if _camera == null:
         return
-    _camera.position.y = eye_height
+    _camera.position = Vector3(0.0, eye_height, 0.0)
 
 
 func _resolve_target_yaw(start_yaw: float, base_target_yaw: float) -> float:
