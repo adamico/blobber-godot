@@ -2,10 +2,16 @@
 
 [ext_resource type="Script" uid="uid://gou1ehsfof0p" path="res://scenes/player/player.gd" id="1_8afob"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_8afob"]
+
 [node name="Player" type="Node3D" unique_id=264519807]
 script = ExtResource("1_8afob")
 debug_log_input_actions = true
 
 [node name="Camera3D" type="Camera3D" parent="." unique_id=373551072]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.5)
 current = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=452369827]
+visible = false
+mesh = SubResource("BoxMesh_8afob")

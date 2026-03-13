@@ -2,17 +2,24 @@
 
 [ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="1"]
 [ext_resource type="Script" uid="uid://ckj8u3iqlgkw0" path="res://scenes/world/debug_world_builder.gd" id="2"]
-[ext_resource type="Script" uid="uid://djfta4awucv1" path="res://resources/movement_config.gd" id="3_1cgsu"]
-
-[sub_resource type="Resource" id="Resource_sqegf"]
-script = ExtResource("3_1cgsu")
-smooth_mode = true
-metadata/_custom_type_script = "uid://djfta4awucv1"
+[ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_1cgsu"]
+[ext_resource type="Script" uid="uid://gu3lsi7vt4st" path="res://scenes/world/manual_test_world.gd" id="4"]
+[ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="5_71y6c"]
 
 [node name="ManualTestWorld" type="Node3D" unique_id=1276884268]
+script = ExtResource("4")
 
 [node name="DebugWorld" type="Node3D" parent="." unique_id=1352228884]
 script = ExtResource("2")
 
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("1")]
-movement_config = SubResource("Resource_sqegf")
+movement_config = ExtResource("3_1cgsu")
+debug_log_input_actions = false
+
+[node name="GridMap" type="GridMap" parent="." unique_id=1476284130]
+mesh_library = ExtResource("5_71y6c")
+cell_size = Vector3(1, 1, 1)
+data = {
+"cells": PackedInt32Array(1, 0, 393216, 65534, 0, 393216, 65534, 65534, 393216, 65534, 65535, 393216, 1, 65535, 393216, 1, 65534, 393216, 1, 65533, 393216, 65534, 65533, 393216, 65534, 65532, 393216, 65535, 65532, 393216, 0, 65532, 393216, 1, 65532, 393216, 65534, 1, 393216, 65534, 2, 393216, 65535, 2, 393216, 1, 2, 393216, 1, 1, 393216, 0, 2, 393216)
+}
+metadata/_editor_floor_ = Vector3(0, 0, 0)
