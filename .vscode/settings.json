@@ -1,0 +1,5 @@
+{
+  "gut-extension.additionalOptions": "--headless -gexit -gignore_pause -glog=1",
+  "gut-extension.discardTerminal": true,
+  "gut-extension.godotOverridePath": "/Applications/Godot.app/Contents/MacOS/Godot"
+}
