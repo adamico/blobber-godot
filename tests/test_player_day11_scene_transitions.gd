@@ -98,3 +98,23 @@ func test_action_and_debug_button_triggers_open_expected_overlay() -> void:
 	assert_not_null(close_overlay)
 	close_overlay.emit_signal("pressed")
 	assert_false(world.has_active_overlay())
+
+
+func test_minimap_remains_visible_while_modal_overlay_opens_and_closes() -> void:
+	var world := await _spawn_world()
+	var minimap := world.get_node_or_null("OverlayLayer/MinimapOverlay") as Control
+	var toggle_minimap := world.get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap") as Button
+	assert_not_null(minimap)
+	assert_not_null(toggle_minimap)
+
+	assert_false(minimap.visible)
+	toggle_minimap.emit_signal("pressed")
+	assert_true(minimap.visible)
+
+	world.open_inventory_overlay()
+	assert_true(world.has_active_overlay())
+	assert_true(minimap.visible)
+
+	world.close_active_overlay()
+	assert_false(world.has_active_overlay())
+	assert_true(minimap.visible)

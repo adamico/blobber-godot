@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="2_7tdlr"]
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
+[ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -34,12 +35,27 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="GridCoordsLabel" type="Label" parent="OverlayLayer" unique_id=211122343]
+[node name="MinimapOverlay" type="Control" parent="OverlayLayer" unique_id=211122344]
 visible = false
-offset_left = 990.0
-offset_top = 16.0
+layout_mode = 3
+anchors_preset = 0
+offset_left = 1016.0
+offset_top = 56.0
 offset_right = 1264.0
-offset_bottom = 42.0
+offset_bottom = 304.0
+mouse_filter = 2
+script = ExtResource("5_1h5vq")
+
+[node name="GridCoordsLabel" type="Label" parent="OverlayLayer/MinimapOverlay" unique_id=211122343]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 32.0
+grow_horizontal = 2
 text = "Grid X: 0  Y: 0"
 horizontal_alignment = 2
 
@@ -82,6 +98,10 @@ text = "Open Combat"
 [node name="OpenTown" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122338]
 layout_mode = 2
 text = "Open Town"
+
+[node name="ToggleMinimap" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122345]
+layout_mode = 2
+text = "Toggle Minimap"
 
 [node name="CloseOverlay" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122339]
 layout_mode = 2

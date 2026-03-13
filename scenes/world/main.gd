@@ -4,6 +4,7 @@ extends Node3D
 @export var auto_align_gridmap_visual := true
 @export var show_debug_panel := false
 @export var show_grid_coordinates_overlay := false
+@export var show_minimap_overlay := false
 @export_enum("Menu", "Gameplay", "GameOverFailure", "GameOverSuccess") var initial_game_state := "Gameplay"
 @export var enable_cell_end_conditions := true
 @export var success_goal_cell := Vector2i(2, -2)
@@ -32,10 +33,12 @@ const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_PLAYER := "Player"
 const NODE_OVERLAY_MOUNT := "OverlayLayer/OverlayMount"
 const NODE_DEBUG_PANEL := "OverlayLayer/DebugPanel"
-const NODE_GRID_COORDS_LABEL := "OverlayLayer/GridCoordsLabel"
+const NODE_GRID_COORDS_LABEL := "OverlayLayer/MinimapOverlay/GridCoordsLabel"
+const NODE_MINIMAP_OVERLAY := "OverlayLayer/MinimapOverlay"
 const NODE_BTN_OPEN_INVENTORY := "OverlayLayer/DebugPanel/Margin/VBox/OpenInventory"
 const NODE_BTN_OPEN_COMBAT := "OverlayLayer/DebugPanel/Margin/VBox/OpenCombat"
 const NODE_BTN_OPEN_TOWN := "OverlayLayer/DebugPanel/Margin/VBox/OpenTown"
+const NODE_BTN_TOGGLE_MINIMAP := "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap"
 const NODE_BTN_CLOSE_OVERLAY := "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay"
 
 var _occupancy: GridOccupancyMap
@@ -49,9 +52,11 @@ var _player: Player
 var _overlay_mount: Control
 var _debug_panel: Control
 var _grid_coords_label: Label
+var _minimap_overlay: Control
 var _btn_open_inventory: Button
 var _btn_open_combat: Button
 var _btn_open_town: Button
+var _btn_toggle_minimap: Button
 var _btn_close_overlay: Button
 
 func _ready() -> void:
@@ -67,7 +72,9 @@ func _ready() -> void:
 	_wire_end_conditions.call_deferred()
 	_apply_debug_panel_visibility()
 	_apply_grid_coordinates_overlay_visibility()
+	_apply_minimap_overlay_visibility()
 	_refresh_grid_coordinates_overlay()
+	_refresh_minimap_overlay()
 	_wire_overlay_controls()
 	_refresh_debug_buttons()
 
@@ -77,9 +84,11 @@ func _resolve_world_nodes() -> void:
 	_overlay_mount = get_node_or_null(NODE_OVERLAY_MOUNT) as Control
 	_debug_panel = get_node_or_null(NODE_DEBUG_PANEL) as Control
 	_grid_coords_label = get_node_or_null(NODE_GRID_COORDS_LABEL) as Label
+	_minimap_overlay = get_node_or_null(NODE_MINIMAP_OVERLAY) as Control
 	_btn_open_inventory = get_node_or_null(NODE_BTN_OPEN_INVENTORY) as Button
 	_btn_open_combat = get_node_or_null(NODE_BTN_OPEN_COMBAT) as Button
 	_btn_open_town = get_node_or_null(NODE_BTN_OPEN_TOWN) as Button
+	_btn_toggle_minimap = get_node_or_null(NODE_BTN_TOGGLE_MINIMAP) as Button
 	_btn_close_overlay = get_node_or_null(NODE_BTN_CLOSE_OVERLAY) as Button
 
 
@@ -193,6 +202,8 @@ func _wire_overlay_controls() -> void:
 		_btn_open_combat.pressed.connect(open_combat_overlay)
 	if _btn_open_town != null:
 		_btn_open_town.pressed.connect(open_town_overlay)
+	if _btn_toggle_minimap != null:
+		_btn_toggle_minimap.pressed.connect(_toggle_minimap_overlay)
 	if _btn_close_overlay != null:
 		_btn_close_overlay.pressed.connect(close_active_overlay)
 
@@ -207,6 +218,11 @@ func _apply_grid_coordinates_overlay_visibility() -> void:
 		_grid_coords_label.visible = show_grid_coordinates_overlay
 
 
+func _apply_minimap_overlay_visibility() -> void:
+	if _minimap_overlay != null:
+		_minimap_overlay.visible = show_minimap_overlay
+
+
 func _refresh_grid_coordinates_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
 	if _grid_coords_label == null:
 		return
@@ -216,6 +232,27 @@ func _refresh_grid_coordinates_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
 		coords = _player.grid_state.cell
 
 	_grid_coords_label.text = "Grid X: %d  Y: %d" % [coords.x, coords.y]
+
+
+func _toggle_minimap_overlay() -> void:
+	show_minimap_overlay = not show_minimap_overlay
+	_apply_minimap_overlay_visibility()
+
+
+func _refresh_minimap_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
+	if _minimap_overlay == null:
+		return
+
+	var coords := cell
+	var facing := GridDefinitions.Facing.NORTH
+	if _player != null and _player.grid_state != null:
+		coords = _player.grid_state.cell
+		facing = _player.grid_state.facing
+
+	if _minimap_overlay.has_method("set_occupancy"):
+		_minimap_overlay.call("set_occupancy", _occupancy)
+	if _minimap_overlay.has_method("set_player_state"):
+		_minimap_overlay.call("set_player_state", coords, facing)
 
 
 func _refresh_debug_buttons() -> void:
@@ -424,6 +461,7 @@ func _wire_end_conditions() -> void:
 
 func _on_player_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> void:
 	_refresh_grid_coordinates_overlay(new_state.cell)
+	_refresh_minimap_overlay(new_state.cell)
 
 	if not enable_cell_end_conditions:
 		return
@@ -495,6 +533,7 @@ func _wire_occupancy() -> void:
 		_align_gridmap_to_player_grid(gm)
 
 	_occupancy = GridOccupancyMap.from_grid_map(gm, occupancy_wall_layer)
+	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _occupancy.is_passable
 		print("[Occupancy] layer=%d wired %d blocked cells" % [occupancy_wall_layer, _occupancy._blocked.size()])
