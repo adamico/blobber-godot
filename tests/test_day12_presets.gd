@@ -1,6 +1,6 @@
 extends GutTest
 
-const WORLD_SCENE := preload("res://scenes/world/manual_test_world.tscn")
+const WORLD_SCENE := preload("res://scenes/world/main.tscn")
 const SNAP_PRESET := preload("res://resources/presets/movement_config_snap.tres")
 const SMOOTH_PRESET := preload("res://resources/presets/movement_config_smooth.tres")
 

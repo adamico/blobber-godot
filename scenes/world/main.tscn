@@ -1,22 +1,22 @@
 [gd_scene format=3 uid="uid://ci5c4s13iefpr"]
 
-[ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="1"]
-[ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_1cgsu"]
-[ext_resource type="Script" uid="uid://gu3lsi7vt4st" path="res://scenes/world/manual_test_world.gd" id="4"]
-[ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="5_71y6c"]
+[ext_resource type="Script" uid="uid://gu3lsi7vt4st" path="res://scenes/world/main.gd" id="1_wbupf"]
+[ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="2_7tdlr"]
+[ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
+[ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
 
-[node name="ManualTestWorld" type="Node3D" unique_id=1276884268]
-script = ExtResource("4")
+[node name="Main" type="Node3D" unique_id=1276884268]
+script = ExtResource("1_wbupf")
 show_debug_panel = true
 show_grid_coordinates_overlay = true
 failure_goal_cell = Vector2i(-3, 2)
 
-[node name="Player" parent="." unique_id=1354958968 instance=ExtResource("1")]
-movement_config = ExtResource("3_1cgsu")
+[node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
+movement_config = ExtResource("3_tt8nk")
 debug_log_input_actions = false
 
 [node name="GridMap" type="GridMap" parent="." unique_id=1476284130]
-mesh_library = ExtResource("5_71y6c")
+mesh_library = ExtResource("4_6r0uj")
 cell_size = Vector3(1, 1, 1)
 data = {
 "cells": PackedInt32Array(1, 0, 393216, 65534, 0, 393216, 65534, 65534, 393216, 65534, 65535, 393216, 1, 65535, 393216, 1, 65534, 393216, 1, 65533, 393216, 65534, 65533, 393216, 65534, 65532, 393216, 1, 65532, 393216, 65534, 1, 393216, 65534, 2, 393216, 1, 2, 393216, 1, 1, 393216)

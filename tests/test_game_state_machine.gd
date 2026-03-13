@@ -1,6 +1,6 @@
 extends GutTest
 
-const WORLD_SCENE := preload("res://scenes/world/manual_test_world.tscn")
+const WORLD_SCENE := preload("res://scenes/world/main.tscn")
 
 
 func _spawn_world() -> Node3D:

@@ -8,7 +8,7 @@ Date: 2026-03-13
 
 ### Quick Swap Workflow (Inspector)
 1. Open `ManualTestWorld` scene.
-2. Select the root node with script `manual_test_world.gd`.
+2. Select the root node with script `main.gd`.
 3. In Inspector, set `active_movement_preset` to `Snap` or `Smooth`.
 4. Run project (`F5`) to apply chosen preset at startup.
 
