@@ -37,6 +37,21 @@ func execute_command(cmd: PlayerCommand.Type) -> bool:
     return movement_controller.execute_command(cmd)
 
 
+func execute_action(action: StringName) -> bool:
+    if not input_actions_enabled:
+        return false
+
+    var cmd: int = _command_for_action(action)
+    if cmd == INVALID_COMMAND:
+        return false
+
+    var executed := execute_command(cmd as PlayerCommand.Type)
+    if debug_log_input_actions:
+        print("[PlayerInput] action=%s executed=%s busy=%s" % [action, executed, movement_controller.is_busy])
+
+    return executed
+
+
 func _unhandled_input(event: InputEvent) -> void:
     if not input_actions_enabled:
         return
@@ -48,13 +63,7 @@ func _unhandled_input(event: InputEvent) -> void:
     if action == StringName():
         return
 
-    var cmd: int = _command_for_action(action)
-    if cmd == INVALID_COMMAND:
-        return
-
-    var executed := execute_command(cmd as PlayerCommand.Type)
-    if debug_log_input_actions:
-        print("[PlayerInput] action=%s executed=%s busy=%s" % [action, executed, movement_controller.is_busy])
+    execute_action(action)
 
     get_viewport().set_input_as_handled()
 

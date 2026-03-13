@@ -5,6 +5,6 @@
 [resource]
 script = ExtResource("1_cddi4")
 smooth_mode = true
-step_duration = 0.08
-turn_duration = 0.06
+step_duration = 0.16
+turn_duration = 0.08
 metadata/_custom_type_script = "uid://djfta4awucv1"
