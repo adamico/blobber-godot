@@ -36,12 +36,34 @@ Exit criteria: headless test run passes reliably on repeat and reports no resour
 11. Day 11: Scene transition input isolation shell.
 Deliverables: placeholder inventory/combat/town scenes that pause exploration command processing.
 Exit criteria: entering any placeholder scene guarantees zero movement until return to exploration.
-12. Day 12: Config presets and tuning workflow.
-Deliverables: snap and smooth config presets exposed for quick swap in inspector/testing scene.
-Exit criteria: presets can be switched without code edits and pass full movement regression script.
+12. Day 12: Skipped (deferred).
+Deliverables: none for this cycle; config preset/tuning workflow deferred to post-Day 13.
+Exit criteria: decision documented and no Day 12-only blockers remain for build-readiness work.
 13. Day 13: Build-readiness checks.
 Deliverables: clean startup flow, stable scene ownership, reproducible run instructions.
 Exit criteria: fresh open-and-run works without manual fixes and reaches exploration scene first try.
+
+Day 13 execution checklist:
+1. Startup flow hardening.
+- Set and verify the primary run scene is the intended exploration entry.
+- Remove or gate any temporary bootstrap/debug-only startup behavior that can hijack first-run flow.
+- Confirm one-click run lands in exploration without manual editor steps.
+2. Scene ownership and lifecycle sanity.
+- Verify dynamic nodes created at runtime (overlays, temporary visuals, tween-driven helpers) are parented and freed deterministically.
+- Ensure world scene contains authoritative ownership boundaries (player, grid/passability wiring, overlay shell).
+- Confirm close/open overlay cycles do not leak nodes or duplicate handlers.
+3. Input + command readiness pass.
+- Validate input actions required for exploration and overlay transitions are present and documented.
+- Confirm command gating behavior remains deterministic across scene transitions and first-run state.
+- Re-run key Day 8-Day 11 behavior checks (queue, blocked feedback, overlay isolation).
+4. Reproducible run instructions.
+- Write a concise runbook in docs with exact "open project -> run -> expected first frame" behavior.
+- Include required plugin assumptions (GUT enabled) and expected test entry command/path.
+- Add troubleshooting notes for the 2-3 most likely first-run issues.
+5. Validation and sign-off.
+- Execute full automated test suite and record pass status.
+- Perform a fresh-open manual smoke check and capture result.
+- Mark Day 13 complete only when both automated and manual checks pass.
 14. Day 14: Compliance rehearsal and checklist lock.
 Deliverables: explicit jam-rule compliance checklist for first-person exploration, square-grid full steps, and cardinal turns.
 Exit criteria: each checklist item is demonstrated in-engine and signed off in notes.

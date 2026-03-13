@@ -2,6 +2,7 @@ extends Node3D
 
 @export var occupancy_wall_layer := 0
 @export var auto_align_gridmap_visual := true
+@export var show_debug_panel := false
 
 const INVENTORY_OVERLAY_PATH := "res://scenes/inventory/inventory_placeholder.tscn"
 const COMBAT_OVERLAY_PATH := "res://scenes/combat/combat_placeholder.tscn"
@@ -17,6 +18,7 @@ var _active_overlay_kind: StringName = StringName()
 
 @onready var _player: Player = get_node_or_null("Player")
 @onready var _overlay_mount: Control = get_node_or_null("OverlayLayer/OverlayMount")
+@onready var _debug_panel: Control = get_node_or_null("OverlayLayer/DebugPanel")
 @onready var _btn_open_inventory: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenInventory")
 @onready var _btn_open_combat: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenCombat")
 @onready var _btn_open_town: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenTown")
@@ -28,6 +30,7 @@ func _ready() -> void:
 
 	# Defer to ensure all children (including Player) have finished _ready().
 	_wire_occupancy.call_deferred()
+	_apply_debug_panel_visibility()
 	_wire_overlay_controls()
 	_refresh_debug_buttons()
 
@@ -120,6 +123,11 @@ func _wire_overlay_controls() -> void:
 		_btn_open_town.pressed.connect(open_town_overlay)
 	if _btn_close_overlay != null:
 		_btn_close_overlay.pressed.connect(close_active_overlay)
+
+
+func _apply_debug_panel_visibility() -> void:
+	if _debug_panel != null:
+		_debug_panel.visible = show_debug_panel
 
 
 func _refresh_debug_buttons() -> void:
