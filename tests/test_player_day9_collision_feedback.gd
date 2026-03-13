@@ -1,5 +1,7 @@
 extends GutTest
 
+const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
+
 
 func _make_controller(smooth_mode: bool = false, step_duration: float = 0.03, turn_duration: float = 0.02) -> MovementController:
 	var cfg := MovementConfig.new()
@@ -21,6 +23,14 @@ func _wait_until_not_busy(mc: MovementController, max_frames: int = 240) -> void
 			return
 		await get_tree().process_frame
 	fail_test("Timed out waiting for smooth command completion")
+
+
+func _spawn_player() -> Player:
+	var player: Player = PLAYER_SCENE.instantiate()
+	add_child_autofree(player)
+	player.input_actions_enabled = true
+	player.movement_config.smooth_mode = false
+	return player
 
 
 func _serialize_outcome(outcome: MovementOutcome) -> Dictionary:
@@ -145,3 +155,51 @@ func test_200_mixed_actions_event_log_is_deterministic_and_blocked_preserves_sta
 		if event["outcome_type"] == MovementOutcome.TYPE_BLOCKED:
 			assert_eq(event["before_cell"], event["after_cell"])
 			assert_eq(event["before_facing"], event["after_facing"])
+
+
+func test_player_blocked_feedback_animates_and_returns_to_canonical_position() -> void:
+	var player := _spawn_player()
+	player.movement_config.blocked_feedback_enabled = true
+	player.movement_config.blocked_bump_distance = 0.1
+	player.movement_config.blocked_bump_duration = 0.08
+	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
+
+	var canonical_pos := player.global_position
+	var ok := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+
+	assert_false(ok)
+	assert_eq(player.grid_state.cell, Vector2i.ZERO)
+	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)
+
+	await get_tree().process_frame
+	assert_true(player.global_position.distance_to(canonical_pos) > 0.0001)
+
+	for _i in range(12):
+		await get_tree().process_frame
+
+	assert_eq(player.grid_state.cell, Vector2i.ZERO)
+	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)
+	assert_eq(player.global_position, canonical_pos)
+
+
+func test_player_blocked_strafe_emits_cue_without_positional_bump() -> void:
+	var player := _spawn_player()
+	player.movement_config.blocked_feedback_enabled = true
+	player.movement_config.blocked_bump_distance = 0.1
+	player.movement_config.blocked_bump_duration = 0.08
+	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
+
+	var cue_commands: Array[PlayerCommand.Type] = []
+	player.blocked_feedback_cue.connect(func(cmd: PlayerCommand.Type) -> void:
+		cue_commands.append(cmd)
+	)
+
+	var canonical_pos := player.global_position
+	var ok := player.execute_command(PlayerCommand.Type.MOVE_LEFT)
+
+	assert_false(ok)
+	assert_eq(cue_commands.size(), 1)
+	assert_eq(cue_commands[0], PlayerCommand.Type.MOVE_LEFT)
+	assert_eq(player.global_position, canonical_pos)
+	assert_eq(player.grid_state.cell, Vector2i.ZERO)
+	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)

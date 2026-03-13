@@ -1,6 +1,10 @@
 class_name Player
 extends Node3D
 
+const MovementOutcomeData := preload("res://models/movement_outcome.gd")
+
+signal blocked_feedback_cue(cmd: PlayerCommand.Type)
+
 @export var movement_config: MovementConfig
 @export var eye_height := 0.6
 @export var input_actions_enabled := true
@@ -13,6 +17,7 @@ const INVALID_COMMAND := -1
 var grid_state: GridState
 var movement_controller: MovementController
 var _active_tween: Tween
+var _blocked_tween: Tween
 var _queued_command: int = INVALID_COMMAND
 
 
@@ -32,6 +37,7 @@ func _ready() -> void:
 
     movement_controller.action_started.connect(_on_action_started)
     movement_controller.action_completed.connect(_on_action_completed)
+    movement_controller.movement_outcome.connect(_on_movement_outcome)
 
 
 func execute_command(cmd: PlayerCommand.Type) -> bool:
@@ -86,6 +92,8 @@ func _on_action_started(_cmd: PlayerCommand.Type, previous_state: GridState, new
     if movement_config == null or not movement_config.smooth_mode or duration <= 0.0:
         return
 
+    _cancel_blocked_feedback()
+
     if is_instance_valid(_active_tween):
         _active_tween.kill()
 
@@ -104,6 +112,8 @@ func _on_action_started(_cmd: PlayerCommand.Type, previous_state: GridState, new
 
 
 func _on_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> void:
+    _cancel_blocked_feedback()
+
     if is_instance_valid(_active_tween):
         _active_tween.kill()
     _active_tween = null
@@ -120,6 +130,19 @@ func _on_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> voi
         ])
 
     _drain_queued_command()
+
+
+func _on_movement_outcome(outcome) -> void:
+    if movement_config == null or not movement_config.blocked_feedback_enabled:
+        return
+
+    if outcome.outcome_type != MovementOutcomeData.TYPE_BLOCKED:
+        return
+
+    if outcome.phase != MovementOutcomeData.PHASE_DECISION:
+        return
+
+    _play_blocked_feedback(outcome.command)
 
 
 func _set_yaw(value: float) -> void:
@@ -169,6 +192,50 @@ func _drain_queued_command() -> void:
     var queued_cmd := _queued_command
     _queued_command = INVALID_COMMAND
     movement_controller.execute_command(queued_cmd as PlayerCommand.Type)
+
+
+func _cancel_blocked_feedback() -> void:
+    if is_instance_valid(_blocked_tween):
+        _blocked_tween.kill()
+    _blocked_tween = null
+
+
+func _play_blocked_feedback(cmd: PlayerCommand.Type) -> void:
+    if movement_config == null:
+        return
+
+    if movement_config.blocked_bump_distance <= 0.0 or movement_config.blocked_bump_duration <= 0.0:
+        return
+
+    if cmd != PlayerCommand.Type.STEP_FORWARD:
+        _cancel_blocked_feedback()
+        global_position = GridMapper.cell_to_world(grid_state.cell, movement_config.cell_size, 0.0)
+        blocked_feedback_cue.emit(cmd)
+        return
+
+    _cancel_blocked_feedback()
+
+    var base_pos := GridMapper.cell_to_world(grid_state.cell, movement_config.cell_size, 0.0)
+    global_position = base_pos
+
+    var facing_vec := GridDefinitions.facing_to_vec2i(grid_state.facing)
+    var bump_dir := Vector3(float(facing_vec.x), 0.0, float(facing_vec.y)).normalized()
+    if bump_dir == Vector3.ZERO:
+        return
+
+    var bump_target := base_pos + bump_dir * movement_config.blocked_bump_distance
+    var half_duration := maxf(movement_config.blocked_bump_duration * 0.5, 0.001)
+
+    _blocked_tween = create_tween()
+    _blocked_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+    _blocked_tween.tween_property(self, "global_position", bump_target, half_duration)
+    _blocked_tween.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+    _blocked_tween.tween_property(self, "global_position", base_pos, half_duration)
+    _blocked_tween.finished.connect(_on_blocked_feedback_finished)
+
+
+func _on_blocked_feedback_finished() -> void:
+    _blocked_tween = null
 
 
 func _command_for_action(action: StringName) -> int:
