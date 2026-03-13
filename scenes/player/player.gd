@@ -8,6 +8,7 @@ signal blocked_feedback_cue(cmd: PlayerCommand.Type)
 @export var movement_config: MovementConfig
 @export var eye_height := 0.6
 @export var input_actions_enabled := true
+@export var command_processing_enabled := true
 @export var debug_log_input_actions := false
 
 const INVALID_COMMAND := -1
@@ -44,10 +45,24 @@ func execute_command(cmd: PlayerCommand.Type) -> bool:
     if movement_controller == null:
         return false
 
+    if not command_processing_enabled:
+        return false
+
     if movement_controller.is_busy:
         return _enqueue_command(cmd)
 
     return movement_controller.execute_command(cmd)
+
+
+func pause_exploration_commands() -> void:
+    input_actions_enabled = false
+    command_processing_enabled = false
+
+
+func resume_exploration_commands() -> void:
+    command_processing_enabled = true
+    input_actions_enabled = true
+    _drain_queued_command()
 
 
 func execute_action(action: StringName) -> bool:
@@ -187,6 +202,15 @@ func _enqueue_command(cmd: PlayerCommand.Type) -> bool:
 
 func _drain_queued_command() -> void:
     if _queued_command == INVALID_COMMAND:
+        return
+
+    if not command_processing_enabled:
+        return
+
+    if movement_controller == null:
+        return
+
+    if movement_controller.is_busy:
         return
 
     var queued_cmd := _queued_command
