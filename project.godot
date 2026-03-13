@@ -19,6 +19,13 @@ run/main_scene="res://scenes/world/manual_test_world.tscn"
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="viewport"
+window/stretch/aspect="keep"
+
 [input]
 
 move_forward={

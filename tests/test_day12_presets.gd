@@ -25,6 +25,8 @@ func _run_script_for_preset(world: Node3D, preset_name: String) -> Dictionary:
 	assert_true(world.apply_movement_preset(preset_name), "Expected movement preset to apply")
 	var player := world.get_node_or_null("Player") as Player
 	assert_not_null(player)
+	# Keep this regression focused on preset behavior, not map layout passability.
+	player.movement_controller.passability_fn = Callable()
 
 	var script: Array[PlayerCommand.Type] = [
 		PlayerCommand.Type.STEP_FORWARD,

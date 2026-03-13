@@ -72,6 +72,7 @@ Status: completed on 2026-03-13. Checklist locked in `docs/day14_compliance_chec
 15. Day 15: Freeze template and handoff package.
 Deliverables: stable prep template snapshot, concise technical README, prioritized post-jam-start backlog.
 Exit criteria: template is ready to branch at jam start with no blocker defects in movement/view core.
+Status: in progress on 2026-03-13. Baseline window/viewport and stretch policy locked in `project.godot`; theme-driven visual tuning remains deferred until reveal.
 
 **Relevant files**
 - New Godot project assets for scenes, scripts, and tests to be created during execution (exact paths chosen at implementation time).

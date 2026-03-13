@@ -6,30 +6,39 @@ extends Node3D
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
 @export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
-
-const INVENTORY_OVERLAY_PATH := "res://scenes/inventory/inventory_placeholder.tscn"
-const COMBAT_OVERLAY_PATH := "res://scenes/combat/combat_placeholder.tscn"
-const TOWN_OVERLAY_PATH := "res://scenes/town/town_placeholder.tscn"
+@export_file("*.tscn") var overlay_inventory_scene_path := "res://scenes/inventory/inventory_placeholder.tscn"
+@export_file("*.tscn") var overlay_combat_scene_path := "res://scenes/combat/combat_placeholder.tscn"
+@export_file("*.tscn") var overlay_town_scene_path := "res://scenes/town/town_placeholder.tscn"
 
 const OVERLAY_INVENTORY := &"inventory"
 const OVERLAY_COMBAT := &"combat"
 const OVERLAY_TOWN := &"town"
 const PRESET_SNAP := &"snap"
 const PRESET_SMOOTH := &"smooth"
+const NODE_PLAYER := "Player"
+const NODE_OVERLAY_MOUNT := "OverlayLayer/OverlayMount"
+const NODE_DEBUG_PANEL := "OverlayLayer/DebugPanel"
+const NODE_BTN_OPEN_INVENTORY := "OverlayLayer/DebugPanel/Margin/VBox/OpenInventory"
+const NODE_BTN_OPEN_COMBAT := "OverlayLayer/DebugPanel/Margin/VBox/OpenCombat"
+const NODE_BTN_OPEN_TOWN := "OverlayLayer/DebugPanel/Margin/VBox/OpenTown"
+const NODE_BTN_CLOSE_OVERLAY := "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay"
 
 var _occupancy: GridOccupancyMap
 var _active_overlay: Control
 var _active_overlay_kind: StringName = StringName()
+var _overlay_scene_paths: Dictionary = {}
 
-@onready var _player: Player = get_node_or_null("Player")
-@onready var _overlay_mount: Control = get_node_or_null("OverlayLayer/OverlayMount")
-@onready var _debug_panel: Control = get_node_or_null("OverlayLayer/DebugPanel")
-@onready var _btn_open_inventory: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenInventory")
-@onready var _btn_open_combat: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenCombat")
-@onready var _btn_open_town: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/OpenTown")
-@onready var _btn_close_overlay: Button = get_node_or_null("OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay")
+var _player: Player
+var _overlay_mount: Control
+var _debug_panel: Control
+var _btn_open_inventory: Button
+var _btn_open_combat: Button
+var _btn_open_town: Button
+var _btn_close_overlay: Button
 
 func _ready() -> void:
+	_resolve_world_nodes()
+	_rebuild_overlay_registry()
 	_add_light()
 	_add_floor()
 	apply_movement_preset(active_movement_preset)
@@ -39,6 +48,24 @@ func _ready() -> void:
 	_apply_debug_panel_visibility()
 	_wire_overlay_controls()
 	_refresh_debug_buttons()
+
+
+func _resolve_world_nodes() -> void:
+	_player = get_node_or_null(NODE_PLAYER) as Player
+	_overlay_mount = get_node_or_null(NODE_OVERLAY_MOUNT) as Control
+	_debug_panel = get_node_or_null(NODE_DEBUG_PANEL) as Control
+	_btn_open_inventory = get_node_or_null(NODE_BTN_OPEN_INVENTORY) as Button
+	_btn_open_combat = get_node_or_null(NODE_BTN_OPEN_COMBAT) as Button
+	_btn_open_town = get_node_or_null(NODE_BTN_OPEN_TOWN) as Button
+	_btn_close_overlay = get_node_or_null(NODE_BTN_CLOSE_OVERLAY) as Button
+
+
+func _rebuild_overlay_registry() -> void:
+	_overlay_scene_paths = {
+		OVERLAY_INVENTORY: overlay_inventory_scene_path,
+		OVERLAY_COMBAT: overlay_combat_scene_path,
+		OVERLAY_TOWN: overlay_town_scene_path,
+	}
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -202,15 +229,11 @@ func _copy_movement_config_values(source: MovementConfig, target: MovementConfig
 
 
 func _scene_for_overlay(kind: StringName) -> PackedScene:
-	match kind:
-		OVERLAY_INVENTORY:
-			return load(INVENTORY_OVERLAY_PATH) as PackedScene
-		OVERLAY_COMBAT:
-			return load(COMBAT_OVERLAY_PATH) as PackedScene
-		OVERLAY_TOWN:
-			return load(TOWN_OVERLAY_PATH) as PackedScene
-		_:
-			return null
+	var scene_path := String(_overlay_scene_paths.get(kind, ""))
+	if scene_path.is_empty():
+		return null
+
+	return load(scene_path) as PackedScene
 
 
 func _close_overlay_internal(restore_exploration: bool) -> void:
@@ -283,9 +306,8 @@ func _wire_occupancy() -> void:
 		_align_gridmap_to_player_grid(gm)
 
 	_occupancy = GridOccupancyMap.from_grid_map(gm, occupancy_wall_layer)
-	var player: Player = get_node_or_null("Player")
-	if player != null and player.movement_controller != null:
-		player.movement_controller.passability_fn = _occupancy.is_passable
+	if _player != null and _player.movement_controller != null:
+		_player.movement_controller.passability_fn = _occupancy.is_passable
 		print("[Occupancy] layer=%d wired %d blocked cells" % [occupancy_wall_layer, _occupancy._blocked.size()])
 
 
