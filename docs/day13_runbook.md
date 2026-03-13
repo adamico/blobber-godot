@@ -1,8 +1,10 @@
 ## Day 13 Runbook
 
 ### Startup Expectation
-- Primary run scene: `res://scenes/world/manual_test_world.tscn`
+- Primary run scene: `res://scenes/title/title_screen.tscn`
 - Expected first frame after Run:
+- Title screen is visible with Start Game and Quit options.
+- After selecting Start Game, gameplay loads `ManualTestWorld`.
 - Player spawns in exploration world at origin-facing north baseline.
 - GridMap is visible and passability wiring completes (occupancy log prints once).
 - Overlay shell is loaded, but debug panel is hidden by default unless `show_debug_panel` is enabled on `ManualTestWorld`.
@@ -10,7 +12,8 @@
 ### Manual Run (Godot Editor)
 1. Open the project in Godot 4.
 2. Press Run Project (or `F5`).
-3. Verify startup lands directly in ManualTestWorld with no scene picker or manual scene open step.
+3. Verify startup lands on the title screen with no scene picker or manual scene open step.
+4. Select Start Game and verify transition into ManualTestWorld.
 4. Optional smoke checks:
 - Movement actions (`move_forward`, `move_back`, `move_left`, `move_right`, `turn_left`, `turn_right`) respond.
 - Overlay actions (`open_inventory`, `open_combat`, `open_town`, `close_overlay`) work and movement is isolated while overlays are active.
@@ -22,7 +25,7 @@
 
 ### Troubleshooting
 1. Runs into an unexpected scene or blank startup.
-- Verify `project.godot` has `run/main_scene="res://scenes/world/manual_test_world.tscn"`.
+- Verify `project.godot` has `run/main_scene="res://scenes/title/title_screen.tscn"`.
 - Reopen project so editor cache picks up updated startup settings.
 
 2. Movement seems blocked at startup.
