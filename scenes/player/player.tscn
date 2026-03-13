@@ -4,3 +4,4 @@
 
 [node name="Player" type="Node3D" unique_id=264519807]
 script = ExtResource("1_8afob")
+debug_log_input_actions = true
