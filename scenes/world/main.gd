@@ -28,6 +28,7 @@ const PRESET_SNAP := &"snap"
 const PRESET_SMOOTH := &"smooth"
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
+const GAME_STATE_COMBAT := &"combat"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_PLAYER := "Player"
@@ -58,6 +59,7 @@ var _btn_open_combat: Button
 var _btn_open_town: Button
 var _btn_toggle_minimap: Button
 var _btn_close_overlay: Button
+var _hp_bar: ProgressBar
 
 func _ready() -> void:
 	_resolve_world_nodes()
@@ -77,6 +79,7 @@ func _ready() -> void:
 	_refresh_minimap_overlay()
 	_wire_overlay_controls()
 	_refresh_debug_buttons()
+	_add_hp_bar.call_deferred()
 
 
 func _resolve_world_nodes() -> void:
@@ -289,6 +292,18 @@ func is_gameplay_state_active() -> bool:
 	return current_game_state() == GAME_STATE_GAMEPLAY
 
 
+func is_combat_state_active() -> bool:
+	return current_game_state() == GAME_STATE_COMBAT
+
+
+func start_combat() -> void:
+	_set_game_state(GAME_STATE_COMBAT)
+
+
+func end_combat() -> void:
+	_set_game_state(GAME_STATE_GAMEPLAY)
+
+
 func go_to_menu() -> void:
 	_set_game_state(GAME_STATE_MENU)
 
@@ -323,6 +338,8 @@ func _set_game_state(state_name: StringName) -> void:
 			_game_state_machine.to_menu()
 		GAME_STATE_GAMEPLAY:
 			_game_state_machine.to_gameplay()
+		GAME_STATE_COMBAT:
+			_game_state_machine.to_combat()
 		GAME_STATE_GAMEOVER_FAILURE:
 			_game_state_machine.to_gameover_failure()
 		GAME_STATE_GAMEOVER_SUCCESS:
@@ -358,6 +375,10 @@ func _apply_state_side_effects() -> void:
 			_close_overlay_internal(false)
 		if not has_active_overlay():
 			_set_exploration_active(true)
+		return
+
+	if is_combat_state_active():
+		_set_exploration_active(false)
 		return
 
 	_close_overlay_internal(false)
@@ -459,7 +480,7 @@ func _wire_end_conditions() -> void:
 	_player.movement_controller.action_completed.connect(_on_player_action_completed)
 
 
-func _on_player_action_completed(_cmd: PlayerCommand.Type, new_state: GridState) -> void:
+func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -> void:
 	_refresh_grid_coordinates_overlay(new_state.cell)
 	_refresh_minimap_overlay(new_state.cell)
 
@@ -480,6 +501,55 @@ func _on_player_action_completed(_cmd: PlayerCommand.Type, new_state: GridState)
 	if new_state.cell == failure_goal_cell:
 		_run_is_resolved = true
 		finish_with_failure()
+
+
+func _add_hp_bar() -> void:
+	if _player == null or _player.stats == null:
+		return
+
+	var overlay_layer := get_node_or_null("OverlayLayer")
+	if overlay_layer == null:
+		return
+
+	var panel := PanelContainer.new()
+	panel.name = "HPBarPanel"
+	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	panel.position = Vector2(8.0, -8.0)
+	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	panel.add_child(hbox)
+
+	var label := Label.new()
+	label.text = "HP"
+	hbox.add_child(label)
+
+	var bar := ProgressBar.new()
+	bar.name = "HPBar"
+	bar.custom_minimum_size = Vector2(120.0, 16.0)
+	bar.min_value = 0.0
+	bar.max_value = float(_player.stats.max_health)
+	bar.value = float(_player.stats.health)
+	bar.show_percentage = false
+	hbox.add_child(bar)
+	_hp_bar = bar
+
+	overlay_layer.add_child(panel)
+	_player.stats.damaged.connect(_on_player_damaged)
+	_player.stats.healed.connect(_on_player_healed)
+
+
+func _on_player_damaged(_amount: int, _old_health: int, new_health: int) -> void:
+	if _hp_bar == null:
+		return
+	_hp_bar.value = float(new_health)
+
+
+func _on_player_healed(_amount: int, _old_health: int, new_health: int) -> void:
+	if _hp_bar == null:
+		return
+	_hp_bar.value = float(new_health)
 
 
 func _add_light() -> void:

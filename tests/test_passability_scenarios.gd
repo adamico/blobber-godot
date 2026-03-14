@@ -26,10 +26,10 @@ func test_all_translational_commands_blocked_when_surrounded() -> void:
 	om.set_blocked(Vector2i(-1,  0), true)   # WEST neighbor
 	mc.passability_fn = om.is_passable
 
-	assert_false(mc.execute_command(PlayerCommand.Type.STEP_FORWARD),  "STEP_FORWARD blocked when surrounded")
-	assert_false(mc.execute_command(PlayerCommand.Type.STEP_BACK),     "STEP_BACK blocked when surrounded")
-	assert_false(mc.execute_command(PlayerCommand.Type.MOVE_LEFT),     "MOVE_LEFT blocked when surrounded")
-	assert_false(mc.execute_command(PlayerCommand.Type.MOVE_RIGHT),    "MOVE_RIGHT blocked when surrounded")
+	assert_false(mc.execute_command(GridCommand.Type.STEP_FORWARD),  "STEP_FORWARD blocked when surrounded")
+	assert_false(mc.execute_command(GridCommand.Type.STEP_BACK),     "STEP_BACK blocked when surrounded")
+	assert_false(mc.execute_command(GridCommand.Type.MOVE_LEFT),     "MOVE_LEFT blocked when surrounded")
+	assert_false(mc.execute_command(GridCommand.Type.MOVE_RIGHT),    "MOVE_RIGHT blocked when surrounded")
 	assert_eq(mc.grid_state.cell, Vector2i.ZERO, "cell unchanged when fully surrounded")
 	assert_eq(mc.grid_state.facing, GridDefinitions.Facing.NORTH, "facing unchanged when fully surrounded")
 	assert_false(mc.is_busy, "controller must not be busy after blocked commands")
@@ -39,9 +39,9 @@ func test_turns_unaffected_when_grid_fully_blocked() -> void:
 	var mc := _make_controller()
 	mc.passability_fn = func(_cell: Vector2i) -> bool: return false
 
-	assert_true(mc.execute_command(PlayerCommand.Type.TURN_LEFT),  "TURN_LEFT succeeds despite full blockade")
+	assert_true(mc.execute_command(GridCommand.Type.TURN_LEFT),  "TURN_LEFT succeeds despite full blockade")
 	assert_eq(mc.grid_state.facing, GridDefinitions.Facing.WEST)
-	assert_true(mc.execute_command(PlayerCommand.Type.TURN_RIGHT), "TURN_RIGHT succeeds despite full blockade")
+	assert_true(mc.execute_command(GridCommand.Type.TURN_RIGHT), "TURN_RIGHT succeeds despite full blockade")
 	assert_eq(mc.grid_state.facing, GridDefinitions.Facing.NORTH)
 	assert_eq(mc.grid_state.cell, Vector2i.ZERO, "turns must not translate position")
 
@@ -54,18 +54,18 @@ func test_corridor_traversal_forward_and_back() -> void:
 	om.set_blocked(Vector2i(0,  1), true)   # south wall of corridor
 	mc.passability_fn = om.is_passable
 
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(mc.grid_state.cell, Vector2i(0, -1))
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(mc.grid_state.cell, Vector2i(0, -2))
-	assert_false(mc.execute_command(PlayerCommand.Type.STEP_FORWARD), "north wall blocks further advance")
+	assert_false(mc.execute_command(GridCommand.Type.STEP_FORWARD), "north wall blocks further advance")
 	assert_eq(mc.grid_state.cell, Vector2i(0, -2))
 
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_BACK))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_BACK))
 	assert_eq(mc.grid_state.cell, Vector2i(0, -1))
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_BACK))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_BACK))
 	assert_eq(mc.grid_state.cell, Vector2i.ZERO, "back to origin")
-	assert_false(mc.execute_command(PlayerCommand.Type.STEP_BACK), "south wall blocks further retreat")
+	assert_false(mc.execute_command(GridCommand.Type.STEP_BACK), "south wall blocks further retreat")
 	assert_eq(mc.grid_state.cell, Vector2i.ZERO)
 
 
@@ -78,17 +78,17 @@ func test_l_shaped_path_requires_turn_to_navigate() -> void:
 	om.set_blocked(Vector2i(1,  0), true)   # east shortcut from origin
 	mc.passability_fn = om.is_passable
 
-	assert_false(mc.execute_command(PlayerCommand.Type.MOVE_RIGHT), "east shortcut from origin is blocked")
+	assert_false(mc.execute_command(GridCommand.Type.MOVE_RIGHT), "east shortcut from origin is blocked")
 	assert_eq(mc.grid_state.cell, Vector2i.ZERO)
 
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(mc.grid_state.cell, Vector2i(0, -1))
-	assert_false(mc.execute_command(PlayerCommand.Type.STEP_FORWARD), "dead end ahead is blocked")
+	assert_false(mc.execute_command(GridCommand.Type.STEP_FORWARD), "dead end ahead is blocked")
 	assert_eq(mc.grid_state.cell, Vector2i(0, -1))
 
-	assert_true(mc.execute_command(PlayerCommand.Type.TURN_RIGHT))
+	assert_true(mc.execute_command(GridCommand.Type.TURN_RIGHT))
 	assert_eq(mc.grid_state.facing, GridDefinitions.Facing.EAST)
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(mc.grid_state.cell, Vector2i(1, -1), "L-corner reached via required turn")
 
 
@@ -102,10 +102,10 @@ func test_blocked_state_unchanged_for_all_facing_and_move_combos() -> void:
 		GridDefinitions.Facing.WEST,
 	]
 	var commands: Array = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.STEP_BACK,
-		PlayerCommand.Type.MOVE_LEFT,
-		PlayerCommand.Type.MOVE_RIGHT,
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.STEP_BACK,
+		GridCommand.Type.MOVE_LEFT,
+		GridCommand.Type.MOVE_RIGHT,
 	]
 
 	for facing in all_facings:
@@ -117,10 +117,10 @@ func test_blocked_state_unchanged_for_all_facing_and_move_combos() -> void:
 
 			var target: Vector2i
 			match cmd:
-				PlayerCommand.Type.STEP_FORWARD:  target = fwd_dir
-				PlayerCommand.Type.STEP_BACK:     target = -fwd_dir
-				PlayerCommand.Type.MOVE_LEFT:     target = -rgt_dir
-				PlayerCommand.Type.MOVE_RIGHT:    target = rgt_dir
+				GridCommand.Type.STEP_FORWARD:  target = fwd_dir
+				GridCommand.Type.STEP_BACK:     target = -fwd_dir
+				GridCommand.Type.MOVE_LEFT:     target = -rgt_dir
+				GridCommand.Type.MOVE_RIGHT:    target = rgt_dir
 
 			var om := GridOccupancyMap.new()
 			om.set_blocked(target, true)

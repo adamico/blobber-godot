@@ -55,7 +55,7 @@ func test_grid_coords_overlay_updates_after_player_move() -> void:
 	assert_true(label.visible)
 	assert_eq(label.text, "Grid X: 0  Y: 0")
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
 	assert_eq(label.text, "Grid X: 0  Y: -1")
 
@@ -73,6 +73,6 @@ func test_minimap_overlay_updates_player_state_after_player_move() -> void:
 
 	assert_eq(minimap.get_player_cell(), Vector2i.ZERO)
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
 	assert_eq(minimap.get_player_cell(), Vector2i(0, -1))

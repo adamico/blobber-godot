@@ -23,7 +23,7 @@ func _wait_until_not_busy(player: Player, max_frames: int = 180) -> void:
 func test_step_forward_advances_cell() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var executed := player.execute_command(GridCommand.Type.STEP_FORWARD)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
@@ -32,7 +32,7 @@ func test_step_forward_advances_cell() -> void:
 func test_step_back_retreats_cell() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.STEP_BACK)
+	var executed := player.execute_command(GridCommand.Type.STEP_BACK)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.cell, Vector2i(0, 1))
@@ -41,7 +41,7 @@ func test_step_back_retreats_cell() -> void:
 func test_strafe_left_moves_perpendicular() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.MOVE_LEFT)
+	var executed := player.execute_command(GridCommand.Type.MOVE_LEFT)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.cell, Vector2i(-1, 0))
@@ -50,7 +50,7 @@ func test_strafe_left_moves_perpendicular() -> void:
 func test_strafe_right_moves_perpendicular() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.MOVE_RIGHT)
+	var executed := player.execute_command(GridCommand.Type.MOVE_RIGHT)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.cell, Vector2i(1, 0))
@@ -59,7 +59,7 @@ func test_strafe_right_moves_perpendicular() -> void:
 func test_turn_left_updates_facing() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.TURN_LEFT)
+	var executed := player.execute_command(GridCommand.Type.TURN_LEFT)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.WEST)
@@ -68,7 +68,7 @@ func test_turn_left_updates_facing() -> void:
 func test_turn_right_updates_facing() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
+	var executed := player.execute_command(GridCommand.Type.TURN_RIGHT)
 
 	assert_true(executed)
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.EAST)
@@ -77,7 +77,7 @@ func test_turn_right_updates_facing() -> void:
 func test_transform_sync_after_command() -> void:
 	var player := _spawn_player()
 
-	var executed := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var executed := player.execute_command(GridCommand.Type.STEP_FORWARD)
 	var expected_pos := GridMapper.cell_to_world(player.grid_state.cell, player.movement_config.cell_size, 0.0)
 
 	assert_true(executed)
@@ -87,11 +87,11 @@ func test_transform_sync_after_command() -> void:
 func test_scripted_sequence_yields_expected_final_state() -> void:
 	var player := _spawn_player()
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	assert_true(player.execute_command(PlayerCommand.Type.TURN_RIGHT))
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	assert_true(player.execute_command(PlayerCommand.Type.TURN_LEFT))
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_BACK))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.TURN_LEFT))
+	assert_true(player.execute_command(GridCommand.Type.STEP_BACK))
 
 	assert_eq(player.grid_state.cell, Vector2i(1, 0))
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)
@@ -105,8 +105,8 @@ func test_execute_command_queues_one_command_while_busy() -> void:
 	var before_cell := player.grid_state.cell
 	var before_facing := player.grid_state.facing
 
-	var accepted := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
-	var dropped := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
+	var accepted := player.execute_command(GridCommand.Type.STEP_FORWARD)
+	var dropped := player.execute_command(GridCommand.Type.TURN_RIGHT)
 
 	assert_true(accepted)
 	assert_false(dropped)
@@ -117,7 +117,7 @@ func test_execute_command_queues_one_command_while_busy() -> void:
 func test_smooth_mode_single_step_reaches_expected_state() -> void:
 	var player := _spawn_player(true)
 
-	var executed := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var executed := player.execute_command(GridCommand.Type.STEP_FORWARD)
 
 	assert_true(executed)
 	assert_true(player.movement_controller.is_busy)
@@ -129,7 +129,7 @@ func test_smooth_mode_single_step_reaches_expected_state() -> void:
 func test_smooth_mode_turn_reaches_expected_facing_and_yaw() -> void:
 	var player := _spawn_player(true)
 
-	var executed := player.execute_command(PlayerCommand.Type.TURN_LEFT)
+	var executed := player.execute_command(GridCommand.Type.TURN_LEFT)
 
 	assert_true(executed)
 	assert_true(player.movement_controller.is_busy)
@@ -141,9 +141,9 @@ func test_smooth_mode_turn_reaches_expected_facing_and_yaw() -> void:
 func test_smooth_mode_queues_overlap_and_executes_in_order() -> void:
 	var player := _spawn_player(true, 0.06, 0.04)
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	var queued_execute := player.execute_command(PlayerCommand.Type.TURN_RIGHT)
-	var dropped_execute := player.execute_command(PlayerCommand.Type.TURN_LEFT)
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	var queued_execute := player.execute_command(GridCommand.Type.TURN_RIGHT)
+	var dropped_execute := player.execute_command(GridCommand.Type.TURN_LEFT)
 
 	assert_true(queued_execute)
 	assert_false(dropped_execute)
@@ -155,12 +155,12 @@ func test_smooth_mode_queues_overlap_and_executes_in_order() -> void:
 func test_snap_and_smooth_modes_match_for_scripted_sequence() -> void:
 	var snap_player := _spawn_player(false)
 	var smooth_player := _spawn_player(true)
-	var script: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_RIGHT,
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_LEFT,
-		PlayerCommand.Type.STEP_BACK,
+	var script: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_RIGHT,
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_LEFT,
+		GridCommand.Type.STEP_BACK,
 	]
 
 	for cmd in script:

@@ -28,12 +28,12 @@ func _run_script_for_preset(world: Node3D, preset_name: String) -> Dictionary:
 	# Keep this regression focused on preset behavior, not map layout passability.
 	player.movement_controller.passability_fn = Callable()
 
-	var script: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_RIGHT,
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_LEFT,
-		PlayerCommand.Type.STEP_BACK,
+	var script: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_RIGHT,
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_LEFT,
+		GridCommand.Type.STEP_BACK,
 	]
 
 	for cmd in script:

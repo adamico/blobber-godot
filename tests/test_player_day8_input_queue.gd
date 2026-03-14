@@ -32,9 +32,9 @@ func _press_action(player: Player, action_name: StringName) -> void:
 func test_busy_state_accepts_one_queued_and_drops_extra_inputs() -> void:
 	var player := _spawn_player()
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	assert_true(player.execute_command(PlayerCommand.Type.TURN_RIGHT))
-	assert_false(player.execute_command(PlayerCommand.Type.TURN_LEFT))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
+	assert_false(player.execute_command(GridCommand.Type.TURN_LEFT))
 
 	await _wait_until_not_busy(player)
 	assert_eq(player.grid_state.cell, Vector2i(0, -1))
@@ -43,8 +43,8 @@ func test_busy_state_accepts_one_queued_and_drops_extra_inputs() -> void:
 
 func test_input_actions_held_stress_keeps_order_without_double_executes() -> void:
 	var player := _spawn_player(0.04, 0.03)
-	var completed: Array[PlayerCommand.Type] = []
-	player.movement_controller.action_completed.connect(func(cmd: PlayerCommand.Type, _new_state: GridState) -> void:
+	var completed: Array[GridCommand.Type] = []
+	player.movement_controller.action_completed.connect(func(cmd: GridCommand.Type, _new_state: GridState) -> void:
 		completed.append(cmd)
 	)
 
@@ -55,9 +55,9 @@ func test_input_actions_held_stress_keeps_order_without_double_executes() -> voi
 
 	await _wait_until_not_busy(player)
 
-	var expected: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_RIGHT,
+	var expected: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_RIGHT,
 	]
 
 	assert_eq(completed, expected)

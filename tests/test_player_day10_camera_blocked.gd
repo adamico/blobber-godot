@@ -60,7 +60,7 @@ func test_camera_position_canonical_after_blocked_forward() -> void:
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var canonical_pos := player.global_position
-	assert_false(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD))
 
 	await _wait_frames(15)
 
@@ -82,7 +82,7 @@ func test_camera_yaw_unchanged_after_blocked_forward() -> void:
 	var camera := _get_camera(player)
 	var yaw_before := _normalized_degrees(camera.global_rotation_degrees.y)
 
-	assert_false(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	await _wait_frames(15)
 
 	var yaw_after := _normalized_degrees(camera.global_rotation_degrees.y)
@@ -97,7 +97,7 @@ func test_camera_position_canonical_after_blocked_strafe() -> void:
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var canonical_pos := player.global_position
-	assert_false(player.execute_command(PlayerCommand.Type.MOVE_LEFT))
+	assert_false(player.execute_command(GridCommand.Type.MOVE_LEFT))
 
 	await get_tree().process_frame   # allow signal handlers to complete
 
@@ -121,11 +121,11 @@ func test_camera_follows_turn_after_prior_blocked_forward() -> void:
 	player.movement_controller.passability_fn = om.is_passable
 
 	# Blocked forward triggers bump animation
-	assert_false(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	await _wait_frames(15)   # wait for bump to complete
 
 	# Turn left: NORTH → WEST (must succeed and update camera yaw)
-	assert_true(player.execute_command(PlayerCommand.Type.TURN_LEFT))
+	assert_true(player.execute_command(GridCommand.Type.TURN_LEFT))
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.WEST)
 
 	var camera := _get_camera(player)

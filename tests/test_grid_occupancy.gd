@@ -49,7 +49,7 @@ func _make_controller() -> MovementController:
 func test_no_passability_fn_all_moves_pass() -> void:
 	var mc := _make_controller()
 	watch_signals(mc)
-	var ok := mc.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var ok := mc.execute_command(GridCommand.Type.STEP_FORWARD)
 	assert_true(ok, "should execute without passability_fn")
 	assert_signal_emit_count(mc, "action_completed", 1)
 
@@ -61,7 +61,7 @@ func test_blocked_translation_returns_false_and_emits_nothing() -> void:
 	mc.passability_fn = om.is_passable
 
 	watch_signals(mc)
-	var ok := mc.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var ok := mc.execute_command(GridCommand.Type.STEP_FORWARD)
 	assert_false(ok, "blocked move should return false")
 	assert_false(mc.is_busy, "is_busy must remain false after blocked command")
 	assert_signal_emit_count(mc, "action_completed", 0)
@@ -74,7 +74,7 @@ func test_blocked_translation_does_not_mutate_state() -> void:
 	om.set_blocked(Vector2i(0, -1), true)
 	mc.passability_fn = om.is_passable
 
-	mc.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	mc.execute_command(GridCommand.Type.STEP_FORWARD)
 	assert_eq(mc.grid_state.cell, Vector2i(0, 0), "cell must not change when blocked")
 
 
@@ -85,7 +85,7 @@ func test_valid_translation_completes_exactly_once() -> void:
 	mc.passability_fn = om.is_passable
 
 	watch_signals(mc)
-	var ok := mc.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var ok := mc.execute_command(GridCommand.Type.STEP_FORWARD)
 	assert_true(ok, "unblocked move should return true")
 	assert_signal_emit_count(mc, "action_completed", 1)
 
@@ -96,7 +96,7 @@ func test_turns_never_blocked_even_with_always_false_passability_fn() -> void:
 	mc.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	watch_signals(mc)
-	var ok_left := mc.execute_command(PlayerCommand.Type.TURN_LEFT)
+	var ok_left := mc.execute_command(GridCommand.Type.TURN_LEFT)
 	assert_true(ok_left, "TURN_LEFT should not be blocked by passability_fn")
 	assert_signal_emit_count(mc, "action_completed", 1)
 
@@ -104,13 +104,13 @@ func test_turns_never_blocked_even_with_always_false_passability_fn() -> void:
 func test_all_four_translation_directions_checked_individually() -> void:
 	# Block each cardinal neighbour and verify each direction is blocked
 	var directions := [
-		[PlayerCommand.Type.STEP_FORWARD,  Vector2i(0, -1)],
-		[PlayerCommand.Type.STEP_BACK,     Vector2i(0,  1)],
-		[PlayerCommand.Type.MOVE_LEFT,     Vector2i(-1, 0)],
-		[PlayerCommand.Type.MOVE_RIGHT,    Vector2i(1,  0)],
+		[GridCommand.Type.STEP_FORWARD,  Vector2i(0, -1)],
+		[GridCommand.Type.STEP_BACK,     Vector2i(0,  1)],
+		[GridCommand.Type.MOVE_LEFT,     Vector2i(-1, 0)],
+		[GridCommand.Type.MOVE_RIGHT,    Vector2i(1,  0)],
 	]
 	for pair in directions:
-		var cmd: PlayerCommand.Type = pair[0]
+		var cmd: GridCommand.Type = pair[0]
 		var blocked_cell: Vector2i = pair[1]
 
 		var mc := _make_controller()

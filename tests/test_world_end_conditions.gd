@@ -27,7 +27,7 @@ func test_reaching_success_goal_cell_triggers_victory_overlay() -> void:
 	world.failure_goal_cell = Vector2i(99, 99)
 	world.start_gameplay()
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(world.current_game_state(), &"gameover_success")
 	assert_eq(world.active_overlay_kind(), &"victory")
 	assert_true(world.has_active_overlay())
@@ -43,7 +43,7 @@ func test_reaching_failure_goal_cell_triggers_defeat_overlay() -> void:
 	world.failure_goal_cell = Vector2i(0, 1)
 	world.start_gameplay()
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_BACK))
+	assert_true(player.execute_command(GridCommand.Type.STEP_BACK))
 	assert_eq(world.current_game_state(), &"gameover_failure")
 	assert_eq(world.active_overlay_kind(), &"defeat")
 	assert_true(world.has_active_overlay())
@@ -60,6 +60,6 @@ func test_disabled_end_conditions_do_not_change_state() -> void:
 	world.failure_goal_cell = Vector2i(0, 1)
 	world.start_gameplay()
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(world.current_game_state(), &"gameplay")
 	assert_false(world.has_active_overlay())

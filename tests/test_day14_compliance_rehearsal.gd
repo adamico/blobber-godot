@@ -30,11 +30,11 @@ func _is_cardinal(value: float) -> bool:
 
 func test_compliance_grid_commands_move_exactly_one_cell_or_noop_when_blocked() -> void:
 	var player := _spawn_player()
-	var traversals: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.STEP_BACK,
-		PlayerCommand.Type.MOVE_LEFT,
-		PlayerCommand.Type.MOVE_RIGHT,
+	var traversals: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.STEP_BACK,
+		GridCommand.Type.MOVE_LEFT,
+		GridCommand.Type.MOVE_RIGHT,
 	]
 
 	for cmd in traversals:
@@ -49,15 +49,15 @@ func test_compliance_grid_commands_move_exactly_one_cell_or_noop_when_blocked() 
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var blocked_before := player.grid_state.cell
-	assert_false(player.execute_command(PlayerCommand.Type.STEP_FORWARD), "Blocked forward step must no-op")
+	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD), "Blocked forward step must no-op")
 	assert_eq(player.grid_state.cell, blocked_before, "Blocked forward step must preserve grid cell")
 
 
 func test_compliance_turns_are_cardinal_quarter_steps_only() -> void:
 	var player := _spawn_player()
-	var turns: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.TURN_LEFT,
-		PlayerCommand.Type.TURN_RIGHT,
+	var turns: Array[GridCommand.Type] = [
+		GridCommand.Type.TURN_LEFT,
+		GridCommand.Type.TURN_RIGHT,
 	]
 
 	for cmd in turns:
@@ -68,7 +68,7 @@ func test_compliance_turns_are_cardinal_quarter_steps_only() -> void:
 
 		var after_facing := int(player.grid_state.facing)
 		var delta := (after_facing - before_facing + 4) % 4
-		if cmd == PlayerCommand.Type.TURN_LEFT:
+		if cmd == GridCommand.Type.TURN_LEFT:
 			assert_eq(delta, 3, "TURN_LEFT must be exactly one cardinal step")
 		else:
 			assert_eq(delta, 1, "TURN_RIGHT must be exactly one cardinal step")
@@ -79,12 +79,12 @@ func test_compliance_camera_yaw_remains_cardinal_during_mixed_script() -> void:
 	var camera := player.get_node_or_null("Camera3D") as Camera3D
 	assert_not_null(camera, "Player must provide first-person camera")
 
-	var script: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.TURN_RIGHT,
-		PlayerCommand.Type.MOVE_LEFT,
-		PlayerCommand.Type.TURN_LEFT,
-		PlayerCommand.Type.STEP_BACK,
+	var script: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.TURN_RIGHT,
+		GridCommand.Type.MOVE_LEFT,
+		GridCommand.Type.TURN_LEFT,
+		GridCommand.Type.STEP_BACK,
 	]
 
 	for cmd in script:

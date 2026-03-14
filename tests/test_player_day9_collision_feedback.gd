@@ -55,7 +55,7 @@ func test_blocked_step_emits_decision_and_preserves_state() -> void:
 		outcomes.append(outcome)
 	)
 
-	var ok := mc.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var ok := mc.execute_command(GridCommand.Type.STEP_FORWARD)
 
 	assert_false(ok)
 	assert_eq(outcomes.size(), 1)
@@ -78,7 +78,7 @@ func test_snap_turn_emits_start_then_complete_with_stable_payload_shape() -> voi
 		outcomes.append(outcome)
 	)
 
-	var ok := mc.execute_command(PlayerCommand.Type.TURN_RIGHT)
+	var ok := mc.execute_command(GridCommand.Type.TURN_RIGHT)
 
 	assert_true(ok)
 	assert_eq(outcomes.size(), 2)
@@ -103,7 +103,7 @@ func test_smooth_move_emits_start_then_complete() -> void:
 		phases.append(outcome.phase)
 	)
 
-	assert_true(mc.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
 	await _wait_until_not_busy(mc)
 
 	assert_eq(phases, [MovementOutcome.PHASE_START, MovementOutcome.PHASE_COMPLETE])
@@ -123,13 +123,13 @@ func _run_mixed_commands_with_seed(seed_value: int) -> Array[Dictionary]:
 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var commands: Array[PlayerCommand.Type] = [
-		PlayerCommand.Type.STEP_FORWARD,
-		PlayerCommand.Type.STEP_BACK,
-		PlayerCommand.Type.MOVE_LEFT,
-		PlayerCommand.Type.MOVE_RIGHT,
-		PlayerCommand.Type.TURN_LEFT,
-		PlayerCommand.Type.TURN_RIGHT,
+	var commands: Array[GridCommand.Type] = [
+		GridCommand.Type.STEP_FORWARD,
+		GridCommand.Type.STEP_BACK,
+		GridCommand.Type.MOVE_LEFT,
+		GridCommand.Type.MOVE_RIGHT,
+		GridCommand.Type.TURN_LEFT,
+		GridCommand.Type.TURN_RIGHT,
 	]
 
 	var event_log: Array[Dictionary] = []
@@ -138,7 +138,7 @@ func _run_mixed_commands_with_seed(seed_value: int) -> Array[Dictionary]:
 	)
 
 	for _i in range(200):
-		var cmd: PlayerCommand.Type = commands[rng.randi_range(0, commands.size() - 1)]
+		var cmd: GridCommand.Type = commands[rng.randi_range(0, commands.size() - 1)]
 		mc.execute_command(cmd)
 
 	return event_log
@@ -165,7 +165,7 @@ func test_player_blocked_feedback_animates_and_returns_to_canonical_position() -
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var canonical_pos := player.global_position
-	var ok := player.execute_command(PlayerCommand.Type.STEP_FORWARD)
+	var ok := player.execute_command(GridCommand.Type.STEP_FORWARD)
 
 	assert_false(ok)
 	assert_eq(player.grid_state.cell, Vector2i.ZERO)
@@ -189,17 +189,17 @@ func test_player_blocked_strafe_emits_cue_without_positional_bump() -> void:
 	player.movement_config.blocked_bump_duration = 0.08
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
-	var cue_commands: Array[PlayerCommand.Type] = []
-	player.blocked_feedback_cue.connect(func(cmd: PlayerCommand.Type) -> void:
+	var cue_commands: Array[GridCommand.Type] = []
+	player.blocked_feedback_cue.connect(func(cmd: GridCommand.Type) -> void:
 		cue_commands.append(cmd)
 	)
 
 	var canonical_pos := player.global_position
-	var ok := player.execute_command(PlayerCommand.Type.MOVE_LEFT)
+	var ok := player.execute_command(GridCommand.Type.MOVE_LEFT)
 
 	assert_false(ok)
 	assert_eq(cue_commands.size(), 1)
-	assert_eq(cue_commands[0], PlayerCommand.Type.MOVE_LEFT)
+	assert_eq(cue_commands[0], GridCommand.Type.MOVE_LEFT)
 	assert_eq(player.global_position, canonical_pos)
 	assert_eq(player.grid_state.cell, Vector2i.ZERO)
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.NORTH)

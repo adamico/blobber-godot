@@ -42,7 +42,7 @@ func test_overlay_blocks_exploration_until_close() -> void:
 
 	var start_cell := player.grid_state.cell
 	assert_false(player.execute_action(&"move_forward"))
-	assert_false(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
+	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(player.grid_state.cell, start_cell)
 
 	world.close_active_overlay()
@@ -59,8 +59,8 @@ func test_busy_queue_is_preserved_across_overlay_and_runs_once_on_resume() -> vo
 	player.movement_config.step_duration = 0.04
 	player.movement_config.turn_duration = 0.03
 
-	assert_true(player.execute_command(PlayerCommand.Type.STEP_FORWARD))
-	assert_true(player.execute_command(PlayerCommand.Type.TURN_RIGHT))
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
 
 	world.open_inventory_overlay()
 	assert_true(world.has_active_overlay())

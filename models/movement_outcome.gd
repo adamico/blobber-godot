@@ -9,7 +9,7 @@ const PHASE_DECISION := "decision"
 const PHASE_START := "start"
 const PHASE_COMPLETE := "complete"
 
-var command: PlayerCommand.Type
+var command: GridCommand.Type
 var outcome_type: String
 var phase: String
 var state_before: GridState
@@ -18,7 +18,7 @@ var duration: float
 
 
 func _init(
-	new_command: PlayerCommand.Type,
+	new_command: GridCommand.Type,
 	new_outcome_type: String,
 	new_phase: String,
 	new_state_before: GridState,

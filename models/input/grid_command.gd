@@ -1,4 +1,4 @@
-class_name PlayerCommand
+class_name GridCommand
 extends RefCounted
 
 enum Type {
