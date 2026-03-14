@@ -32,6 +32,8 @@ const GAME_STATE_COMBAT := &"combat"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_PLAYER := "Player"
+const NODE_SCENE_INITIALIZER_MODULE := "SceneInitializerModule"
+const NODE_OVERLAY_MODULE := "OverlayModule"
 const NODE_OVERLAY_MOUNT := "OverlayLayer/OverlayMount"
 const NODE_DEBUG_PANEL := "OverlayLayer/DebugPanel"
 const NODE_GRID_COORDS_LABEL := "OverlayLayer/MinimapOverlay/GridCoordsLabel"
@@ -44,13 +46,13 @@ const NODE_BTN_CLOSE_OVERLAY := "OverlayLayer/DebugPanel/Margin/VBox/CloseOverla
 const ENEMY_GROUP := &"grid_enemies"
 
 var _occupancy: GridOccupancyMap
-var _active_overlay: Control
-var _active_overlay_kind: StringName = StringName()
 var _overlay_scene_paths: Dictionary = {}
 var _game_state_machine: GameStateMachine
 var _run_is_resolved := false
 
 var _player: Player
+var _scene_initializer_module: WorldSceneInitializerModule
+var _overlay_module: WorldOverlayModule
 var _overlay_mount: Control
 var _debug_panel: Control
 var _grid_coords_label: Label
@@ -66,9 +68,9 @@ var _enemies: Array = []
 func _ready() -> void:
 	_resolve_world_nodes()
 	_rebuild_overlay_registry()
+	_configure_overlay_module()
 	_setup_game_state_machine()
-	_add_light()
-	_add_floor()
+	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
 
 	# Defer to ensure all children (including Player) have finished _ready().
@@ -87,6 +89,8 @@ func _ready() -> void:
 
 func _resolve_world_nodes() -> void:
 	_player = get_node_or_null(NODE_PLAYER) as Player
+	_scene_initializer_module = get_node_or_null(NODE_SCENE_INITIALIZER_MODULE) as WorldSceneInitializerModule
+	_overlay_module = get_node_or_null(NODE_OVERLAY_MODULE) as WorldOverlayModule
 	_overlay_mount = get_node_or_null(NODE_OVERLAY_MOUNT) as Control
 	_debug_panel = get_node_or_null(NODE_DEBUG_PANEL) as Control
 	_grid_coords_label = get_node_or_null(NODE_GRID_COORDS_LABEL) as Label
@@ -106,6 +110,28 @@ func _rebuild_overlay_registry() -> void:
 		OVERLAY_VICTORY: overlay_victory_scene_path,
 		OVERLAY_DEFEAT: overlay_defeat_scene_path,
 	}
+	if _overlay_module != null:
+		_overlay_module.set_overlay_scene_paths(_overlay_scene_paths)
+
+
+func _configure_overlay_module() -> void:
+	if _overlay_module == null:
+		return
+
+	_overlay_module.configure(_overlay_mount, _overlay_scene_paths)
+	if not _overlay_module.restart_requested.is_connected(_on_overlay_restart_requested):
+		_overlay_module.restart_requested.connect(_on_overlay_restart_requested)
+	if not _overlay_module.return_to_title_requested.is_connected(_on_overlay_return_to_title_requested):
+		_overlay_module.return_to_title_requested.connect(_on_overlay_return_to_title_requested)
+
+
+func _add_world_environment() -> void:
+	if _scene_initializer_module != null:
+		_scene_initializer_module.add_environment(self)
+		return
+
+	_add_light()
+	_add_floor()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -137,11 +163,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func has_active_overlay() -> bool:
-	return is_instance_valid(_active_overlay)
+	return _overlay_module != null and _overlay_module.has_active_overlay()
 
 
 func active_overlay_kind() -> StringName:
-	return _active_overlay_kind
+	if _overlay_module == null:
+		return StringName()
+	return _overlay_module.active_overlay_kind()
 
 
 func open_inventory_overlay() -> void:
@@ -164,37 +192,17 @@ func _open_overlay(kind: StringName, allow_non_gameplay: bool) -> void:
 	if not allow_non_gameplay and not is_gameplay_state_active():
 		return
 
-	if _overlay_mount == null:
+	if _overlay_module == null:
 		return
 
-	if _active_overlay_kind == kind and has_active_overlay():
+	if _overlay_module.active_overlay_kind() == kind and has_active_overlay():
 		return
 
-	_close_overlay_internal(false)
-
-	var scene := _scene_for_overlay(kind)
-	if scene == null:
+	if not _overlay_module.open_overlay(kind):
 		return
 
-	var overlay := scene.instantiate() as Control
-	if overlay == null:
-		return
-
-	_overlay_mount.add_child(overlay)
-	if overlay.has_signal("close_requested"):
-		overlay.connect("close_requested", _on_overlay_close_requested)
-	if overlay.has_signal("restart_requested"):
-		overlay.connect("restart_requested", _on_overlay_restart_requested)
-	if overlay.has_signal("return_to_title_requested"):
-		overlay.connect("return_to_title_requested", _on_overlay_return_to_title_requested)
-
-	_active_overlay = overlay
-	_active_overlay_kind = kind
 	_set_exploration_active(false)
 	_refresh_debug_buttons()
-
-	if overlay.has_method("request_overlay_focus"):
-		overlay.call_deferred("request_overlay_focus")
 
 
 func close_active_overlay() -> void:
@@ -374,7 +382,8 @@ func _on_game_state_changed(_previous_state: int, _new_state: int) -> void:
 
 func _apply_state_side_effects() -> void:
 	if is_gameplay_state_active():
-		if _active_overlay_kind == OVERLAY_VICTORY or _active_overlay_kind == OVERLAY_DEFEAT:
+		var current_overlay_kind := active_overlay_kind()
+		if current_overlay_kind == OVERLAY_VICTORY or current_overlay_kind == OVERLAY_DEFEAT:
 			_close_overlay_internal(false)
 		if not has_active_overlay():
 			_set_exploration_active(true)
@@ -434,21 +443,9 @@ func _copy_movement_config_values(source: MovementConfig, target: MovementConfig
 	target.blocked_bump_distance = source.blocked_bump_distance
 	target.blocked_bump_duration = source.blocked_bump_duration
 
-
-func _scene_for_overlay(kind: StringName) -> PackedScene:
-	var scene_path := String(_overlay_scene_paths.get(kind, ""))
-	if scene_path.is_empty():
-		return null
-
-	return load(scene_path) as PackedScene
-
-
 func _close_overlay_internal(restore_exploration: bool) -> void:
-	if has_active_overlay():
-		_active_overlay.queue_free()
-
-	_active_overlay = null
-	_active_overlay_kind = StringName()
+	if _overlay_module != null:
+		_overlay_module.close_overlay()
 
 	if restore_exploration:
 		_set_exploration_active(true)
@@ -456,10 +453,6 @@ func _close_overlay_internal(restore_exploration: bool) -> void:
 			_btn_open_inventory.call_deferred("grab_focus")
 
 	_refresh_debug_buttons()
-
-
-func _on_overlay_close_requested() -> void:
-	close_active_overlay()
 
 
 func _on_overlay_restart_requested() -> void:

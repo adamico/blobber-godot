@@ -5,6 +5,12 @@
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
+[ext_resource type="Script" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -23,6 +29,24 @@ data = {
 "cells": PackedInt32Array(1, 0, 393216, 65534, 0, 393216, 65534, 65534, 393216, 65534, 65535, 393216, 1, 65535, 393216, 1, 65534, 393216, 1, 65533, 393216, 65534, 65533, 393216, 65534, 65532, 393216, 1, 65532, 393216, 65534, 1, 393216, 65534, 2, 393216, 1, 2, 393216, 1, 1, 393216)
 }
 metadata/_editor_floor_ = Vector3(0, 0, 0)
+
+[node name="OverlayModule" type="Node" parent="."]
+script = ExtResource("6_75n3u")
+
+[node name="SceneInitializerModule" type="Node" parent="."]
+script = ExtResource("7_tk6wu")
+
+[node name="GridModule" type="Node" parent="."]
+script = ExtResource("8_aln2x")
+
+[node name="EncounterModule" type="Node" parent="."]
+script = ExtResource("9_obv6f")
+
+[node name="RunOutcomeModule" type="Node" parent="."]
+script = ExtResource("10_q8k5u")
+
+[node name="UIModule" type="Node" parent="."]
+script = ExtResource("11_jv3ce")
 
 [node name="OverlayLayer" type="CanvasLayer" parent="." unique_id=189560015]
 
