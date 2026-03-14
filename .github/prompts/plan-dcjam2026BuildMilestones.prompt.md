@@ -10,10 +10,12 @@ Five milestones. M1 is a strict prerequisite for everything else. M4 model work 
 ### Class design sketch
 
 **`CharacterStats` — `res://models/character_stats.gd`** (`extends Resource`)
-- `@export var max_hp: int`, `var hp: int`, `@export var attack: int`, `@export var defence: int`
-- `signal hp_changed(old_hp: int, new_hp: int)`
-- `func take_damage(amount: int)` — applies `max(amount - defence, 1)`, clamps to 0, emits signal
-- `func heal(amount: int)` — adds amount, clamps to `max_hp`, emits signal
+- `@export var max_health: int`, `var health: int`, `@export var attack: int`, `@export var defence: int`
+- `signal damaged(amount: int, old_health: int, new_health: int)`
+- `signal healed(amount: int, old_health: int, new_health: int)`
+- `func take_damage(amount: int)` — applies defence, enforces minimum 1 damage, clamps to 0, emits `damaged`
+- `func heal(amount: int)` — clamps heal input to non-negative, clamps to `max_health`, emits `healed`
+- `func fill() -> void` — restores to full (`max_health`), emits `healed` when health changes
 - `func is_dead() -> bool`
 
 **`GridEntity` — `res://components/grid_entity.gd`** (`extends Node3D`)
@@ -51,7 +53,7 @@ Five milestones. M1 is a strict prerequisite for everything else. M4 model work 
 3. Refactor `Player` to `extends GridEntity` — delete extracted code, keep camera/input/tween/feedback logic, override `_on_action_completed()` with `super()` call
 4. Add `stats: CharacterStats` to `GridEntity._ready()` (default-constructed if null)
 5. Add `COMBAT` state to `GameStateMachine` + `to_combat()` / `is_combat()` methods
-6. Add HP bar HUD to `main.tscn`, wired to `player.stats.hp_changed`
+6. Add HP bar HUD to `main.tscn`, wired to `player.stats.damaged` and `player.stats.healed`
 7. GUT tests: `CharacterStats` (damage, heal, clamp, death flag), `GridEntity` base (command execution, queue, pause/resume, canonical transform)
 
 ---

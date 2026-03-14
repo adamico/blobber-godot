@@ -41,6 +41,7 @@ const NODE_BTN_OPEN_COMBAT := "OverlayLayer/DebugPanel/Margin/VBox/OpenCombat"
 const NODE_BTN_OPEN_TOWN := "OverlayLayer/DebugPanel/Margin/VBox/OpenTown"
 const NODE_BTN_TOGGLE_MINIMAP := "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap"
 const NODE_BTN_CLOSE_OVERLAY := "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay"
+const ENEMY_GROUP := &"grid_enemies"
 
 var _occupancy: GridOccupancyMap
 var _active_overlay: Control
@@ -60,6 +61,7 @@ var _btn_open_town: Button
 var _btn_toggle_minimap: Button
 var _btn_close_overlay: Button
 var _hp_bar: ProgressBar
+var _enemies: Array = []
 
 func _ready() -> void:
 	_resolve_world_nodes()
@@ -71,6 +73,7 @@ func _ready() -> void:
 
 	# Defer to ensure all children (including Player) have finished _ready().
 	_wire_occupancy.call_deferred()
+	_wire_enemies.call_deferred()
 	_wire_end_conditions.call_deferred()
 	_apply_debug_panel_visibility()
 	_apply_grid_coordinates_overlay_visibility()
@@ -483,6 +486,7 @@ func _wire_end_conditions() -> void:
 func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -> void:
 	_refresh_grid_coordinates_overlay(new_state.cell)
 	_refresh_minimap_overlay(new_state.cell)
+	_collect_enemies()
 
 	if not enable_cell_end_conditions:
 		return
@@ -501,6 +505,128 @@ func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -
 	if new_state.cell == failure_goal_cell:
 		_run_is_resolved = true
 		finish_with_failure()
+		return
+
+	if _try_trigger_combat():
+		return
+
+	_tick_enemies_step_echo()
+	_try_trigger_combat()
+
+
+func _on_enemy_action_completed(_cmd: GridCommand.Type, _new_state: GridState, _enemy) -> void:
+	if not is_gameplay_state_active() or _run_is_resolved:
+		return
+	_try_trigger_combat()
+
+
+func _wire_enemies() -> void:
+	_collect_enemies()
+
+	for enemy in _enemies:
+		if enemy.movement_controller == null:
+			continue
+		enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
+			return _is_enemy_cell_passable(enemy, cell)
+		if enemy.movement_controller.action_completed.is_connected(_on_enemy_action_completed.bind(enemy)):
+			continue
+		enemy.movement_controller.action_completed.connect(_on_enemy_action_completed.bind(enemy))
+
+	if _player != null and _player.movement_controller != null:
+		_player.movement_controller.passability_fn = _is_player_cell_passable
+
+
+func _collect_enemies() -> void:
+	_enemies.clear()
+
+	for node in get_tree().get_nodes_in_group(ENEMY_GROUP):
+		if node == null:
+			continue
+		if node.get_tree() != get_tree():
+			continue
+		if not node.has_method("tick_ai"):
+			continue
+		_enemies.append(node)
+
+	# Fallback discovery for enemies that are present in the world tree but not yet in group.
+	for node in find_children("*", "Node", true, false):
+		if node == null or node == self or node == _player:
+			continue
+		if not node.has_method("tick_ai"):
+			continue
+		if _enemies.has(node):
+			continue
+		_enemies.append(node)
+
+
+func _tick_enemies_step_echo() -> void:
+	if not is_gameplay_state_active() or _player == null:
+		return
+
+	_collect_enemies()
+
+	for enemy in _enemies:
+		if enemy == null:
+			continue
+		enemy.tick_ai(_player)
+
+
+func _is_player_cell_passable(cell: Vector2i) -> bool:
+	if _occupancy != null and not _occupancy.is_passable(cell):
+		return false
+
+	for enemy in _enemies:
+		if enemy == null or enemy.grid_state == null:
+			continue
+		if enemy.grid_state.cell == cell:
+			return false
+
+	return true
+
+
+func _is_enemy_cell_passable(enemy, cell: Vector2i) -> bool:
+	if _occupancy != null and not _occupancy.is_passable(cell):
+		return false
+
+	for other in _enemies:
+		if other == null or other == enemy or other.grid_state == null:
+			continue
+		if other.grid_state.cell == cell:
+			return false
+
+	return true
+
+
+func _try_trigger_combat() -> bool:
+	if not is_gameplay_state_active() or _player == null or _player.grid_state == null:
+		return false
+
+	_collect_enemies()
+
+	var encountered: Array = []
+	for enemy in _enemies:
+		if enemy == null or enemy.grid_state == null:
+			continue
+		var enemy_cell: Vector2i = enemy.grid_state.cell
+		var player_cell: Vector2i = _player.grid_state.cell
+		var delta: Vector2i = enemy_cell - player_cell
+		var manhattan: int = absi(delta.x) + absi(delta.y)
+		if manhattan <= 1:
+			encountered.append(enemy)
+
+	if encountered.is_empty():
+		return false
+
+	_trigger_combat(encountered)
+	return true
+
+
+func _trigger_combat(encountered: Array) -> void:
+	if encountered.is_empty() or not is_gameplay_state_active():
+		return
+
+	print("[Combat] Triggered with %d encountered enemies" % encountered.size())
+	start_combat()
 
 
 func _add_hp_bar() -> void:
@@ -605,7 +731,7 @@ func _wire_occupancy() -> void:
 	_occupancy = GridOccupancyMap.from_grid_map(gm, occupancy_wall_layer)
 	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
-		_player.movement_controller.passability_fn = _occupancy.is_passable
+		_player.movement_controller.passability_fn = _is_player_cell_passable
 		print("[Occupancy] layer=%d wired %d blocked cells" % [occupancy_wall_layer, _occupancy._blocked.size()])
 
 

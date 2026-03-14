@@ -6,6 +6,8 @@ signal command_completed(cmd: GridCommand.Type, new_state: GridState)
 const INVALID_COMMAND := -1
 
 @export var movement_config: MovementConfig
+@export var initial_cell: Vector2i = Vector2i.ZERO
+@export var initial_facing: GridDefinitions.Facing = GridDefinitions.Facing.NORTH
 
 var grid_state: GridState
 var movement_controller: MovementController
@@ -22,7 +24,7 @@ func _ready() -> void:
 	if stats == null:
 		stats = CharacterStats.new()
 
-	grid_state = GridState.new(Vector2i.ZERO, GridDefinitions.Facing.NORTH)
+	grid_state = GridState.new(initial_cell, initial_facing)
 	_apply_canonical_transform()
 
 	movement_controller = MovementController.new()
