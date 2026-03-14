@@ -124,6 +124,7 @@ func configure_modules(ctx: Dictionary) -> void:
 			grid_module,
 			encounter_module,
 			run_outcome_module,
+			root,
 			player,
 			ctx["is_gameplay_state_active"],
 			ctx["is_combat_state_active"],

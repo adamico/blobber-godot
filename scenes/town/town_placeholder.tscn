@@ -1,8 +1,8 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/overlays/placeholder_overlay.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/town/town_overlay.gd" id="1"]
 
-[node name="TownPlaceholder" type="Control"]
+[node name="TownOverlay" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,8 +10,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
-overlay_title = "Town"
-overlay_subtitle = "Day 11 placeholder scene"
 
 [node name="Dimmer" type="ColorRect" parent="."]
 layout_mode = 1
@@ -32,7 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(390, 210)
+custom_minimum_size = Vector2(420, 250)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel"]
@@ -46,14 +44,33 @@ theme_override_constants/margin_bottom = 16
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="TownTitleLabel" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
-horizontal_alignment = 1
+unique_name_in_owner = true
+text = "Town"
 
-[node name="Subtitle" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="TownPlayerHPLabel" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
-horizontal_alignment = 1
+unique_name_in_owner = true
+text = "Player HP: --"
 
-[node name="CloseButton" type="Button" parent="Center/Panel/Margin/VBox"]
+[node name="TownStatusLabel" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
+unique_name_in_owner = true
+text = "Take a rest to recover"
+
+[node name="Actions" type="HBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TownRestButton" type="Button" parent="Center/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+unique_name_in_owner = true
+size_flags_horizontal = 3
+text = "Rest"
+
+[node name="TownCloseButton" type="Button" parent="Center/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+unique_name_in_owner = true
+size_flags_horizontal = 3
 text = "Return To Exploration"

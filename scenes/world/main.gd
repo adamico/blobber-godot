@@ -247,6 +247,27 @@ func get_player_stats() -> CharacterStats:
 	return _player.stats
 
 
+func get_player_inventory_items() -> Array:
+	if _player == null or _player.inventory == null:
+		return []
+	if not _player.inventory.has_method("get_items"):
+		return []
+	return _player.inventory.get_items()
+
+
+func use_player_inventory_item(index: int) -> bool:
+	if _player == null:
+		return false
+	return _player.use_item(index)
+
+
+func rest_player() -> bool:
+	if _player == null or _player.stats == null:
+		return false
+	_player.stats.fill()
+	return true
+
+
 func submit_combat_intent(cmd: GridCommand.Type) -> bool:
 	return _turn_orchestrator.submit_player_combat_intent(cmd)
 
