@@ -1,17 +1,15 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/overlays/placeholder_overlay.gd" id="1"]
+[ext_resource type="Script" path="res://scenes/combat/combat_overlay.gd" id="1_61k2v"]
 
-[node name="CombatPlaceholder" type="Control"]
+[node name="CombatOverlay" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1")
-overlay_title = "Combat"
-overlay_subtitle = "Day 11 placeholder scene"
+script = ExtResource("1_61k2v")
 
 [node name="Dimmer" type="ColorRect" parent="."]
 layout_mode = 1
@@ -32,7 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Panel" type="PanelContainer" parent="Center"]
-custom_minimum_size = Vector2(390, 210)
+custom_minimum_size = Vector2(460, 260)
 layout_mode = 2
 
 [node name="Margin" type="MarginContainer" parent="Center/Panel"]
@@ -48,12 +46,34 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
+text = "Combat"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="PlayerHP" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
-horizontal_alignment = 1
+text = "Player HP: --"
 
-[node name="CloseButton" type="Button" parent="Center/Panel/Margin/VBox"]
+[node name="EnemyHP" type="Label" parent="Center/Panel/Margin/VBox"]
 layout_mode = 2
-text = "Return To Exploration"
+text = "Enemies: --"
+
+[node name="Status" type="Label" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+text = "Choose an action"
+
+[node name="Actions" type="HBoxContainer" parent="Center/Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="Attack" type="Button" parent="Center/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+text = "Attack"
+
+[node name="Defend" type="Button" parent="Center/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+text = "Defend"
+
+[node name="UseItem" type="Button" parent="Center/Panel/Margin/VBox/Actions"]
+layout_mode = 2
+text = "Use Item"

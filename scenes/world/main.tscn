@@ -5,21 +5,21 @@
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_turn_orchestrator.gd" id="13_p7vna"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_policy_orchestrator.gd" id="15_8m9uz"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_input_orchestrator.gd" id="16_6f2hc"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
-[ext_resource type="Script" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
+[ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
+[ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
+[ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
+[ext_resource type="Script" uid="uid://03i62ypeorjw" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
+[ext_resource type="Script" uid="uid://cbe2icf2qc83t" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
+[ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
+[ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
+[ext_resource type="Script" uid="uid://ctchp8tibfuv1" path="res://scenes/world/modules/world_turn_orchestrator.gd" id="13_p7vna"]
+[ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
+[ext_resource type="Script" uid="uid://cngjknn253s42" path="res://scenes/world/modules/world_policy_orchestrator.gd" id="15_8m9uz"]
+[ext_resource type="Script" uid="uid://b36u64mcxmwrh" path="res://scenes/world/modules/world_input_orchestrator.gd" id="16_6f2hc"]
+[ext_resource type="Script" uid="uid://dpspbqqs4t1ms" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
+[ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
+[ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
+[ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -28,8 +28,8 @@ show_grid_coordinates_overlay = true
 failure_goal_cell = Vector2i(-3, 2)
 
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
-movement_config = ExtResource("3_tt8nk")
 debug_log_input_actions = false
+movement_config = ExtResource("3_tt8nk")
 
 [node name="GridMap" type="GridMap" parent="." unique_id=1476284130]
 mesh_library = ExtResource("4_6r0uj")
@@ -39,49 +39,49 @@ data = {
 }
 metadata/_editor_floor_ = Vector3(0, 0, 0)
 
-[node name="OverlayModule" type="Node" parent="."]
+[node name="OverlayModule" type="Node" parent="." unique_id=2044801561]
 script = ExtResource("6_75n3u")
 
-[node name="SceneInitializerModule" type="Node" parent="."]
+[node name="SceneInitializerModule" type="Node" parent="." unique_id=1430462751]
 script = ExtResource("7_tk6wu")
 
-[node name="GridModule" type="Node" parent="."]
+[node name="GridModule" type="Node" parent="." unique_id=1945126429]
 script = ExtResource("8_aln2x")
 
-[node name="EncounterModule" type="Node" parent="."]
+[node name="EncounterModule" type="Node" parent="." unique_id=904532739]
 script = ExtResource("9_obv6f")
 
-[node name="RunOutcomeModule" type="Node" parent="."]
+[node name="RunOutcomeModule" type="Node" parent="." unique_id=1100726258]
 script = ExtResource("10_q8k5u")
 
-[node name="UIModule" type="Node" parent="."]
+[node name="UIModule" type="Node" parent="." unique_id=1447534636]
 script = ExtResource("11_jv3ce")
 
-[node name="StateOrchestrator" type="Node" parent="."]
+[node name="StateOrchestrator" type="Node" parent="." unique_id=1756513716]
 script = ExtResource("12_4j8kp")
 
-[node name="TurnOrchestrator" type="Node" parent="."]
+[node name="TurnOrchestrator" type="Node" parent="." unique_id=232148457]
 script = ExtResource("13_p7vna")
 
-[node name="CompositionOrchestrator" type="Node" parent="."]
+[node name="CompositionOrchestrator" type="Node" parent="." unique_id=162870882]
 script = ExtResource("14_wk2mb")
 
-[node name="PolicyOrchestrator" type="Node" parent="."]
+[node name="PolicyOrchestrator" type="Node" parent="." unique_id=1742826120]
 script = ExtResource("15_8m9uz")
 
-[node name="InputOrchestrator" type="Node" parent="."]
+[node name="InputOrchestrator" type="Node" parent="." unique_id=492702643]
 script = ExtResource("16_6f2hc")
 
-[node name="MovementOrchestrator" type="Node" parent="."]
+[node name="MovementOrchestrator" type="Node" parent="." unique_id=1321821013]
 script = ExtResource("17_4a2zs")
 
-[node name="ContextOrchestrator" type="Node" parent="."]
+[node name="ContextOrchestrator" type="Node" parent="." unique_id=934108474]
 script = ExtResource("18_9d4lw")
 
-[node name="EventBus" type="Node" parent="."]
+[node name="EventBus" type="Node" parent="." unique_id=1685434463]
 script = ExtResource("19_1n8yf")
 
-[node name="EventRouterOrchestrator" type="Node" parent="."]
+[node name="EventRouterOrchestrator" type="Node" parent="." unique_id=1166162658]
 script = ExtResource("20_v0w2m")
 
 [node name="OverlayLayer" type="CanvasLayer" parent="." unique_id=189560015]

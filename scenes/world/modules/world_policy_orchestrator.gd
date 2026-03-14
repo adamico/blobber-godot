@@ -42,13 +42,14 @@ func apply_state_side_effects(
 		current_state: StringName,
 		is_gameplay_active: bool,
 		is_combat_active: bool,
+		overlay_combat: StringName,
 		overlay_victory: StringName,
 		overlay_defeat: StringName,
 		state_gameover_failure: StringName,
 		state_gameover_success: StringName) -> void:
 	if is_gameplay_active:
 		var current_overlay_kind := _overlay_module.active_overlay_kind()
-		if current_overlay_kind == overlay_victory or current_overlay_kind == overlay_defeat:
+		if current_overlay_kind == overlay_combat or current_overlay_kind == overlay_victory or current_overlay_kind == overlay_defeat:
 			close_overlay(false)
 		if not _overlay_module.has_active_overlay():
 			set_exploration_active(true)

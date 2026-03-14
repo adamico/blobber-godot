@@ -73,6 +73,7 @@ func test_adjacent_enemy_triggers_combat_state_on_player_action() -> void:
 	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
 	await _wait_until_not_busy(player)
 	assert_eq(world.current_game_state(), &"combat")
+	assert_eq(world.active_overlay_kind(), &"combat")
 
 
 func test_step_echo_enemy_ai_ticks_after_player_action() -> void:
@@ -114,6 +115,7 @@ func test_combat_input_submits_intent_and_round_returns_to_gameplay() -> void:
 	await _wait_frames(1)
 
 	assert_eq(world.current_game_state(), &"gameplay")
+	assert_false(world.has_active_overlay())
 
 
 func test_combat_attack_can_kill_enemy_and_exit_combat() -> void:
@@ -135,12 +137,14 @@ func test_combat_attack_can_kill_enemy_and_exit_combat() -> void:
 	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
 	await _wait_until_not_busy(player)
 	assert_eq(world.current_game_state(), &"combat")
+	assert_eq(world.active_overlay_kind(), &"combat")
 
 	_press_world_action(world, &"combat_attack")
 	await _wait_frames(1)
 
 	assert_true(enemy.stats.is_dead())
 	assert_eq(world.current_game_state(), &"gameplay")
+	assert_false(world.has_active_overlay())
 
 
 func test_combat_enemy_attack_can_kill_player_and_fail_run() -> void:

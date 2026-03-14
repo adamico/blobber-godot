@@ -176,11 +176,14 @@ func is_combat_state_active() -> bool:
 
 func start_combat() -> void:
 	_state_orchestrator.start_combat()
+	_policy_orchestrator.open_overlay(OVERLAY_COMBAT, true, true)
 	_turn_orchestrator.start_combat_round(get_enemies())
 
 
 func end_combat() -> void:
 	_state_orchestrator.end_combat()
+	if active_overlay_kind() == OVERLAY_COMBAT:
+		_overlay_module.close_overlay()
 
 
 func go_to_menu() -> void:
@@ -214,6 +217,7 @@ func apply_state_side_effects() -> void:
 			current_game_state(),
 			is_gameplay_state_active(),
 			is_combat_state_active(),
+			OVERLAY_COMBAT,
 			OVERLAY_VICTORY,
 			OVERLAY_DEFEAT,
 			GAME_STATE_GAMEOVER_FAILURE,
@@ -235,6 +239,16 @@ func return_to_title() -> void:
 		return
 
 	get_tree().change_scene_to_file(title_scene_path)
+
+
+func get_player_stats() -> CharacterStats:
+	if _player == null:
+		return null
+	return _player.stats
+
+
+func submit_combat_intent(cmd: GridCommand.Type) -> bool:
+	return _turn_orchestrator.submit_player_combat_intent(cmd)
 
 
 func _wire_end_conditions() -> void:
