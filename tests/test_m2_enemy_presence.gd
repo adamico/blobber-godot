@@ -41,7 +41,7 @@ func test_player_passability_blocks_enemy_occupied_cell() -> void:
 	world._wire_enemies()
 	world._wire_end_conditions()
 	await _wait_frames(1)
-	assert_true(world._enemies.size() > 0)
+	assert_true(world.get_enemies().size() > 0)
 	assert_eq(enemy.grid_state.cell, Vector2i(0, -1))
 
 	var ok := player.execute_command(GridCommand.Type.STEP_FORWARD)
@@ -60,7 +60,7 @@ func test_adjacent_enemy_triggers_combat_state_on_player_action() -> void:
 	world._wire_enemies()
 	world._wire_end_conditions()
 	await _wait_frames(1)
-	assert_true(world._enemies.size() > 0)
+	assert_true(world.get_enemies().size() > 0)
 	assert_eq(enemy.grid_state.cell, Vector2i(1, 0))
 
 	assert_true(player.execute_command(GridCommand.Type.TURN_RIGHT))
@@ -79,7 +79,7 @@ func test_step_echo_enemy_ai_ticks_after_player_action() -> void:
 	world._wire_enemies()
 	world._wire_end_conditions()
 	await _wait_frames(1)
-	assert_true(world._enemies.size() > 0)
+	assert_true(world.get_enemies().size() > 0)
 	assert_eq(enemy.grid_state.cell, Vector2i(0, -2))
 
 	assert_true(player.execute_command(GridCommand.Type.TURN_LEFT))

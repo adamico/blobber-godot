@@ -34,7 +34,10 @@ const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_PLAYER := "Player"
 const NODE_SCENE_INITIALIZER_MODULE := "SceneInitializerModule"
 const NODE_OVERLAY_MODULE := "OverlayModule"
+const NODE_GRID_MODULE := "GridModule"
+const NODE_ENCOUNTER_MODULE := "EncounterModule"
 const NODE_RUN_OUTCOME_MODULE := "RunOutcomeModule"
+const NODE_UI_MODULE := "UIModule"
 const NODE_OVERLAY_MOUNT := "OverlayLayer/OverlayMount"
 const NODE_DEBUG_PANEL := "OverlayLayer/DebugPanel"
 const NODE_GRID_COORDS_LABEL := "OverlayLayer/MinimapOverlay/GridCoordsLabel"
@@ -54,7 +57,10 @@ var _run_is_resolved := false
 var _player: Player
 var _scene_initializer_module: WorldSceneInitializerModule
 var _overlay_module: WorldOverlayModule
+var _grid_module: WorldGridModule
+var _encounter_module: WorldEncounterModule
 var _run_outcome_module: WorldRunOutcomeModule
+var _ui_module: WorldUIModule
 var _overlay_mount: Control
 var _debug_panel: Control
 var _grid_coords_label: Label
@@ -72,6 +78,8 @@ func _ready() -> void:
 	_rebuild_overlay_registry()
 	_configure_overlay_module()
 	_configure_run_outcome_module()
+	_configure_encounter_module()
+	_configure_ui_module()
 	_setup_game_state_machine()
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
@@ -94,7 +102,10 @@ func _resolve_world_nodes() -> void:
 	_player = get_node_or_null(NODE_PLAYER) as Player
 	_scene_initializer_module = get_node_or_null(NODE_SCENE_INITIALIZER_MODULE) as WorldSceneInitializerModule
 	_overlay_module = get_node_or_null(NODE_OVERLAY_MODULE) as WorldOverlayModule
+	_grid_module = get_node_or_null(NODE_GRID_MODULE) as WorldGridModule
+	_encounter_module = get_node_or_null(NODE_ENCOUNTER_MODULE) as WorldEncounterModule
 	_run_outcome_module = get_node_or_null(NODE_RUN_OUTCOME_MODULE) as WorldRunOutcomeModule
+	_ui_module = get_node_or_null(NODE_UI_MODULE) as WorldUIModule
 	_overlay_mount = get_node_or_null(NODE_OVERLAY_MOUNT) as Control
 	_debug_panel = get_node_or_null(NODE_DEBUG_PANEL) as Control
 	_grid_coords_label = get_node_or_null(NODE_GRID_COORDS_LABEL) as Label
@@ -134,10 +145,31 @@ func _configure_run_outcome_module() -> void:
 		return
 
 	_run_outcome_module.configure(enable_cell_end_conditions, success_goal_cell, failure_goal_cell)
+	_run_outcome_module.reset_run()
 	if not _run_outcome_module.success_reached.is_connected(_on_run_outcome_success_reached):
 		_run_outcome_module.success_reached.connect(_on_run_outcome_success_reached)
 	if not _run_outcome_module.failure_reached.is_connected(_on_run_outcome_failure_reached):
 		_run_outcome_module.failure_reached.connect(_on_run_outcome_failure_reached)
+
+
+func _configure_encounter_module() -> void:
+	if _encounter_module == null:
+		return
+
+	_encounter_module.configure(self, _player, _grid_module)
+	if not _encounter_module.encounter_detected.is_connected(_on_encounter_detected):
+		_encounter_module.encounter_detected.connect(_on_encounter_detected)
+	if not _encounter_module.enemy_acted.is_connected(_on_any_enemy_acted):
+		_encounter_module.enemy_acted.connect(_on_any_enemy_acted)
+
+
+func _configure_ui_module() -> void:
+	if _ui_module == null:
+		return
+
+	_ui_module.configure(
+			_player, _debug_panel, _grid_coords_label, _minimap_overlay,
+			_btn_open_inventory, _btn_open_combat, _btn_open_town, _btn_close_overlay)
 
 
 func _add_world_environment() -> void:
@@ -238,21 +270,37 @@ func _wire_overlay_controls() -> void:
 
 
 func _apply_debug_panel_visibility() -> void:
+	if _ui_module != null:
+		_ui_module.apply_debug_panel_visibility(show_debug_panel)
+		return
+
 	if _debug_panel != null:
 		_debug_panel.visible = show_debug_panel
 
 
 func _apply_grid_coordinates_overlay_visibility() -> void:
+	if _ui_module != null:
+		_ui_module.apply_grid_coords_visibility(show_grid_coordinates_overlay)
+		return
+
 	if _grid_coords_label != null:
 		_grid_coords_label.visible = show_grid_coordinates_overlay
 
 
 func _apply_minimap_overlay_visibility() -> void:
+	if _ui_module != null:
+		_ui_module.apply_minimap_visibility(show_minimap_overlay)
+		return
+
 	if _minimap_overlay != null:
 		_minimap_overlay.visible = show_minimap_overlay
 
 
 func _refresh_grid_coordinates_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
+	if _ui_module != null:
+		_ui_module.refresh_coords(cell)
+		return
+
 	if _grid_coords_label == null:
 		return
 
@@ -264,11 +312,20 @@ func _refresh_grid_coordinates_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
 
 
 func _toggle_minimap_overlay() -> void:
+	if _ui_module != null:
+		show_minimap_overlay = _ui_module.toggle_minimap()
+		return
+
 	show_minimap_overlay = not show_minimap_overlay
 	_apply_minimap_overlay_visibility()
 
 
 func _refresh_minimap_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
+	if _ui_module != null:
+		var occ: GridOccupancyMap = _grid_module.occupancy() if _grid_module != null else _occupancy
+		_ui_module.refresh_minimap(cell, occ)
+		return
+
 	if _minimap_overlay == null:
 		return
 
@@ -278,14 +335,19 @@ func _refresh_minimap_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
 		coords = _player.grid_state.cell
 		facing = _player.grid_state.facing
 
+	var current_occupancy := _grid_module.occupancy() if _grid_module != null else _occupancy
 	if _minimap_overlay.has_method("set_occupancy"):
-		_minimap_overlay.call("set_occupancy", _occupancy)
+		_minimap_overlay.call("set_occupancy", current_occupancy)
 	if _minimap_overlay.has_method("set_player_state"):
 		_minimap_overlay.call("set_player_state", coords, facing)
 
 
 func _refresh_debug_buttons() -> void:
 	var overlay_open := has_active_overlay()
+
+	if _ui_module != null:
+		_ui_module.refresh_debug_buttons(overlay_open)
+		return
 
 	if _btn_open_inventory != null:
 		_btn_open_inventory.disabled = overlay_open
@@ -336,8 +398,7 @@ func go_to_menu() -> void:
 
 func start_gameplay() -> void:
 	_run_is_resolved = false
-	if _run_outcome_module != null:
-		_run_outcome_module.reset_run()
+	_configure_run_outcome_module()
 	_set_game_state(GAME_STATE_GAMEPLAY)
 	_refresh_grid_coordinates_overlay()
 
@@ -496,7 +557,11 @@ func _wire_end_conditions() -> void:
 func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -> void:
 	_refresh_grid_coordinates_overlay(new_state.cell)
 	_refresh_minimap_overlay(new_state.cell)
-	_collect_enemies()
+
+	if _encounter_module != null:
+		_encounter_module.collect()
+	else:
+		_collect_enemies()
 
 	if not is_gameplay_state_active():
 		return
@@ -515,10 +580,17 @@ func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -
 	_try_trigger_combat()
 
 
-func _on_enemy_action_completed(_cmd: GridCommand.Type, _new_state: GridState, _enemy) -> void:
+func _on_any_enemy_acted() -> void:
 	if not is_gameplay_state_active() or _is_run_resolved():
 		return
 	_try_trigger_combat()
+
+
+func _on_encounter_detected(encountered: Array) -> void:
+	if encountered.is_empty() or not is_gameplay_state_active():
+		return
+	print("[Combat] Triggered with %d encountered enemies" % encountered.size())
+	start_combat()
 
 
 func _evaluate_run_outcome(cell: Vector2i) -> void:
@@ -554,16 +626,20 @@ func _on_run_outcome_failure_reached() -> void:
 
 
 func _wire_enemies() -> void:
-	_collect_enemies()
+	if _encounter_module != null:
+		_encounter_module.wire_enemies()
+		return
 
+	# Fallback: original inline logic when module is absent.
+	_collect_enemies()
 	for enemy in _enemies:
 		if enemy.movement_controller == null:
 			continue
 		enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
 			return _is_enemy_cell_passable(enemy, cell)
-		if enemy.movement_controller.action_completed.is_connected(_on_enemy_action_completed.bind(enemy)):
+		if enemy.movement_controller.action_completed.is_connected(_on_enemy_action_completed_fallback.bind(enemy)):
 			continue
-		enemy.movement_controller.action_completed.connect(_on_enemy_action_completed.bind(enemy))
+		enemy.movement_controller.action_completed.connect(_on_enemy_action_completed_fallback.bind(enemy))
 
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
@@ -581,7 +657,7 @@ func _collect_enemies() -> void:
 			continue
 		_enemies.append(node)
 
-	# Fallback discovery for enemies that are present in the world tree but not yet in group.
+	# Fallback discovery for enemies present in tree but not yet in group.
 	for node in find_children("*", "Node", true, false):
 		if node == null or node == self or node == _player:
 			continue
@@ -592,23 +668,46 @@ func _collect_enemies() -> void:
 		_enemies.append(node)
 
 
+func _on_enemy_action_completed_fallback(_cmd: GridCommand.Type, _new_state: GridState, _enemy) -> void:
+	if not is_gameplay_state_active() or _is_run_resolved():
+		return
+	_try_trigger_combat()
+
+
 func _tick_enemies_step_echo() -> void:
+	if _encounter_module != null:
+		_encounter_module.tick_step_echo()
+		return
+
 	if not is_gameplay_state_active() or _player == null:
 		return
 
 	_collect_enemies()
-
 	for enemy in _enemies:
 		if enemy == null:
 			continue
 		enemy.tick_ai(_player)
 
 
+func get_enemies() -> Array:
+	return _current_enemies()
+
+
+func _current_enemies() -> Array:
+	if _encounter_module != null:
+		return _encounter_module.get_enemies()
+	return _enemies
+
+
 func _is_player_cell_passable(cell: Vector2i) -> bool:
+	var enemies := _current_enemies()
+	if _grid_module != null:
+		return _grid_module.is_player_cell_passable(cell, enemies)
+
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
 
-	for enemy in _enemies:
+	for enemy in enemies:
 		if enemy == null or enemy.grid_state == null:
 			continue
 		if enemy.grid_state.cell == cell:
@@ -618,10 +717,14 @@ func _is_player_cell_passable(cell: Vector2i) -> bool:
 
 
 func _is_enemy_cell_passable(enemy, cell: Vector2i) -> bool:
+	var enemies := _current_enemies()
+	if _grid_module != null:
+		return _grid_module.is_enemy_cell_passable(enemy, cell, enemies)
+
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
 
-	for other in _enemies:
+	for other in enemies:
 		if other == null or other == enemy or other.grid_state == null:
 			continue
 		if other.grid_state.cell == cell:
@@ -634,15 +737,16 @@ func _try_trigger_combat() -> bool:
 	if not is_gameplay_state_active() or _player == null or _player.grid_state == null:
 		return false
 
-	_collect_enemies()
+	if _encounter_module != null:
+		return _encounter_module.check_combat_trigger()
 
+	# Fallback: inline logic when module is absent.
+	_collect_enemies()
 	var encountered: Array = []
 	for enemy in _enemies:
 		if enemy == null or enemy.grid_state == null:
 			continue
-		var enemy_cell: Vector2i = enemy.grid_state.cell
-		var player_cell: Vector2i = _player.grid_state.cell
-		var delta: Vector2i = enemy_cell - player_cell
+		var delta: Vector2i = enemy.grid_state.cell - _player.grid_state.cell
 		var manhattan: int = absi(delta.x) + absi(delta.y)
 		if manhattan <= 1:
 			encountered.append(enemy)
@@ -650,19 +754,16 @@ func _try_trigger_combat() -> bool:
 	if encountered.is_empty():
 		return false
 
-	_trigger_combat(encountered)
+	print("[Combat] Triggered with %d encountered enemies" % encountered.size())
+	start_combat()
 	return true
 
 
-func _trigger_combat(encountered: Array) -> void:
-	if encountered.is_empty() or not is_gameplay_state_active():
+func _add_hp_bar() -> void:
+	if _ui_module != null:
+		_ui_module.setup_hp_bar(get_node_or_null("OverlayLayer") as CanvasLayer)
 		return
 
-	print("[Combat] Triggered with %d encountered enemies" % encountered.size())
-	start_combat()
-
-
-func _add_hp_bar() -> void:
 	if _player == null or _player.stats == null:
 		return
 
@@ -700,6 +801,7 @@ func _add_hp_bar() -> void:
 
 
 func _on_player_damaged(_amount: int, _old_health: int, new_health: int) -> void:
+	# Fallback handler used when UIModule is absent.
 	if _hp_bar == null:
 		return
 	_hp_bar.value = float(new_health)
@@ -758,14 +860,18 @@ func _wire_occupancy() -> void:
 	if gm == null:
 		return
 
-	if auto_align_gridmap_visual:
-		_align_gridmap_to_player_grid(gm)
+	if _grid_module != null:
+		_grid_module.build_occupancy(gm, occupancy_wall_layer, auto_align_gridmap_visual)
+		_occupancy = _grid_module.occupancy()
+	else:
+		if auto_align_gridmap_visual:
+			_align_gridmap_to_player_grid(gm)
+		_occupancy = GridOccupancyMap.from_grid_map(gm, occupancy_wall_layer)
+		print("[Occupancy] layer=%d wired %d blocked cells" % [occupancy_wall_layer, _occupancy._blocked.size()])
 
-	_occupancy = GridOccupancyMap.from_grid_map(gm, occupancy_wall_layer)
 	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
-		print("[Occupancy] layer=%d wired %d blocked cells" % [occupancy_wall_layer, _occupancy._blocked.size()])
 
 
 func _align_gridmap_to_player_grid(gm: GridMap) -> void:
