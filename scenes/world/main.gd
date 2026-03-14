@@ -99,6 +99,10 @@ func _add_world_environment() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _input_orchestrator.handle_unhandled_input(event, is_gameplay_state_active()):
 		get_viewport().set_input_as_handled()
+		return
+
+	if _turn_orchestrator.handle_combat_input(event):
+		get_viewport().set_input_as_handled()
 
 
 func has_active_overlay() -> bool:
@@ -172,6 +176,7 @@ func is_combat_state_active() -> bool:
 
 func start_combat() -> void:
 	_state_orchestrator.start_combat()
+	_turn_orchestrator.start_combat_round(get_enemies())
 
 
 func end_combat() -> void:

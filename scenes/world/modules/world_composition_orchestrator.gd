@@ -57,6 +57,9 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 		"start_combat": Callable(world, "start_combat"),
 		"on_state_side_effects": Callable(world, "apply_state_side_effects"),
 		"is_gameplay_state_active": Callable(world, "is_gameplay_state_active"),
+		"is_combat_state_active": Callable(world, "is_combat_state_active"),
+		"end_combat": Callable(world, "end_combat"),
+		"finish_with_failure_in_combat": Callable(world, "finish_with_failure"),
 	}
 
 
@@ -121,7 +124,11 @@ func configure_modules(ctx: Dictionary) -> void:
 			grid_module,
 			encounter_module,
 			run_outcome_module,
-			ctx["is_gameplay_state_active"])
+			player,
+			ctx["is_gameplay_state_active"],
+			ctx["is_combat_state_active"],
+			ctx["end_combat"],
+			ctx["finish_with_failure_in_combat"])
 
 	policy_orchestrator.configure(
 			player,
