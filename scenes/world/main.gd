@@ -34,6 +34,7 @@ const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_PLAYER := "Player"
 const NODE_SCENE_INITIALIZER_MODULE := "SceneInitializerModule"
 const NODE_OVERLAY_MODULE := "OverlayModule"
+const NODE_RUN_OUTCOME_MODULE := "RunOutcomeModule"
 const NODE_OVERLAY_MOUNT := "OverlayLayer/OverlayMount"
 const NODE_DEBUG_PANEL := "OverlayLayer/DebugPanel"
 const NODE_GRID_COORDS_LABEL := "OverlayLayer/MinimapOverlay/GridCoordsLabel"
@@ -53,6 +54,7 @@ var _run_is_resolved := false
 var _player: Player
 var _scene_initializer_module: WorldSceneInitializerModule
 var _overlay_module: WorldOverlayModule
+var _run_outcome_module: WorldRunOutcomeModule
 var _overlay_mount: Control
 var _debug_panel: Control
 var _grid_coords_label: Label
@@ -69,6 +71,7 @@ func _ready() -> void:
 	_resolve_world_nodes()
 	_rebuild_overlay_registry()
 	_configure_overlay_module()
+	_configure_run_outcome_module()
 	_setup_game_state_machine()
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
@@ -91,6 +94,7 @@ func _resolve_world_nodes() -> void:
 	_player = get_node_or_null(NODE_PLAYER) as Player
 	_scene_initializer_module = get_node_or_null(NODE_SCENE_INITIALIZER_MODULE) as WorldSceneInitializerModule
 	_overlay_module = get_node_or_null(NODE_OVERLAY_MODULE) as WorldOverlayModule
+	_run_outcome_module = get_node_or_null(NODE_RUN_OUTCOME_MODULE) as WorldRunOutcomeModule
 	_overlay_mount = get_node_or_null(NODE_OVERLAY_MOUNT) as Control
 	_debug_panel = get_node_or_null(NODE_DEBUG_PANEL) as Control
 	_grid_coords_label = get_node_or_null(NODE_GRID_COORDS_LABEL) as Label
@@ -123,6 +127,17 @@ func _configure_overlay_module() -> void:
 		_overlay_module.restart_requested.connect(_on_overlay_restart_requested)
 	if not _overlay_module.return_to_title_requested.is_connected(_on_overlay_return_to_title_requested):
 		_overlay_module.return_to_title_requested.connect(_on_overlay_return_to_title_requested)
+
+
+func _configure_run_outcome_module() -> void:
+	if _run_outcome_module == null:
+		return
+
+	_run_outcome_module.configure(enable_cell_end_conditions, success_goal_cell, failure_goal_cell)
+	if not _run_outcome_module.success_reached.is_connected(_on_run_outcome_success_reached):
+		_run_outcome_module.success_reached.connect(_on_run_outcome_success_reached)
+	if not _run_outcome_module.failure_reached.is_connected(_on_run_outcome_failure_reached):
+		_run_outcome_module.failure_reached.connect(_on_run_outcome_failure_reached)
 
 
 func _add_world_environment() -> void:
@@ -321,6 +336,8 @@ func go_to_menu() -> void:
 
 func start_gameplay() -> void:
 	_run_is_resolved = false
+	if _run_outcome_module != null:
+		_run_outcome_module.reset_run()
 	_set_game_state(GAME_STATE_GAMEPLAY)
 	_refresh_grid_coordinates_overlay()
 
@@ -481,23 +498,14 @@ func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -
 	_refresh_minimap_overlay(new_state.cell)
 	_collect_enemies()
 
-	if not enable_cell_end_conditions:
-		return
-
 	if not is_gameplay_state_active():
 		return
 
-	if _run_is_resolved:
+	if _is_run_resolved():
 		return
 
-	if new_state.cell == success_goal_cell:
-		_run_is_resolved = true
-		finish_with_success()
-		return
-
-	if new_state.cell == failure_goal_cell:
-		_run_is_resolved = true
-		finish_with_failure()
+	_evaluate_run_outcome(new_state.cell)
+	if _is_run_resolved():
 		return
 
 	if _try_trigger_combat():
@@ -508,9 +516,41 @@ func _on_player_action_completed(_cmd: GridCommand.Type, new_state: GridState) -
 
 
 func _on_enemy_action_completed(_cmd: GridCommand.Type, _new_state: GridState, _enemy) -> void:
-	if not is_gameplay_state_active() or _run_is_resolved:
+	if not is_gameplay_state_active() or _is_run_resolved():
 		return
 	_try_trigger_combat()
+
+
+func _evaluate_run_outcome(cell: Vector2i) -> void:
+	if _run_outcome_module != null:
+		_run_outcome_module.evaluate(cell)
+		return
+
+	if not enable_cell_end_conditions or _run_is_resolved:
+		return
+
+	if cell == success_goal_cell:
+		_run_is_resolved = true
+		finish_with_success()
+		return
+
+	if cell == failure_goal_cell:
+		_run_is_resolved = true
+		finish_with_failure()
+
+
+func _is_run_resolved() -> bool:
+	if _run_outcome_module != null:
+		return _run_outcome_module.is_resolved()
+	return _run_is_resolved
+
+
+func _on_run_outcome_success_reached() -> void:
+	finish_with_success()
+
+
+func _on_run_outcome_failure_reached() -> void:
+	finish_with_failure()
 
 
 func _wire_enemies() -> void:
