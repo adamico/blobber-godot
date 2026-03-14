@@ -1,8 +1,6 @@
 class_name Player
 extends GridEntity
 
-const MovementOutcomeData := preload("res://models/movement_outcome.gd")
-
 signal blocked_feedback_cue(cmd: GridCommand.Type)
 
 @export var eye_height := 0.6
@@ -13,13 +11,38 @@ signal blocked_feedback_cue(cmd: GridCommand.Type)
 
 var _active_tween: Tween
 var _blocked_tween: Tween
+var inventory
 
 
 func _ready() -> void:
     super()
+    if inventory == null:
+        inventory = Inventory.new()
     _sync_camera_height()
     movement_controller.action_started.connect(_on_action_started)
     movement_controller.movement_outcome.connect(_on_movement_outcome)
+
+
+func add_item(item) -> bool:
+    if not (item is ItemData):
+        return false
+    if inventory == null:
+        return false
+    return inventory.add_item(item)
+
+
+func remove_item(item) -> bool:
+    if not (item is ItemData):
+        return false
+    if inventory == null:
+        return false
+    return inventory.remove_item(item)
+
+
+func use_item(index: int) -> bool:
+    if inventory == null:
+        return false
+    return inventory.use_item(index, stats)
 
 
 func pause_exploration_commands() -> void:
@@ -113,10 +136,10 @@ func _on_movement_outcome(outcome) -> void:
     if movement_config == null or not movement_config.blocked_feedback_enabled:
         return
 
-    if outcome.outcome_type != MovementOutcomeData.TYPE_BLOCKED:
+    if outcome.outcome_type != MovementOutcome.TYPE_BLOCKED:
         return
 
-    if outcome.phase != MovementOutcomeData.PHASE_DECISION:
+    if outcome.phase != MovementOutcome.PHASE_DECISION:
         return
 
     _play_blocked_feedback(outcome.command)

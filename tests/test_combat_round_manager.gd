@@ -1,10 +1,8 @@
 extends GutTest
 
-const CombatRoundManagerClass := preload("res://models/combat/combat_round_manager.gd")
-
 
 func _spawn_manager() -> CombatRoundManager:
-	var manager := CombatRoundManagerClass.new() as CombatRoundManager
+	var manager := CombatRoundManager.new()
 	add_child_autofree(manager)
 	return manager
 

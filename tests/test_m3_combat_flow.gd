@@ -14,6 +14,8 @@ func _spawn_enemy_at(cell: Vector2i, facing: GridDefinitions.Facing = GridDefini
 	var enemy := ENEMY_SCENE.instantiate() as Enemy
 	enemy.initial_cell = cell
 	enemy.initial_facing = facing
+	if enemy.stats == null:
+		enemy.stats = CharacterStats.new()
 	return enemy
 
 
@@ -85,7 +87,7 @@ func test_combat_win_returns_to_gameplay_and_resumes_exploration() -> void:
 
 	assert_eq(world.current_game_state(), &"gameplay")
 	assert_false(world.has_active_overlay())
-	assert_true(player.execute_action(&"move_forward"))
+	assert_true(player.execute_action(&"turn_left"))
 
 
 func test_combat_loss_transitions_to_failure_state() -> void:

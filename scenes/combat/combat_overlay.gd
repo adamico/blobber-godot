@@ -11,7 +11,7 @@ var _world: Node
 
 
 func _ready() -> void:
-	_world = get_tree().current_scene
+	_world = _resolve_world_context()
 	if _btn_attack != null and not _btn_attack.pressed.is_connected(_on_attack_pressed):
 		_btn_attack.pressed.connect(_on_attack_pressed)
 	if _btn_defend != null and not _btn_defend.pressed.is_connected(_on_defend_pressed):
@@ -33,7 +33,9 @@ func request_overlay_focus() -> void:
 
 func _refresh_view() -> void:
 	if _world == null:
-		return
+		_world = _resolve_world_context()
+		if _world == null:
+			return
 
 	var player_stats: CharacterStats = null
 	if _world.has_method("get_player_stats"):
@@ -65,6 +67,16 @@ func _refresh_view() -> void:
 	_btn_defend.disabled = not combat_active
 	_btn_use_item.disabled = not combat_active
 	_status_label.text = "Choose an action" if combat_active else "Waiting..."
+
+
+func _resolve_world_context() -> Node:
+	var cursor: Node = self
+	while cursor != null:
+		if cursor.has_method("get_player_stats") and cursor.has_method("submit_combat_intent"):
+			return cursor
+		cursor = cursor.get_parent()
+
+	return get_tree().current_scene
 
 
 func _on_attack_pressed() -> void:
