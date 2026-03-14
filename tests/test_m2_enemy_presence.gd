@@ -95,7 +95,7 @@ func test_step_echo_enemy_ai_ticks_after_player_action() -> void:
 	assert_eq(enemy.grid_state.cell, Vector2i(0, -1))
 
 
-func test_combat_input_submits_intent_and_round_returns_to_gameplay() -> void:
+func test_combat_input_submits_intent_and_round_continues_when_enemy_alive() -> void:
 	var world := _spawn_world()
 	var player := world.get_node_or_null("Player") as Player
 	assert_not_null(player)
@@ -114,8 +114,8 @@ func test_combat_input_submits_intent_and_round_returns_to_gameplay() -> void:
 	_press_world_action(world, &"combat_attack")
 	await _wait_frames(1)
 
-	assert_eq(world.current_game_state(), &"gameplay")
-	assert_false(world.has_active_overlay())
+	assert_eq(world.current_game_state(), &"combat")
+	assert_eq(world.active_overlay_kind(), &"combat")
 
 
 func test_combat_attack_can_kill_enemy_and_exit_combat() -> void:
