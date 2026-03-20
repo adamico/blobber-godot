@@ -90,4 +90,4 @@ func test_compliance_camera_yaw_remains_cardinal_during_mixed_script() -> void:
 	for cmd in script:
 		assert_true(player.execute_command(cmd))
 		assert_true(_is_cardinal(camera.global_rotation_degrees.y), "Camera yaw must remain cardinal")
-		assert_eq(camera.global_position, player.global_position + Vector3(0.0, player.eye_height, 0.0), "Camera must stay first-person centered")
+		assert_eq(camera.global_position, player.global_position + Vector3(0.0, player.camera_height, 0.0), "Camera must stay first-person centered")

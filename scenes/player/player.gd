@@ -3,7 +3,8 @@ extends GridEntity
 
 signal blocked_feedback_cue(cmd: GridCommand.Type)
 
-@export var eye_height := 0.6
+@export var camera_height := 0.5
+@export var camera_retreat_distance := 0.279
 @export var input_actions_enabled := true
 @export var debug_log_input_actions := false
 
@@ -152,7 +153,7 @@ func _set_yaw(value: float) -> void:
 func _sync_camera_height() -> void:
     if _camera == null:
         return
-    _camera.position = Vector3(0.0, eye_height, 0.0)
+    _camera.position = Vector3(0.0, camera_height, camera_retreat_distance)
 
 
 func _resolve_target_yaw(start_yaw: float, base_target_yaw: float) -> float:

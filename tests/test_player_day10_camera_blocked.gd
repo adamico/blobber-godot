@@ -70,7 +70,7 @@ func test_camera_position_canonical_after_blocked_forward() -> void:
 	var camera := _get_camera(player)
 	assert_eq(
 		camera.global_position,
-		player.global_position + Vector3(0.0, player.eye_height, 0.0),
+		player.global_position + Vector3(0.0, player.camera_height, 0.0),
 		"camera must sit at eye height over canonical position after bump"
 	)
 
@@ -107,7 +107,7 @@ func test_camera_position_canonical_after_blocked_strafe() -> void:
 	var camera := _get_camera(player)
 	assert_eq(
 		camera.global_position,
-		player.global_position + Vector3(0.0, player.eye_height, 0.0),
+		player.global_position + Vector3(0.0, player.camera_height, 0.0),
 		"camera must stay at eye height after blocked strafe"
 	)
 
@@ -136,6 +136,6 @@ func test_camera_follows_turn_after_prior_blocked_forward() -> void:
 	)
 	assert_eq(
 		camera.global_position,
-		player.global_position + Vector3(0.0, player.eye_height, 0.0),
+		player.global_position + Vector3(0.0, player.camera_height, 0.0),
 		"camera position must remain canonical after blocked-then-turn sequence"
 	)

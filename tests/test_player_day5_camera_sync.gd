@@ -41,7 +41,7 @@ func _is_cardinal_yaw(value: float) -> bool:
 func _assert_camera_centered(player: Player) -> void:
 	var camera := player.get_node_or_null("Camera3D") as Camera3D
 	assert_not_null(camera, "Player should provide a Camera3D child")
-	assert_eq(camera.global_position, player.global_position + Vector3(0.0, player.eye_height, 0.0), "Camera must remain centered on player eye height")
+	assert_eq(camera.global_position, player.global_position + Vector3(0.0, player.camera_height, 0.0), "Camera must remain centered on player eye height")
 
 
 func test_player_scene_has_camera3d_child() -> void:
@@ -52,9 +52,9 @@ func test_player_scene_has_camera3d_child() -> void:
 	assert_true(camera.current)
 
 
-func test_camera_uses_eye_height_offset() -> void:
+func test_camera_uses_camera_height_offset() -> void:
 	var player := _spawn_player()
-	player.eye_height = 1.25
+	player.camera_height = 1.25
 	player._apply_canonical_transform()
 
 	_assert_camera_centered(player)
