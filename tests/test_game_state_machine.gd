@@ -81,7 +81,13 @@ func test_gameover_overlay_restart_signal_returns_to_gameplay() -> void:
 
 	var overlay := world.get_node_or_null("OverlayLayer/OverlayMount/DefeatOverlay") as Control
 	assert_not_null(overlay)
+	var parent := world.get_parent()
 	overlay.emit_signal("restart_requested")
+	await get_tree().process_frame
+	await get_tree().process_frame
 
-	assert_eq(world.current_game_state(), &"gameplay")
-	assert_false(world.has_active_overlay())
+	assert_false(is_instance_valid(world))
+	var replacement := parent.get_node_or_null("Main") as Node3D
+	assert_not_null(replacement)
+	assert_eq(replacement.current_game_state(), &"gameplay")
+	assert_false(replacement.has_active_overlay())

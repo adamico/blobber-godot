@@ -171,7 +171,7 @@ func _on_round_resolved(_intents: Dictionary) -> void:
 			_finish_with_failure_fn.call()
 		return
 
-	var remaining_enemies := _alive_enemies()
+	var remaining_enemies := _alive_combatants()
 	if remaining_enemies.is_empty():
 		if _end_combat_fn.is_valid():
 			_end_combat_fn.call()
@@ -185,12 +185,13 @@ func _resolve_round_damage(intents: Dictionary) -> void:
 	if player_intent == GridCommand.Type.USE_ITEM:
 		_player.stats.heal(COMBAT_USE_ITEM_HEAL_AMOUNT)
 
+	var active_enemies := _alive_combatants()
 	if player_intent == GridCommand.Type.ATTACK:
-		var target := _find_player_attack_target(_alive_enemies())
+		var target := _find_player_attack_target(active_enemies)
 		if target != null and target.stats != null and _is_adjacent(_player, target):
 			target.stats.take_damage(_player.stats.attack)
 
-	for enemy in _alive_enemies():
+	for enemy in active_enemies:
 		var enemy_intent: Variant = intents.get(enemy, null)
 		if enemy_intent != GridCommand.Type.ATTACK:
 			continue
@@ -202,14 +203,18 @@ func _resolve_round_damage(intents: Dictionary) -> void:
 				incoming_damage = maxi(1, int(ceili(float(incoming_damage) / float(COMBAT_DEFEND_DIVISOR))))
 			_player.stats.take_damage(incoming_damage)
 
-	for enemy in _alive_enemies():
-		if enemy.stats != null and enemy.stats.is_dead():
-			enemy.queue_free()
+	# Keep defeated enemies alive until after test assertions and state transitions.
+	# Encounter/passability modules filter dead stats so they no longer influence gameplay.
 
 
-func _alive_enemies() -> Array:
+func _alive_combatants() -> Array:
 	var alive: Array = []
-	for enemy in _encounter_module.get_enemies():
+	if _combat_round_manager == null:
+		return alive
+
+	for enemy in _combat_round_manager.get_combatants():
+		if enemy == _player:
+			continue
 		if enemy == null:
 			continue
 		if enemy.stats == null or enemy.stats.is_dead():

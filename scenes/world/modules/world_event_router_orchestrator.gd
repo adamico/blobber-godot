@@ -2,7 +2,7 @@ extends Node
 class_name WorldEventRouterOrchestrator
 
 var _event_bus: WorldEventBus
-var _start_gameplay_fn: Callable
+var _restart_run_fn: Callable
 var _return_to_title_fn: Callable
 var _finish_with_success_fn: Callable
 var _finish_with_failure_fn: Callable
@@ -14,7 +14,7 @@ var _is_gameplay_state_active_fn: Callable
 
 func configure(
 		event_bus: WorldEventBus,
-		start_gameplay_fn: Callable,
+		restart_run_fn: Callable,
 		return_to_title_fn: Callable,
 		finish_with_success_fn: Callable,
 		finish_with_failure_fn: Callable,
@@ -23,7 +23,7 @@ func configure(
 		start_combat_fn: Callable,
 		is_gameplay_state_active_fn: Callable) -> void:
 	_event_bus = event_bus
-	_start_gameplay_fn = start_gameplay_fn
+	_restart_run_fn = restart_run_fn
 	_return_to_title_fn = return_to_title_fn
 	_finish_with_success_fn = finish_with_success_fn
 	_finish_with_failure_fn = finish_with_failure_fn
@@ -56,8 +56,8 @@ func _connect_bus() -> void:
 
 
 func _on_overlay_restart_requested() -> void:
-	if _start_gameplay_fn.is_valid():
-		_start_gameplay_fn.call()
+	if _restart_run_fn.is_valid():
+		_restart_run_fn.call()
 
 
 func _on_overlay_return_to_title_requested() -> void:
@@ -91,7 +91,7 @@ func _on_encounter_detected(encountered: Array) -> void:
 
 	print("[Combat] Triggered with %d encountered enemies" % encountered.size())
 	if _start_combat_fn.is_valid():
-		_start_combat_fn.call()
+		_start_combat_fn.call(encountered)
 
 
 func _is_gameplay_state_active() -> bool:

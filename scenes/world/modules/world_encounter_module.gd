@@ -70,6 +70,8 @@ func tick_step_echo() -> void:
 	for enemy in _enemies:
 		if enemy == null:
 			continue
+		if not _is_enemy_alive(enemy):
+			continue
 		enemy.tick_ai(_player)
 
 
@@ -82,6 +84,8 @@ func check_combat_trigger() -> bool:
 	var encountered: Array = []
 	for enemy in _enemies:
 		if enemy == null or enemy.grid_state == null:
+			continue
+		if not _is_enemy_alive(enemy):
 			continue
 		var delta: Vector2i = enemy.grid_state.cell - _player.grid_state.cell
 		var manhattan: int = absi(delta.x) + absi(delta.y)
@@ -103,3 +107,13 @@ func _enemy_cell_passable(enemy, cell: Vector2i) -> bool:
 
 func _on_enemy_action_completed(_cmd, _new_state, _enemy) -> void:
 	enemy_acted.emit()
+
+
+func _is_enemy_alive(enemy) -> bool:
+	if enemy == null:
+		return false
+	if not is_instance_valid(enemy):
+		return false
+	if enemy.stats == null:
+		return true
+	return not enemy.stats.is_dead()

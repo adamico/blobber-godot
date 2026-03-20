@@ -22,6 +22,8 @@ func is_player_cell_passable(cell: Vector2i, enemies: Array) -> bool:
 	for enemy in enemies:
 		if enemy == null or enemy.grid_state == null:
 			continue
+		if enemy.stats != null and enemy.stats.is_dead():
+			continue
 		if enemy.grid_state.cell == cell:
 			return false
 
@@ -34,6 +36,8 @@ func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array) -> bool:
 
 	for other in enemies:
 		if other == null or other == enemy or other.grid_state == null:
+			continue
+		if other.stats != null and other.stats.is_dead():
 			continue
 		if other.grid_state.cell == cell:
 			return false

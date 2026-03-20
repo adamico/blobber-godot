@@ -7,7 +7,6 @@ extends Node3D
 @export var show_minimap_overlay := false
 @export_enum("Menu", "Gameplay", "GameOverFailure", "GameOverSuccess") var initial_game_state := "Gameplay"
 @export var enable_cell_end_conditions := true
-@export var success_goal_cell := Vector2i(2, -2)
 @export var failure_goal_cell := Vector2i(-2, 2)
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
@@ -174,10 +173,12 @@ func is_combat_state_active() -> bool:
 	return _state_orchestrator.is_combat_state_active()
 
 
-func start_combat() -> void:
+func start_combat(encountered_enemies: Array = []) -> void:
 	_state_orchestrator.start_combat()
 	_policy_orchestrator.open_overlay(OVERLAY_COMBAT, true, true)
-	_turn_orchestrator.start_combat_round(get_enemies())
+	if encountered_enemies.is_empty():
+		encountered_enemies = get_enemies()
+	_turn_orchestrator.start_combat_round(encountered_enemies)
 
 
 func end_combat() -> void:
@@ -194,8 +195,9 @@ func start_gameplay() -> void:
 	_composition_orchestrator.configure_run_outcome(
 			_run_outcome_module,
 			enable_cell_end_conditions,
-			success_goal_cell,
-			failure_goal_cell)
+			failure_goal_cell,
+			self,
+			Callable(self, "get_enemies"))
 	_state_orchestrator.start_gameplay()
 	_refresh_grid_coordinates_overlay()
 
@@ -239,6 +241,45 @@ func return_to_title() -> void:
 		return
 
 	get_tree().change_scene_to_file(title_scene_path)
+
+
+func restart_current_run() -> void:
+	var tree := get_tree()
+	if tree == null:
+		return
+	if tree.current_scene == self:
+		tree.reload_current_scene()
+		return
+
+	var path := scene_file_path
+	if path.is_empty():
+		path = "res://scenes/world/main.tscn"
+
+	var packed_scene := load(path) as PackedScene
+	if packed_scene == null:
+		start_gameplay()
+		return
+	call_deferred("_deferred_restart_with_scene", packed_scene)
+
+
+func _deferred_restart_with_scene(packed_scene: PackedScene) -> void:
+	if packed_scene == null:
+		start_gameplay()
+		return
+
+	var parent := get_parent()
+	if parent == null:
+		start_gameplay()
+		return
+
+	var previous_name := name
+	name = "%s_old" % previous_name
+
+	var replacement := packed_scene.instantiate()
+	replacement.name = previous_name
+	parent.add_child(replacement)
+	parent.move_child(replacement, get_index())
+	queue_free()
 
 
 func get_player_stats() -> CharacterStats:

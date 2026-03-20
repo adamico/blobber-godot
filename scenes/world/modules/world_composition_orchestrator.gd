@@ -46,9 +46,8 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 		"toggle_minimap_overlay": Callable(world, "toggle_minimap_overlay"),
 		"close_active_overlay": Callable(world, "close_active_overlay"),
 		"enable_cell_end_conditions": world.get("enable_cell_end_conditions"),
-		"success_goal_cell": world.get("success_goal_cell"),
 		"failure_goal_cell": world.get("failure_goal_cell"),
-		"start_gameplay": Callable(world, "start_gameplay"),
+		"restart_current_run": Callable(world, "restart_current_run"),
 		"return_to_title": Callable(world, "return_to_title"),
 		"finish_with_success": Callable(world, "finish_with_success"),
 		"finish_with_failure": Callable(world, "finish_with_failure"),
@@ -92,10 +91,12 @@ func configure_modules(ctx: Dictionary) -> void:
 	if not overlay_module.return_to_title_requested.is_connected(event_bus.emit_overlay_return_to_title_requested):
 		overlay_module.return_to_title_requested.connect(event_bus.emit_overlay_return_to_title_requested)
 
-	run_outcome_module.configure(
+	run_outcome_module.call(
+			"configure",
 			ctx["enable_cell_end_conditions"],
-			ctx["success_goal_cell"],
-			ctx["failure_goal_cell"])
+			ctx["failure_goal_cell"],
+			root,
+			Callable(root, "get_enemies"))
 	run_outcome_module.reset_run()
 	if not run_outcome_module.success_reached.is_connected(event_bus.emit_run_outcome_success_reached):
 		run_outcome_module.success_reached.connect(event_bus.emit_run_outcome_success_reached)
@@ -151,7 +152,7 @@ func configure_modules(ctx: Dictionary) -> void:
 
 	event_router_orchestrator.configure(
 			event_bus,
-			ctx["start_gameplay"],
+			ctx["restart_current_run"],
 			ctx["return_to_title"],
 			ctx["finish_with_success"],
 			ctx["finish_with_failure"],
@@ -161,6 +162,6 @@ func configure_modules(ctx: Dictionary) -> void:
 			ctx["is_gameplay_state_active"])
 
 
-func configure_run_outcome(run_outcome_module: WorldRunOutcomeModule, enable_cell_end_conditions: bool, success_goal_cell: Vector2i, failure_goal_cell: Vector2i) -> void:
-	run_outcome_module.configure(enable_cell_end_conditions, success_goal_cell, failure_goal_cell)
+func configure_run_outcome(run_outcome_module: WorldRunOutcomeModule, enable_cell_end_conditions: bool, failure_goal_cell: Vector2i, world_root: Node3D, get_enemies_fn: Callable) -> void:
+	run_outcome_module.call("configure", enable_cell_end_conditions, failure_goal_cell, world_root, get_enemies_fn)
 	run_outcome_module.reset_run()
