@@ -21,22 +21,14 @@
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
 [ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="21_2g9jf"]
-[ext_resource type="Script" path="res://components/world_pickup.gd" id="22_5md0q"]
-[ext_resource type="Script" path="res://components/world_exit.gd" id="23_lh832"]
-[ext_resource type="Script" path="res://models/item_data.gd" id="24_wf6op"]
+[ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="22_5md0q"]
+[ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="23_lh832"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_exit_marker"]
-size = Vector3(0.6, 0.2, 0.6)
+[sub_resource type="Resource" id="27_potion_item"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_pickup_marker"]
 radius = 0.18
 height = 0.36
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_exit_marker"]
-albedo_color = Color(0.196078, 0.705882, 0.333333, 1)
-emission_enabled = true
-emission = Color(0.196078, 0.705882, 0.333333, 1)
-emission_energy_multiplier = 1.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pickup_marker"]
 albedo_color = Color(0.901961, 0.705882, 0.156863, 1)
@@ -44,12 +36,14 @@ emission_enabled = true
 emission = Color(0.901961, 0.705882, 0.156863, 1)
 emission_energy_multiplier = 1.2
 
-[sub_resource type="Resource" id="27_potion_item" script=ExtResource("24_wf6op")]
-item_name = "Field Tonic"
-description = "A small restorative left behind in the outer halls."
-stat_effect = {
-"heal": 3
-}
+[sub_resource type="BoxMesh" id="BoxMesh_exit_marker"]
+size = Vector3(0.6, 0.2, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_exit_marker"]
+albedo_color = Color(0.196078, 0.705882, 0.333333, 1)
+emission_enabled = true
+emission = Color(0.196078, 0.705882, 0.333333, 1)
+emission_energy_multiplier = 1.5
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -61,26 +55,25 @@ failure_goal_cell = Vector2i(-3, 2)
 debug_log_input_actions = false
 movement_config = ExtResource("3_tt8nk")
 
-[node name="FloorEnemy" parent="." instance=ExtResource("21_2g9jf")]
+[node name="FloorEnemy" parent="." unique_id=29647059 instance=ExtResource("21_2g9jf")]
 initial_cell = Vector2i(4, -1)
-initial_facing = 3
 
-[node name="PotionPickup" type="Node3D" parent="."]
+[node name="PotionPickup" type="Node3D" parent="." unique_id=11595592]
 script = ExtResource("22_5md0q")
 grid_cell = Vector2i(2, -2)
 item_data = SubResource("27_potion_item")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="PotionPickup"]
-position = Vector3(0, 0.18, 0)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PotionPickup" unique_id=911111264]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
 mesh = SubResource("SphereMesh_pickup_marker")
 surface_material_override/0 = SubResource("StandardMaterial3D_pickup_marker")
 
-[node name="FloorExit" type="Node3D" parent="."]
+[node name="FloorExit" type="Node3D" parent="." unique_id=577675068]
 script = ExtResource("23_lh832")
 grid_cell = Vector2i(6, -1)
 world_y = 0.05
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="FloorExit"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FloorExit" unique_id=1813182867]
 mesh = SubResource("BoxMesh_exit_marker")
 surface_material_override/0 = SubResource("StandardMaterial3D_exit_marker")
 
@@ -137,13 +130,13 @@ script = ExtResource("19_1n8yf")
 [node name="EventRouterOrchestrator" type="Node" parent="." unique_id=1166162658]
 script = ExtResource("20_v0w2m")
 
-[node name="AudioFootstep" type="AudioStreamPlayer" parent="."]
+[node name="AudioFootstep" type="AudioStreamPlayer" parent="." unique_id=1489583776]
 
-[node name="AudioCombatHit" type="AudioStreamPlayer" parent="."]
+[node name="AudioCombatHit" type="AudioStreamPlayer" parent="." unique_id=1253202549]
 
-[node name="AudioPickup" type="AudioStreamPlayer" parent="."]
+[node name="AudioPickup" type="AudioStreamPlayer" parent="." unique_id=749166422]
 
-[node name="AudioDeath" type="AudioStreamPlayer" parent="."]
+[node name="AudioDeath" type="AudioStreamPlayer" parent="." unique_id=1103540765]
 
 [node name="OverlayLayer" type="CanvasLayer" parent="." unique_id=189560015]
 
