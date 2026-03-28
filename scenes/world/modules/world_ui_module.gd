@@ -173,6 +173,13 @@ func _rebuild_inventory_ui() -> void:
 		slot.custom_minimum_size = Vector2(32, 32)
 		if i < items.size():
 			var item: ItemData = items[i]
+			
+			# Add Tooltip
+			var tooltip := item.item_name
+			if item.properties.size() > 0:
+				tooltip += "\nProperties: " + ", ".join(item.properties)
+			slot.tooltip_text = tooltip
+			
 			if item.texture != null:
 				var tex_rect := TextureRect.new()
 				tex_rect.texture = item.texture

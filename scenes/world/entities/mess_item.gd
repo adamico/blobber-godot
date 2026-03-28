@@ -20,6 +20,7 @@ func matches_cell(cell: Vector2i) -> bool:
 
 func interact(player: Player) -> void:
 	if player.add_item(item_data):
+		print("[MessItem] Picked up %s" % item_data.item_name)
 		queue_free()
 
 
