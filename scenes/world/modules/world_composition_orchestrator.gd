@@ -89,6 +89,8 @@ func configure_modules(ctx: Dictionary) -> void:
 			event_bus.emit_overlay_return_to_title_requested,
 		)
 
+	overlay_module.configure(ctx["overlay_mount"], ctx["overlay_scene_paths"])
+
 	run_outcome_module.call(
 		"configure",
 		ctx["enable_cell_end_conditions"],

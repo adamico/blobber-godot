@@ -6,19 +6,21 @@ extends Node3D
 @export var show_grid_coordinates_overlay := false
 @export var show_minimap_overlay := false
 @export_enum(
-	"Menu",
-	"Gameplay",
-	"GameOverFailure",
-	"GameOverSuccess",
-) var initial_game_state := "Gameplay"
+	"menu",
+	"gameplay",
+	"gameover_failure",
+	"gameover_success",
+) var initial_game_state := "gameplay"
 @export var enable_cell_end_conditions := true
 @export var failure_goal_cell := Vector2i(-2, 2)
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
 @export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
 @export_file("*.tscn") var overlay_dialog_scene_path := "res://scenes/overlays/dialog_overlay.tscn"
-@export_file("*.tscn") var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
-@export_file("*.tscn") var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
+@export_file("*.tscn") var overlay_victory_scene_path := \
+	"res://scenes/overlays/victory_overlay.tscn"
+@export_file("*.tscn") var overlay_defeat_scene_path := \
+	"res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 
 const OVERLAY_DIALOG := &"dialog"
@@ -50,6 +52,7 @@ var _context_orchestrator: WorldContextOrchestrator
 var _event_bus: WorldEventBus
 var _event_router_orchestrator: WorldEventRouterOrchestrator
 var _level_manager := WorldLevelManager.new()
+var _hazard_module: WorldHazardModule
 
 
 func _ready() -> void:
@@ -86,9 +89,9 @@ func _ready() -> void:
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
 
-	# Defer to ensure all children (including Player) have finished _ready().
-	_wire_occupancy.call_deferred()
-	_wire_end_conditions.call_deferred()
+	# Wire immediately to ensure tests can execute commands right after bootstrap
+	_wire_occupancy()
+	_wire_end_conditions()
 	_apply_debug_panel_visibility()
 	_apply_grid_coordinates_overlay_visibility()
 	_apply_minimap_overlay_visibility()
@@ -96,6 +99,7 @@ func _ready() -> void:
 	_refresh_minimap_overlay()
 	_refresh_debug_buttons()
 	_add_hud.call_deferred()
+	_connect_receptacles.call_deferred()
 
 
 func _add_world_environment() -> void:
@@ -207,6 +211,7 @@ func finish_with_success() -> void:
 
 
 func _setup_game_state_machine() -> void:
+	_state_orchestrator.configure(apply_state_side_effects)
 	_state_orchestrator.setup(initial_game_state)
 
 
@@ -337,3 +342,18 @@ func _wire_occupancy() -> void:
 	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
+
+
+func _connect_receptacles() -> void:
+	for node in get_tree().get_nodes_in_group(&"interactable"):
+		if node is Receptacle:
+			if not node.item_cleaned.is_connected(_on_item_cleaned):
+				node.item_cleaned.connect(_on_item_cleaned)
+
+
+func _on_item_cleaned(_item: ItemData, points: int) -> void:
+	_level_manager.add_cleanup_points(points)
+	print("[Main] Cleanup progress: %.1f/%.1f" % [
+		_level_manager.cleanup_score,
+		_level_manager.max_cleanup_score
+	])

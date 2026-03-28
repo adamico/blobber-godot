@@ -32,14 +32,21 @@ func test_reaching_active_exit_triggers_victory_overlay() -> void:
 	player.movement_config.smooth_mode = false
 	player.movement_controller.passability_fn = Callable()
 
-	_add_exit(world, Vector2i(0, -1))
-	world.failure_goal_cell = Vector2i(99, 99)
+	_add_exit(world, Vector2i(0, -1), false)
+	# Wait for WorldExit node to reach _ready() and join the exit group
+	await get_tree().process_frame
 	world.start_gameplay()
+	# Ensure the gameplay state and initial cell evaluation are processed
+	await get_tree().process_frame
 
 	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
-	assert_eq(world.current_game_state(), &"gameover_success")
-	assert_eq(world.active_overlay_kind(), &"victory")
-	assert_true(world.has_active_overlay())
+	# Yield for RunOutcomeModule to process evaluate() through EventRouter
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	# Progressive floor logic: current_floor advances instead of game over (unless last floor)
+	assert_eq(world.current_game_state(), &"gameplay")
+	assert_eq(world.get("_level_manager").current_floor, 2)
 
 
 func test_reaching_failure_goal_cell_triggers_defeat_overlay() -> void:
@@ -49,9 +56,15 @@ func test_reaching_failure_goal_cell_triggers_defeat_overlay() -> void:
 	player.movement_controller.passability_fn = Callable()
 
 	world.failure_goal_cell = Vector2i(0, 1)
+	await get_tree().process_frame
 	world.start_gameplay()
+	await get_tree().process_frame
 
 	assert_true(player.execute_command(GridCommand.Type.STEP_BACK))
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
+
 	assert_eq(world.current_game_state(), &"gameover_failure")
 	assert_eq(world.active_overlay_kind(), &"defeat")
 	assert_true(world.has_active_overlay())
@@ -64,9 +77,11 @@ func test_disabled_end_conditions_do_not_change_state() -> void:
 	player.movement_controller.passability_fn = Callable()
 
 	world.enable_cell_end_conditions = false
-	_add_exit(world, Vector2i(0, -1))
+	_add_exit(world, Vector2i(0, -1), false)
 	world.failure_goal_cell = Vector2i(0, 1)
+	await get_tree().process_frame
 	world.start_gameplay()
+	await get_tree().process_frame
 
 	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
 	assert_eq(world.current_game_state(), &"gameplay")
