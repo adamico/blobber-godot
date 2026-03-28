@@ -4,7 +4,7 @@ extends GridEntity
 signal blocked_feedback_cue(cmd: GridCommand.Type)
 
 @export var camera_height := 0.5
-@export var camera_retreat_distance := 0.0
+@export var camera_retreat_distance := 0.4
 @export var input_actions_enabled := true
 @export var debug_log_input_actions := false
 
