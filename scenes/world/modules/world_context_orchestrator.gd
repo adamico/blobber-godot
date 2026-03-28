@@ -23,7 +23,6 @@ func default_node_paths() -> Dictionary:
 		"debug_panel": "OverlayLayer/DebugPanel",
 		"grid_coords_label": "OverlayLayer/MinimapOverlay/GridCoordsLabel",
 		"minimap_overlay": "OverlayLayer/MinimapOverlay",
-		"btn_open_inventory": "OverlayLayer/DebugPanel/Margin/VBox/OpenInventory",
 		"btn_toggle_minimap": "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap",
 		"btn_close_overlay": "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay",
 	}
@@ -75,7 +74,6 @@ func build_required_modules_from_world(world: Node) -> Dictionary:
 
 func build_overlay_paths_from_world(world: Node) -> Dictionary:
 	return {
-		&"inventory": world.get("overlay_inventory_scene_path"),
 		&"dialog": world.get("overlay_dialog_scene_path"),
 		&"victory": world.get("overlay_victory_scene_path"),
 		&"defeat": world.get("overlay_defeat_scene_path"),

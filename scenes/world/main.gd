@@ -16,13 +16,11 @@ extends Node3D
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
 @export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
-@export_file("*.tscn") var overlay_inventory_scene_path := "res://scenes/inventory/inventory_overlay.tscn"
 @export_file("*.tscn") var overlay_dialog_scene_path := "res://scenes/overlays/dialog_overlay.tscn"
 @export_file("*.tscn") var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
 @export_file("*.tscn") var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 
-const OVERLAY_INVENTORY := &"inventory"
 const OVERLAY_DIALOG := &"dialog"
 const OVERLAY_VICTORY := &"victory"
 const OVERLAY_DEFEAT := &"defeat"
@@ -90,7 +88,6 @@ func _ready() -> void:
 
 	# Defer to ensure all children (including Player) have finished _ready().
 	_wire_occupancy.call_deferred()
-	_wire_enemies.call_deferred()
 	_wire_end_conditions.call_deferred()
 	_apply_debug_panel_visibility()
 	_apply_grid_coordinates_overlay_visibility()
@@ -98,7 +95,7 @@ func _ready() -> void:
 	_refresh_grid_coordinates_overlay()
 	_refresh_minimap_overlay()
 	_refresh_debug_buttons()
-	_add_hp_bar.call_deferred()
+	_add_hud.call_deferred()
 
 
 func _add_world_environment() -> void:
@@ -117,10 +114,6 @@ func has_active_overlay() -> bool:
 
 func active_overlay_kind() -> StringName:
 	return _overlay_module.active_overlay_kind()
-
-
-func open_inventory_overlay() -> void:
-	open_overlay(OVERLAY_INVENTORY)
 
 
 func open_dialog_overlay() -> void:
@@ -326,18 +319,12 @@ func _wire_end_conditions() -> void:
 
 	_player.movement_controller.action_completed.connect(_event_bus.emit_player_action_completed)
 
-
-func _wire_enemies() -> void:
-	if _player != null and _player.movement_controller != null:
-		_player.movement_controller.passability_fn = _is_player_cell_passable
-
-
 func _is_player_cell_passable(cell: Vector2i) -> bool:
 	return _grid_module.is_player_cell_passable(cell)
 
 
-func _add_hp_bar() -> void:
-	_ui_module.setup_hp_bar(get_node_or_null("OverlayLayer") as CanvasLayer)
+func _add_hud() -> void:
+	_ui_module.setup_stamina_and_inventory(get_node_or_null("OverlayLayer") as CanvasLayer)
 
 
 func _wire_occupancy() -> void:

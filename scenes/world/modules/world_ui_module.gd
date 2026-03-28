@@ -1,14 +1,15 @@
-extends Node
 class_name WorldUIModule
+extends Node
 
 var _player
 var _debug_panel: Control
 var _grid_coords_label: Label
 var _minimap_overlay: Control
-var _btn_open_inventory: Button
 var _btn_close_overlay: Button
-var _hp_bar: ProgressBar
+var _stamina_bar: ProgressBar
+var _slot_container: HBoxContainer
 var _show_minimap := false
+var _inventory: Inventory
 
 
 func configure(
@@ -16,47 +17,64 @@ func configure(
 		debug_panel: Control,
 		grid_coords_label: Label,
 		minimap_overlay: Control,
-		btn_inventory: Button,
-		btn_close: Button) -> void:
+		btn_close: Button,
+) -> void:
 	_player = player
 	_debug_panel = debug_panel
 	_grid_coords_label = grid_coords_label
 	_minimap_overlay = minimap_overlay
-	_btn_open_inventory = btn_inventory
 	_btn_close_overlay = btn_close
 
 
-func setup_hp_bar(overlay_layer: CanvasLayer) -> void:
+func setup_stamina_and_inventory(overlay_layer: CanvasLayer) -> void:
 	if _player == null or _player.stats == null or overlay_layer == null:
 		return
 
+	_inventory = _player.inventory
+
 	var panel := PanelContainer.new()
-	panel.name = "HPBarPanel"
+	panel.name = "HUDPanel"
 	panel.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	panel.position = Vector2(8.0, -8.0)
 	panel.grow_vertical = Control.GROW_DIRECTION_BEGIN
 
-	var hbox := HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 6)
-	panel.add_child(hbox)
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	panel.add_child(vbox)
+
+	var hbox_stam := HBoxContainer.new()
+	hbox_stam.add_theme_constant_override("separation", 6)
+	vbox.add_child(hbox_stam)
 
 	var label := Label.new()
-	label.text = "HP"
-	hbox.add_child(label)
+	label.text = "STA"
+	hbox_stam.add_child(label)
 
 	var bar := ProgressBar.new()
-	bar.name = "HPBar"
+	bar.name = "StaminaBar"
 	bar.custom_minimum_size = Vector2(120.0, 16.0)
 	bar.min_value = 0.0
-	bar.max_value = float(_player.stats.max_health)
-	bar.value = float(_player.stats.health)
+	bar.max_value = float(_player.stats.max_stamina)
+	bar.value = float(_player.stats.stamina)
 	bar.show_percentage = false
-	hbox.add_child(bar)
-	_hp_bar = bar
+	hbox_stam.add_child(bar)
+	_stamina_bar = bar
+
+	var hbox_inv := HBoxContainer.new()
+	hbox_inv.name = "InventorySlots"
+	hbox_inv.add_theme_constant_override("separation", 4)
+	vbox.add_child(hbox_inv)
+	_slot_container = hbox_inv
 
 	overlay_layer.add_child(panel)
-	_player.stats.damaged.connect(_on_player_damaged)
-	_player.stats.healed.connect(_on_player_healed)
+
+	_player.stats.stamina_changed.connect(_on_stamina_changed)
+	if _inventory != null:
+		_inventory.capacity_changed.connect(_on_capacity_changed)
+		_inventory.item_added.connect(_on_inventory_changed)
+		_inventory.item_removed.connect(_on_inventory_changed)
+		_inventory.item_used.connect(_on_inventory_changed)
+		_rebuild_inventory_ui()
 
 
 func apply_debug_panel_visibility(show: bool) -> void:
@@ -110,19 +128,48 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 
 
 func refresh_debug_buttons(overlay_open: bool) -> void:
-	if _btn_open_inventory != null:
-		_btn_open_inventory.disabled = overlay_open
 	if _btn_close_overlay != null:
 		_btn_close_overlay.disabled = not overlay_open
 
 
-func _on_player_damaged(_amount: int, _old_health: int, new_health: int) -> void:
-	if _hp_bar == null:
+func _on_stamina_changed(_old_stamina: int, new_stamina: int) -> void:
+	if _stamina_bar == null:
 		return
-	_hp_bar.value = float(new_health)
+	_stamina_bar.value = float(new_stamina)
 
 
-func _on_player_healed(_amount: int, _old_health: int, new_health: int) -> void:
-	if _hp_bar == null:
+func _on_capacity_changed(_new_cap) -> void:
+	_rebuild_inventory_ui()
+
+
+func _on_inventory_changed(_item) -> void:
+	_rebuild_inventory_ui()
+
+
+func _rebuild_inventory_ui() -> void:
+	if _slot_container == null or _inventory == null:
 		return
-	_hp_bar.value = float(new_health)
+
+	for child in _slot_container.get_children():
+		child.queue_free()
+
+	var items = _inventory.get_items()
+	for i in range(_inventory.max_capacity):
+		var slot := Panel.new()
+		slot.custom_minimum_size = Vector2(32, 32)
+		if i < items.size():
+			var item: ItemData = items[i]
+			if item.texture != null:
+				var tex_rect := TextureRect.new()
+				tex_rect.texture = item.texture
+				tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+				slot.add_child(tex_rect)
+			else:
+				var lbl := Label.new()
+				lbl.text = "?"
+				lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+				lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				slot.add_child(lbl)
+		_slot_container.add_child(slot)

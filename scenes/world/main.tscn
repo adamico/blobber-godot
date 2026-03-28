@@ -193,10 +193,6 @@ text = "Day 11 debug controls"
 [node name="Divider" type="HSeparator" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122342]
 layout_mode = 2
 
-[node name="OpenInventory" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122336]
-layout_mode = 2
-text = "Open Inventory"
-
 [node name="ToggleMinimap" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122345]
 layout_mode = 2
 text = "Toggle Minimap"

@@ -1,6 +1,5 @@
-extends Node
-
 class_name WorldTurnOrchestrator
+extends Node
 
 const COMBAT_DEFEND_DIVISOR := 2
 const COMBAT_USE_ITEM_HEAL_AMOUNT := 2
@@ -58,11 +57,6 @@ func _collect_pickups(player_cell: Vector2i) -> void:
 		if not node.has_method("collect_if_player_on_cell"):
 			continue
 		node.call("collect_if_player_on_cell", _player, player_cell)
-
-
-func process_enemy_action() -> void:
-	if not _is_gameplay_active() or _run_outcome_module.is_resolved():
-		return
 
 
 func is_run_resolved() -> bool:

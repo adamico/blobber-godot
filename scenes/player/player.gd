@@ -12,8 +12,8 @@ signal blocked_feedback_cue(cmd: GridCommand.Type)
 
 var _active_tween: Tween
 var _blocked_tween: Tween
-var inventory
-
+var inventory: Inventory
+var _steps_since_last_drain: int = 0
 
 func _ready() -> void:
 	super()
@@ -22,6 +22,10 @@ func _ready() -> void:
 	_sync_camera_height()
 	movement_controller.action_started.connect(_on_action_started)
 	movement_controller.movement_outcome.connect(_on_movement_outcome)
+	if stats != null:
+		if not stats.stamina_changed.is_connected(_on_stamina_changed):
+			stats.stamina_changed.connect(_on_stamina_changed)
+		_on_stamina_changed(stats.stamina, stats.stamina)
 
 
 func add_item(item) -> bool:
@@ -134,6 +138,8 @@ func _on_action_completed(cmd: GridCommand.Type, new_state: GridState) -> void:
 	_active_tween = null
 
 	super(cmd, new_state)
+	
+	_tick_heavy_items()
 
 	if debug_log_input_actions:
 		print(
@@ -268,3 +274,46 @@ func _facing_to_name(facing: GridDefinitions.Facing) -> String:
 			return "WEST"
 		_:
 			return "UNKNOWN"
+
+func _on_stamina_changed(_old, new_stamina: int) -> void:
+	if movement_config == null or inventory == null or stats == null:
+		return
+	if new_stamina <= 0:
+		inventory.max_capacity = 1
+		movement_config.step_duration = 0.4
+	elif new_stamina <= float(stats.max_stamina) / 2.0:
+		inventory.max_capacity = 2
+		movement_config.step_duration = 0.2
+	else:
+		inventory.max_capacity = 3
+		movement_config.step_duration = 0.2
+	
+	_enforce_inventory_capacity()
+
+func _enforce_inventory_capacity() -> void:
+	if inventory == null: 
+		return
+	while inventory.size() > inventory.max_capacity:
+		var items = inventory.get_items()
+		if items.is_empty(): 
+			break
+		var item = items.back()
+		inventory.remove_item(item)
+		# Place logic here to drop item physically in the world.
+
+func _tick_heavy_items() -> void:
+	if inventory == null or stats == null: 
+		return
+	var has_heavy := false
+	for item in inventory.get_items():
+		if item is ItemData and item.has_property(&"heavy"):
+			has_heavy = true
+			break
+	
+	if has_heavy:
+		_steps_since_last_drain += 1
+		if _steps_since_last_drain >= 3:
+			stats.drain_stamina(1)
+			_steps_since_last_drain = 0
+	else:
+		_steps_since_last_drain = 0

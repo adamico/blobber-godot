@@ -40,10 +40,8 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 		"debug_panel": resolved_context.get("debug_panel"),
 		"grid_coords_label": resolved_context.get("grid_coords_label"),
 		"minimap_overlay": resolved_context.get("minimap_overlay"),
-		"btn_open_inventory": resolved_context.get("btn_open_inventory"),
 		"btn_toggle_minimap": resolved_context.get("btn_toggle_minimap"),
 		"btn_close_overlay": resolved_context.get("btn_close_overlay"),
-		"open_inventory_overlay": Callable(world, "open_inventory_overlay"),
 		"toggle_minimap_overlay": Callable(world, "toggle_minimap_overlay"),
 		"close_active_overlay": Callable(world, "close_active_overlay"),
 		"enable_cell_end_conditions": world.get("enable_cell_end_conditions"),
@@ -78,9 +76,8 @@ func configure_modules(ctx: Dictionary) -> void:
 	var policy_orchestrator := ctx["policy_orchestrator"] as WorldPolicyOrchestrator
 	var input_orchestrator := ctx["input_orchestrator"] as WorldInputOrchestrator
 	var event_bus := ctx["event_bus"] as WorldEventBus
-	var event_router_orchestrator := ctx["event_router_orchestrator"] as WorldEventRouterOrchestrator
-
-	overlay_module.configure(ctx["overlay_mount"], ctx["overlay_scene_paths"])
+	var event_router_orchestrator := \
+		ctx["event_router_orchestrator"] as WorldEventRouterOrchestrator
 	if not overlay_module.restart_requested.is_connected(event_bus.emit_overlay_restart_requested):
 		overlay_module.restart_requested.connect(event_bus.emit_overlay_restart_requested)
 	if not overlay_module.return_to_title_requested.is_connected(
@@ -111,7 +108,6 @@ func configure_modules(ctx: Dictionary) -> void:
 		ctx["debug_panel"],
 		ctx["grid_coords_label"],
 		ctx["minimap_overlay"],
-		ctx["btn_open_inventory"],
 		ctx["btn_close_overlay"],
 	)
 
@@ -129,14 +125,11 @@ func configure_modules(ctx: Dictionary) -> void:
 		player,
 		overlay_module,
 		ui_module,
-		ctx["btn_open_inventory"],
 	)
 
 	input_orchestrator.configure(
-		ctx["btn_open_inventory"],
 		ctx["btn_toggle_minimap"],
 		ctx["btn_close_overlay"],
-		ctx["open_inventory_overlay"],
 		ctx["toggle_minimap_overlay"],
 		ctx["close_active_overlay"],
 	)
