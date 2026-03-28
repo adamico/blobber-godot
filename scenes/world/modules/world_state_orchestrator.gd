@@ -3,7 +3,7 @@ class_name WorldStateOrchestrator
 
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
-const GAME_STATE_COMBAT := &"combat"
+const GAME_STATE_DIALOG := &"dialog"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 
@@ -34,15 +34,15 @@ func is_gameplay_state_active() -> bool:
 	return current_game_state() == GAME_STATE_GAMEPLAY
 
 
-func is_combat_state_active() -> bool:
-	return current_game_state() == GAME_STATE_COMBAT
+func is_dialog_state_active() -> bool:
+	return current_game_state() == GAME_STATE_DIALOG
 
 
-func start_combat() -> void:
-	set_state(GAME_STATE_COMBAT)
+func open_dialog() -> void:
+	set_state(GAME_STATE_DIALOG)
 
 
-func end_combat() -> void:
+func close_dialog() -> void:
 	set_state(GAME_STATE_GAMEPLAY)
 
 
@@ -71,8 +71,8 @@ func set_state(state_name: StringName) -> void:
 			_game_state_machine.to_menu()
 		GAME_STATE_GAMEPLAY:
 			_game_state_machine.to_gameplay()
-		GAME_STATE_COMBAT:
-			_game_state_machine.to_combat()
+		GAME_STATE_DIALOG:
+			_game_state_machine.to_dialog()
 		GAME_STATE_GAMEOVER_FAILURE:
 			_game_state_machine.to_gameover_failure()
 		GAME_STATE_GAMEOVER_SUCCESS:

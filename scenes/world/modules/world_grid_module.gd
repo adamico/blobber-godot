@@ -1,4 +1,5 @@
 extends Node
+
 class_name WorldGridModule
 
 var _occupancy: GridOccupancyMap
@@ -8,40 +9,16 @@ func build_occupancy(grid_map: GridMap, wall_layer: int, auto_align: bool) -> vo
 	if auto_align:
 		_align_gridmap_to_player_grid(grid_map)
 	_occupancy = GridOccupancyMap.from_grid_map(grid_map, wall_layer)
-	print("[Occupancy] layer=%d wired %d blocked cells" % [wall_layer, _occupancy._blocked.size()])
+	print("[Occupancy] layer=%d wired" % [wall_layer])
 
 
 func occupancy() -> GridOccupancyMap:
 	return _occupancy
 
 
-func is_player_cell_passable(cell: Vector2i, enemies: Array) -> bool:
+func is_player_cell_passable(cell: Vector2i) -> bool:
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
-
-	for enemy in enemies:
-		if enemy == null or enemy.grid_state == null:
-			continue
-		if enemy.stats != null and enemy.stats.is_dead():
-			continue
-		if enemy.grid_state.cell == cell:
-			return false
-
-	return true
-
-
-func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array) -> bool:
-	if _occupancy != null and not _occupancy.is_passable(cell):
-		return false
-
-	for other in enemies:
-		if other == null or other == enemy or other.grid_state == null:
-			continue
-		if other.stats != null and other.stats.is_dead():
-			continue
-		if other.grid_state.cell == cell:
-			return false
-
 	return true
 
 

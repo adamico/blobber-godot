@@ -8,7 +8,6 @@
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
-[ext_resource type="Script" uid="uid://03i62ypeorjw" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
 [ext_resource type="Script" uid="uid://cbe2icf2qc83t" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
 [ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
@@ -20,7 +19,6 @@
 [ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
 [ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="21_2g9jf"]
 [ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="22_5md0q"]
 [ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="23_lh832"]
 
@@ -54,9 +52,6 @@ failure_goal_cell = Vector2i(-3, 2)
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
 debug_log_input_actions = false
 movement_config = ExtResource("3_tt8nk")
-
-[node name="FloorEnemy" parent="." unique_id=29647059 instance=ExtResource("21_2g9jf")]
-initial_cell = Vector2i(4, -1)
 
 [node name="PotionPickup" type="Node3D" parent="." unique_id=11595592]
 script = ExtResource("22_5md0q")
@@ -93,9 +88,6 @@ script = ExtResource("7_tk6wu")
 
 [node name="GridModule" type="Node" parent="." unique_id=1945126429]
 script = ExtResource("8_aln2x")
-
-[node name="EncounterModule" type="Node" parent="." unique_id=904532739]
-script = ExtResource("9_obv6f")
 
 [node name="RunOutcomeModule" type="Node" parent="." unique_id=1100726258]
 script = ExtResource("10_q8k5u")
@@ -204,14 +196,6 @@ layout_mode = 2
 [node name="OpenInventory" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122336]
 layout_mode = 2
 text = "Open Inventory"
-
-[node name="OpenCombat" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122337]
-layout_mode = 2
-text = "Open Combat"
-
-[node name="OpenTown" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122338]
-layout_mode = 2
-text = "Open Town"
 
 [node name="ToggleMinimap" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122345]
 layout_mode = 2

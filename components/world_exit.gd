@@ -17,8 +17,8 @@ func matches_cell(cell: Vector2i) -> bool:
 	return cell == grid_cell
 
 
-func can_trigger(has_remaining_enemies: bool) -> bool:
-	return not requires_cleared_floor or not has_remaining_enemies
+func can_trigger() -> bool:
+	return not requires_cleared_floor
 
 
 func _sync_world_position() -> void:

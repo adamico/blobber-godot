@@ -5,27 +5,30 @@ extends Node3D
 @export var show_debug_panel := false
 @export var show_grid_coordinates_overlay := false
 @export var show_minimap_overlay := false
-@export_enum("Menu", "Gameplay", "GameOverFailure", "GameOverSuccess") var initial_game_state := "Gameplay"
+@export_enum(
+	"Menu",
+	"Gameplay",
+	"GameOverFailure",
+	"GameOverSuccess",
+) var initial_game_state := "Gameplay"
 @export var enable_cell_end_conditions := true
 @export var failure_goal_cell := Vector2i(-2, 2)
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
 @export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
 @export_file("*.tscn") var overlay_inventory_scene_path := "res://scenes/inventory/inventory_overlay.tscn"
-@export_file("*.tscn") var overlay_combat_scene_path := "res://scenes/combat/combat_placeholder.tscn"
-@export_file("*.tscn") var overlay_town_scene_path := "res://scenes/town/town_overlay.tscn"
+@export_file("*.tscn") var overlay_dialog_scene_path := "res://scenes/overlays/dialog_overlay.tscn"
 @export_file("*.tscn") var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
 @export_file("*.tscn") var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 
 const OVERLAY_INVENTORY := &"inventory"
-const OVERLAY_COMBAT := &"combat"
-const OVERLAY_TOWN := &"town"
+const OVERLAY_DIALOG := &"dialog"
 const OVERLAY_VICTORY := &"victory"
 const OVERLAY_DEFEAT := &"defeat"
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
-const GAME_STATE_COMBAT := &"combat"
+const GAME_STATE_DIALOG := &"dialog"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_TURN_ORCHESTRATOR := "TurnOrchestrator"
@@ -37,7 +40,6 @@ var _player: Player
 var _scene_initializer_module: WorldSceneInitializerModule
 var _overlay_module: WorldOverlayModule
 var _grid_module: WorldGridModule
-var _encounter_module: WorldEncounterModule
 var _run_outcome_module: WorldRunOutcomeModule
 var _ui_module: WorldUIModule
 var _state_orchestrator: WorldStateOrchestrator
@@ -49,14 +51,20 @@ var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
 var _event_bus: WorldEventBus
 var _event_router_orchestrator: WorldEventRouterOrchestrator
+var _level_manager := WorldLevelManager.new()
+
 
 func _ready() -> void:
+	add_child(_level_manager)
 	_context_orchestrator = get_node_or_null(NODE_CONTEXT_ORCHESTRATOR) as WorldContextOrchestrator
 	if _context_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_CONTEXT_ORCHESTRATOR)
 		return
 
-	var resolved_context := _context_orchestrator.resolve_world_context(self, _context_orchestrator.default_node_paths())
+	var resolved_context := _context_orchestrator.resolve_world_context(
+		self,
+		_context_orchestrator.default_node_paths(),
+	)
 	_context_orchestrator.assign_resolved_world_context(self, resolved_context)
 	if _turn_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_TURN_ORCHESTRATOR)
@@ -68,11 +76,12 @@ func _ready() -> void:
 		push_error("Missing required node: %s" % NODE_COMPOSITION_ORCHESTRATOR)
 		return
 	if not _composition_orchestrator.bootstrap_world(
-			self,
-			_context_orchestrator,
-			_context_orchestrator.build_required_modules_from_world(self),
-			_context_orchestrator.build_overlay_paths_from_world(self),
-			_composition_orchestrator.build_bootstrap_context(self, resolved_context)):
+		self,
+		_context_orchestrator,
+		_context_orchestrator.build_required_modules_from_world(self),
+		_context_orchestrator.build_overlay_paths_from_world(self),
+		_composition_orchestrator.build_bootstrap_context(self, resolved_context),
+	):
 		return
 	_input_orchestrator.wire_overlay_controls()
 	_setup_game_state_machine()
@@ -91,6 +100,7 @@ func _ready() -> void:
 	_refresh_debug_buttons()
 	_add_hp_bar.call_deferred()
 
+
 func _add_world_environment() -> void:
 	_scene_initializer_module.add_environment(self)
 
@@ -99,9 +109,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _input_orchestrator.handle_unhandled_input(event, is_gameplay_state_active()):
 		get_viewport().set_input_as_handled()
 		return
-
-	if _turn_orchestrator.handle_combat_input(event):
-		get_viewport().set_input_as_handled()
 
 
 func has_active_overlay() -> bool:
@@ -116,12 +123,8 @@ func open_inventory_overlay() -> void:
 	open_overlay(OVERLAY_INVENTORY)
 
 
-func open_combat_overlay() -> void:
-	open_overlay(OVERLAY_COMBAT)
-
-
-func open_town_overlay() -> void:
-	open_overlay(OVERLAY_TOWN)
+func open_dialog_overlay() -> void:
+	open_overlay(OVERLAY_DIALOG)
 
 
 func open_overlay(kind: StringName) -> void:
@@ -169,21 +172,18 @@ func is_gameplay_state_active() -> bool:
 	return _state_orchestrator.is_gameplay_state_active()
 
 
-func is_combat_state_active() -> bool:
-	return _state_orchestrator.is_combat_state_active()
+func is_dialog_state_active() -> bool:
+	return _state_orchestrator.is_dialog_state_active()
 
 
-func start_combat(encountered_enemies: Array = []) -> void:
-	_state_orchestrator.start_combat()
-	_policy_orchestrator.open_overlay(OVERLAY_COMBAT, true, true)
-	if encountered_enemies.is_empty():
-		encountered_enemies = get_enemies()
-	_turn_orchestrator.start_combat_round(encountered_enemies)
+func open_dialog() -> void:
+	_state_orchestrator.open_dialog()
+	_policy_orchestrator.open_overlay(OVERLAY_DIALOG, true, true)
 
 
-func end_combat() -> void:
-	_state_orchestrator.end_combat()
-	if active_overlay_kind() == OVERLAY_COMBAT:
+func close_dialog() -> void:
+	_state_orchestrator.close_dialog()
+	if active_overlay_kind() == OVERLAY_DIALOG:
 		_overlay_module.close_overlay()
 
 
@@ -193,11 +193,11 @@ func go_to_menu() -> void:
 
 func start_gameplay() -> void:
 	_composition_orchestrator.configure_run_outcome(
-			_run_outcome_module,
-			enable_cell_end_conditions,
-			failure_goal_cell,
-			self,
-			Callable(self, "get_enemies"))
+		_run_outcome_module,
+		enable_cell_end_conditions,
+		failure_goal_cell,
+		self,
+	)
 	_state_orchestrator.start_gameplay()
 	_refresh_grid_coordinates_overlay()
 
@@ -207,7 +207,10 @@ func finish_with_failure() -> void:
 
 
 func finish_with_success() -> void:
-	_state_orchestrator.finish_with_success()
+	if _level_manager.current_floor >= _level_manager.max_floor:
+		_state_orchestrator.finish_with_success()
+	else:
+		_level_manager.advance_floor()
 
 
 func _setup_game_state_machine() -> void:
@@ -216,25 +219,28 @@ func _setup_game_state_machine() -> void:
 
 func apply_state_side_effects() -> void:
 	_policy_orchestrator.apply_state_side_effects(
-			current_game_state(),
-			is_gameplay_state_active(),
-			is_combat_state_active(),
-			OVERLAY_COMBAT,
-			OVERLAY_VICTORY,
-			OVERLAY_DEFEAT,
-			GAME_STATE_GAMEOVER_FAILURE,
-			GAME_STATE_GAMEOVER_SUCCESS)
+		current_game_state(),
+		is_gameplay_state_active(),
+		is_dialog_state_active(),
+		OVERLAY_DIALOG,
+		OVERLAY_VICTORY,
+		OVERLAY_DEFEAT,
+		GAME_STATE_GAMEOVER_FAILURE,
+		GAME_STATE_GAMEOVER_SUCCESS,
+	)
 
 
 func apply_movement_preset(preset_name: String = "") -> bool:
 	var result := _movement_orchestrator.apply_preset(
-			_player,
-			preset_name,
-			active_movement_preset,
-			preset_snap_path,
-			preset_smooth_path)
+		_player,
+		preset_name,
+		active_movement_preset,
+		preset_snap_path,
+		preset_smooth_path,
+	)
 	active_movement_preset = String(result.get("active_name", active_movement_preset))
 	return bool(result.get("ok", false))
+
 
 func return_to_title() -> void:
 	if title_scene_path.is_empty():
@@ -309,32 +315,25 @@ func rest_player() -> bool:
 	return true
 
 
-func submit_combat_intent(cmd: GridCommand.Type) -> bool:
-	return _turn_orchestrator.submit_player_combat_intent(cmd)
-
-
 func _wire_end_conditions() -> void:
 	if _player == null or _player.movement_controller == null:
 		return
 
-	if _player.movement_controller.action_completed.is_connected(_event_bus.emit_player_action_completed):
+	if _player.movement_controller.action_completed.is_connected(
+		_event_bus.emit_player_action_completed,
+	):
 		return
 
 	_player.movement_controller.action_completed.connect(_event_bus.emit_player_action_completed)
 
 
 func _wire_enemies() -> void:
-	_encounter_module.wire_enemies()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
 
 
-func get_enemies() -> Array:
-	return _encounter_module.get_enemies()
-
-
 func _is_player_cell_passable(cell: Vector2i) -> bool:
-	return _grid_module.is_player_cell_passable(cell, get_enemies())
+	return _grid_module.is_player_cell_passable(cell)
 
 
 func _add_hp_bar() -> void:

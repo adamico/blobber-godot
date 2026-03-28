@@ -6,8 +6,6 @@ var _debug_panel: Control
 var _grid_coords_label: Label
 var _minimap_overlay: Control
 var _btn_open_inventory: Button
-var _btn_open_combat: Button
-var _btn_open_town: Button
 var _btn_close_overlay: Button
 var _hp_bar: ProgressBar
 var _show_minimap := false
@@ -19,16 +17,12 @@ func configure(
 		grid_coords_label: Label,
 		minimap_overlay: Control,
 		btn_inventory: Button,
-		btn_combat: Button,
-		btn_town: Button,
 		btn_close: Button) -> void:
 	_player = player
 	_debug_panel = debug_panel
 	_grid_coords_label = grid_coords_label
 	_minimap_overlay = minimap_overlay
 	_btn_open_inventory = btn_inventory
-	_btn_open_combat = btn_combat
-	_btn_open_town = btn_town
 	_btn_close_overlay = btn_close
 
 
@@ -118,10 +112,6 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 func refresh_debug_buttons(overlay_open: bool) -> void:
 	if _btn_open_inventory != null:
 		_btn_open_inventory.disabled = overlay_open
-	if _btn_open_combat != null:
-		_btn_open_combat.disabled = overlay_open
-	if _btn_open_town != null:
-		_btn_open_town.disabled = overlay_open
 	if _btn_close_overlay != null:
 		_btn_close_overlay.disabled = not overlay_open
 
