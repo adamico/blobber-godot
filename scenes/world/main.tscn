@@ -22,6 +22,9 @@
 [ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="22_5md0q"]
 [ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="23_lh832"]
 [ext_resource type="Script" uid="uid://d3qe0cpyhu8s5" path="res://scenes/world/modules/world_hazard_module.gd" id="24_hazard"]
+[ext_resource type="Script" uid="uid://b10bh27xb47hu" path="res://scenes/world/entities/mess_item.gd" id="25_mess"]
+[ext_resource type="Script" uid="uid://bu6q7xjiqc5fv" path="res://scenes/world/entities/receptacle.gd" id="26_receptacle"]
+[ext_resource type="Script" uid="uid://byv8rocfw75ex" path="res://resources/item_data.gd" id="27_item_data_script"]
 
 [sub_resource type="Resource" id="27_potion_item"]
 
@@ -43,6 +46,11 @@ albedo_color = Color(0.196078, 0.705882, 0.333333, 1)
 emission_enabled = true
 emission = Color(0.196078, 0.705882, 0.333333, 1)
 emission_energy_multiplier = 1.5
+
+[sub_resource type="Resource" id="28_test_mess_item"]
+script = ExtResource("27_item_data_script")
+item_name = &"Biohazard Waste"
+properties = Array[StringName]([&"volatile"])
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -72,6 +80,17 @@ world_y = 0.05
 [node name="MeshInstance3D" type="MeshInstance3D" parent="FloorExit" unique_id=1813182867]
 mesh = SubResource("BoxMesh_exit_marker")
 surface_material_override/0 = SubResource("StandardMaterial3D_exit_marker")
+
+[node name="DemoMess" type="Sprite3D" parent="." unique_id=999111001]
+script = ExtResource("25_mess")
+item_data = SubResource("28_test_mess_item")
+grid_cell = Vector2i(0, -1)
+
+[node name="DemoReceptacle" type="Node3D" parent="." unique_id=999111002]
+script = ExtResource("26_receptacle")
+receptacle_type = 1
+required_property = &"volatile"
+grid_cell = Vector2i(1, -1)
 
 [node name="GridMap" type="GridMap" parent="." unique_id=1476284130]
 mesh_library = ExtResource("4_6r0uj")
@@ -199,9 +218,11 @@ layout_mode = 2
 
 [node name="ToggleMinimap" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122345]
 layout_mode = 2
+focus_mode = 0
 text = "Toggle Minimap"
 
 [node name="CloseOverlay" type="Button" parent="OverlayLayer/DebugPanel/Margin/VBox" unique_id=211122339]
 layout_mode = 2
+focus_mode = 0
 disabled = true
 text = "Close Overlay"

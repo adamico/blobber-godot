@@ -329,15 +329,29 @@ func interact() -> bool:
 	if grid_state == null:
 		return false
 	
+	var current_cell := grid_state.cell
 	var facing_vec := GridDefinitions.facing_to_vec2i(grid_state.facing)
-	var target_cell := grid_state.cell + facing_vec
+	var target_cell := current_cell + facing_vec
 	
-	# Find interactables at target_cell
+	print("[Player] Interact triggered from %s facing %s" % [current_cell, target_cell])
+	
 	var interactables = get_tree().get_nodes_in_group(&"interactable")
+	
+	# Priority 1: Check target_cell (facing)
 	for obj in interactables:
 		if obj.has_method(&"matches_cell") and obj.call(&"matches_cell", target_cell):
 			if obj.has_method(&"interact"):
+				print("[Player] Found interaction at target_cell: %s" % obj.name)
+				obj.call(&"interact", self)
+				return true
+				
+	# Priority 2: Check current_cell (standing on)
+	for obj in interactables:
+		if obj.has_method(&"matches_cell") and obj.call(&"matches_cell", current_cell):
+			if obj.has_method(&"interact"):
+				print("[Player] Found interaction at current_cell: %s" % obj.name)
 				obj.call(&"interact", self)
 				return true
 	
+	print("[Player] No interactable found.")
 	return false

@@ -34,6 +34,22 @@ func test_pickup_mess_item() -> void:
 	assert_eq(player.inventory.get_items()[0].item_name, "Biohazard")
 	assert_true(mess.is_queued_for_deletion())
 
+func test_pickup_mess_item_current_cell() -> void:
+	var player := _spawn_player()
+	var item_data := _make_item("Biohazard", [&"volatile"])
+	
+	var mess := MessItem.new()
+	mess.item_data = item_data
+	mess.grid_cell = Vector2i(0, 0)
+	add_child_autofree(mess)
+	
+	player.grid_state.cell = Vector2i(0, 0)
+	
+	assert_eq(player.inventory.size(), 0)
+	assert_true(player.interact())
+	assert_eq(player.inventory.size(), 1)
+	assert_true(mess.is_queued_for_deletion())
+
 func test_receptacle_cleanup() -> void:
 	var player := _spawn_player()
 	var item_data := _make_item("Trash", [&"flammable"])

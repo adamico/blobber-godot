@@ -317,14 +317,28 @@ func perform_interaction() -> void:
 	if _player == null:
 		return
 		
+	var current_cell := _player.grid_state.cell
+	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+	var target_cell := current_cell + facing_vec
+	
+	print("[Main] perform_interaction triggered from %s facing %s" % [current_cell, target_cell])
+	
 	# 1. Player-driven entity interaction (pickups, receptacles)
 	var interact_occurred := _player.interact()
 	
 	# 2. Module-driven grid interaction (hazards)
 	if not interact_occurred and _hazard_module != null:
-		var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
-		var target_cell := _player.grid_state.cell + facing_vec
-		_hazard_module.interact(_player, target_cell)
+		# Check target cell first
+		if _hazard_module.interact(_player, target_cell):
+			print("[Main] Found hazard interaction at target_cell: %s" % target_cell)
+			return
+		# Check current cell next
+		if _hazard_module.interact(_player, current_cell):
+			print("[Main] Found hazard interaction at current_cell: %s" % current_cell)
+			return
+	
+	if not interact_occurred:
+		print("[Main] No interaction occurred.")
 
 
 func _wire_end_conditions() -> void:
