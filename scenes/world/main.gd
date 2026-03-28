@@ -313,6 +313,20 @@ func rest_player() -> bool:
 	return true
 
 
+func perform_interaction() -> void:
+	if _player == null:
+		return
+		
+	# 1. Player-driven entity interaction (pickups, receptacles)
+	var interact_occurred := _player.interact()
+	
+	# 2. Module-driven grid interaction (hazards)
+	if not interact_occurred and _hazard_module != null:
+		var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+		var target_cell := _player.grid_state.cell + facing_vec
+		_hazard_module.interact(_player, target_cell)
+
+
 func _wire_end_conditions() -> void:
 	if _player == null or _player.movement_controller == null:
 		return
@@ -330,6 +344,7 @@ func _is_player_cell_passable(cell: Vector2i) -> bool:
 
 func _add_hud() -> void:
 	_ui_module.setup_stamina_and_inventory(get_node_or_null("OverlayLayer") as CanvasLayer)
+	_ui_module.refresh_cleanup_score(_level_manager.cleanup_score, _level_manager.max_cleanup_score)
 
 
 func _wire_occupancy() -> void:
@@ -353,6 +368,7 @@ func _connect_receptacles() -> void:
 
 func _on_item_cleaned(_item: ItemData, points: int) -> void:
 	_level_manager.add_cleanup_points(points)
+	_ui_module.refresh_cleanup_score(_level_manager.cleanup_score, _level_manager.max_cleanup_score)
 	print("[Main] Cleanup progress: %.1f/%.1f" % [
 		_level_manager.cleanup_score,
 		_level_manager.max_cleanup_score

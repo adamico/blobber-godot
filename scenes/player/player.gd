@@ -69,7 +69,7 @@ func execute_action(action: StringName) -> bool:
 		return false
 
 	if cmd == GridCommand.Type.INTERACT:
-		return _interact()
+		return interact()
 
 	var executed := execute_command(cmd as GridCommand.Type)
 	if debug_log_input_actions:
@@ -325,7 +325,7 @@ func _tick_heavy_items() -> void:
 		_steps_since_last_drain = 0
 
 
-func _interact() -> bool:
+func interact() -> bool:
 	if grid_state == null:
 		return false
 	

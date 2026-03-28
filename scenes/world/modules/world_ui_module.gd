@@ -8,6 +8,7 @@ var _minimap_overlay: Control
 var _btn_close_overlay: Button
 var _stamina_bar: ProgressBar
 var _slot_container: HBoxContainer
+var _cleanup_label: Label
 var _show_minimap := false
 var _inventory: Inventory
 
@@ -65,6 +66,12 @@ func setup_stamina_and_inventory(overlay_layer: CanvasLayer) -> void:
 	hbox_inv.add_theme_constant_override("separation", 4)
 	vbox.add_child(hbox_inv)
 	_slot_container = hbox_inv
+
+	var lbl_clean := Label.new()
+	lbl_clean.name = "CleanupLabel"
+	lbl_clean.text = "Clean: 0%"
+	vbox.add_child(lbl_clean)
+	_cleanup_label = lbl_clean
 
 	overlay_layer.add_child(panel)
 
@@ -130,6 +137,13 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 func refresh_debug_buttons(overlay_open: bool) -> void:
 	if _btn_close_overlay != null:
 		_btn_close_overlay.disabled = not overlay_open
+
+
+func refresh_cleanup_score(score: float, max_score: float) -> void:
+	if _cleanup_label == null:
+		return
+	var pct := (score / max_score) * 100.0
+	_cleanup_label.text = "Clean: %d%%" % int(pct)
 
 
 func _on_stamina_changed(_old_stamina: int, new_stamina: int) -> void:

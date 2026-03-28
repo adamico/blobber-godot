@@ -54,6 +54,7 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 		"process_player_action": Callable(world.get("_turn_orchestrator"), "process_player_action"),
 		"on_state_side_effects": Callable(world, "apply_state_side_effects"),
 		"is_gameplay_state_active": Callable(world, "is_gameplay_state_active"),
+		"perform_interaction": Callable(world, "perform_interaction"),
 	}
 
 
@@ -137,6 +138,7 @@ func configure_modules(ctx: Dictionary) -> void:
 		ctx["btn_close_overlay"],
 		ctx["toggle_minimap_overlay"],
 		ctx["close_active_overlay"],
+		ctx["perform_interaction"],
 	)
 
 	event_router_orchestrator.configure(

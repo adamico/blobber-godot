@@ -7,6 +7,7 @@ var _btn_close_overlay: Button
 
 var _toggle_minimap_fn: Callable
 var _close_overlay_fn: Callable
+var _interact_fn: Callable
 
 
 func configure(
@@ -14,11 +15,13 @@ func configure(
 		btn_close_overlay: Button,
 		toggle_minimap_fn: Callable,
 		close_overlay_fn: Callable,
+		interact_fn: Callable = Callable(),
 ) -> void:
 	_btn_toggle_minimap = btn_toggle_minimap
 	_btn_close_overlay = btn_close_overlay
 	_toggle_minimap_fn = toggle_minimap_fn
 	_close_overlay_fn = close_overlay_fn
+	_interact_fn = interact_fn
 
 
 func wire_overlay_controls() -> void:
@@ -41,5 +44,10 @@ func handle_unhandled_input(event: InputEvent, gameplay_active: bool) -> bool:
 	if event.is_action_pressed("close_overlay") or event.is_action_pressed("ui_cancel"):
 		_close_overlay_fn.call()
 		return true
+
+	if event.is_action_pressed("interact"):
+		if _interact_fn.is_valid():
+			_interact_fn.call()
+			return true
 
 	return false

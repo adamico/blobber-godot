@@ -3,6 +3,9 @@ extends Node3D
 
 signal item_cleaned(item: ItemData, points: int)
 
+enum Type { DISPOSAL, SMELTER, RITUAL }
+
+@export var receptacle_type: Type = Type.DISPOSAL
 @export var required_property: StringName = &""
 @export var grid_cell: Vector2i = Vector2i.ZERO
 
@@ -36,4 +39,13 @@ func _sync_position() -> void:
 
 func _play_cleanup_feedback() -> void:
 	# Placeholder for future visual/audio feedback
-	print("[Receptacle] Item cleaned!")
+	var msg := "Item cleaned!"
+	match receptacle_type:
+		Type.DISPOSAL:
+			msg = "Item disposed of!"
+		Type.SMELTER:
+			msg = "Item incinerated!"
+		Type.RITUAL:
+			msg = "Item purified!"
+	
+	print("[Receptacle] %s" % msg)
