@@ -11,4 +11,5 @@ enum Type {
     ATTACK,
     DEFEND,
     USE_ITEM,
+    INTERACT,
 }

@@ -68,6 +68,9 @@ func execute_action(action: StringName) -> bool:
 	if cmd == INVALID_COMMAND:
 		return false
 
+	if cmd == GridCommand.Type.INTERACT:
+		return _interact()
+
 	var executed := execute_command(cmd as GridCommand.Type)
 	if debug_log_input_actions:
 		print(
@@ -97,7 +100,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
-func _apply_canonical_transform() -> void:
+func apply_canonical_transform() -> void:
 	super()
 	_sync_camera_height()
 
@@ -188,6 +191,7 @@ func _find_pressed_action(event: InputEvent) -> StringName:
 		&"move_right",
 		&"turn_left",
 		&"turn_right",
+		&"interact",
 	]
 
 	for action in actions:
@@ -258,6 +262,8 @@ func _command_for_action(action: StringName) -> int:
 			return GridCommand.Type.TURN_LEFT
 		&"turn_right":
 			return GridCommand.Type.TURN_RIGHT
+		&"interact":
+			return GridCommand.Type.INTERACT
 		_:
 			return INVALID_COMMAND
 
@@ -317,3 +323,21 @@ func _tick_heavy_items() -> void:
 			_steps_since_last_drain = 0
 	else:
 		_steps_since_last_drain = 0
+
+
+func _interact() -> bool:
+	if grid_state == null:
+		return false
+	
+	var facing_vec := GridDefinitions.facing_to_vec2i(grid_state.facing)
+	var target_cell := grid_state.cell + facing_vec
+	
+	# Find interactables at target_cell
+	var interactables = get_tree().get_nodes_in_group(&"interactable")
+	for obj in interactables:
+		if obj.has_method(&"matches_cell") and obj.call(&"matches_cell", target_cell):
+			if obj.has_method(&"interact"):
+				obj.call(&"interact", self)
+				return true
+	
+	return false

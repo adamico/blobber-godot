@@ -3,17 +3,22 @@ extends GutTest
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 
 
-func _spawn_player(smooth_mode: bool = false, step_duration: float = 0.03, turn_duration: float = 0.02) -> Player:
+func _spawn_player(
+		smooth_mode: bool = false,
+		step_duration: float = 0.1,
+		turn_duration: float = 0.08,
+) -> Player:
 	var player: Player = PLAYER_SCENE.instantiate()
-	add_child_autofree(player)
+	player.movement_config = preload("res://resources/movement_config.tres").duplicate()
 	player.movement_config.smooth_mode = smooth_mode
 	player.movement_config.step_duration = step_duration
 	player.movement_config.turn_duration = turn_duration
+	add_child_autofree(player)
 	return player
 
 
 func _wait_until_not_busy(player: Player, max_frames: int = 180) -> void:
-	for _i in range(max_frames):
+	for i in range(max_frames):
 		if not player.movement_controller.is_busy:
 			return
 		await get_tree().process_frame
@@ -78,7 +83,11 @@ func test_transform_sync_after_command() -> void:
 	var player := _spawn_player()
 
 	var executed := player.execute_command(GridCommand.Type.STEP_FORWARD)
-	var expected_pos := GridMapper.cell_to_world(player.grid_state.cell, player.movement_config.cell_size, 0.0)
+	var expected_pos := GridMapper.cell_to_world(
+		player.grid_state.cell,
+		player.movement_config.cell_size,
+		0.0,
+	)
 
 	assert_true(executed)
 	assert_eq(player.global_position, expected_pos)

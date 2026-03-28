@@ -1,3 +1,4 @@
+class_name GameOverOverlay
 extends Control
 
 signal restart_requested

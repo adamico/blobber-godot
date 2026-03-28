@@ -10,6 +10,7 @@ var _grid_module: WorldGridModule
 var _run_outcome_module: WorldRunOutcomeModule
 var _world_root: Node
 var _player
+var _hazard_module: WorldHazardModule
 var _is_gameplay_state_active_fn: Callable
 
 
@@ -17,6 +18,7 @@ func configure(
 		ui_module: WorldUIModule,
 		grid_module: WorldGridModule,
 		run_outcome_module: WorldRunOutcomeModule,
+		hazard_module: WorldHazardModule,
 		world_root: Node,
 		player,
 		is_gameplay_state_active_fn: Callable,
@@ -24,6 +26,7 @@ func configure(
 	_ui_module = ui_module
 	_grid_module = grid_module
 	_run_outcome_module = run_outcome_module
+	_hazard_module = hazard_module
 	_world_root = world_root
 	_player = player
 	_is_gameplay_state_active_fn = is_gameplay_state_active_fn
@@ -32,6 +35,10 @@ func configure(
 func process_player_action(new_state: GridState) -> void:
 	_ui_module.refresh_coords(new_state.cell)
 	_ui_module.refresh_minimap(new_state.cell, _grid_module.occupancy())
+	
+	if _hazard_module != null:
+		_hazard_module.evaluate_hazard(_player, new_state.cell)
+	
 	_collect_pickups(new_state.cell)
 
 	if not _is_gameplay_active():

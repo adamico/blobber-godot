@@ -21,6 +21,7 @@
 [ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
 [ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="22_5md0q"]
 [ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="23_lh832"]
+[ext_resource type="Script" uid="uid://d3qe0cpyhu8s5" path="res://scenes/world/modules/world_hazard_module.gd" id="24_hazard"]
 
 [sub_resource type="Resource" id="27_potion_item"]
 
@@ -121,6 +122,9 @@ script = ExtResource("19_1n8yf")
 
 [node name="EventRouterOrchestrator" type="Node" parent="." unique_id=1166162658]
 script = ExtResource("20_v0w2m")
+
+[node name="HazardModule" type="Node" parent="." unique_id=1781151490]
+script = ExtResource("24_hazard")
 
 [node name="AudioFootstep" type="AudioStreamPlayer" parent="." unique_id=1489583776]
 

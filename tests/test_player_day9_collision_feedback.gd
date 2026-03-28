@@ -1,10 +1,15 @@
 extends GutTest
 
 const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
+const MOVEMENT_CONFIG := preload("res://resources/movement_config.tres")
 
 
-func _make_controller(smooth_mode: bool = false, step_duration: float = 0.03, turn_duration: float = 0.02) -> MovementController:
-	var cfg := MovementConfig.new()
+func _make_controller(
+		smooth_mode: bool = false,
+		step_duration: float = 0.03,
+		turn_duration: float = 0.02,
+) -> MovementController:
+	var cfg = MOVEMENT_CONFIG.duplicate()
 	cfg.smooth_mode = smooth_mode
 	cfg.step_duration = step_duration
 	cfg.turn_duration = turn_duration
@@ -18,7 +23,7 @@ func _make_controller(smooth_mode: bool = false, step_duration: float = 0.03, tu
 
 
 func _wait_until_not_busy(mc: MovementController, max_frames: int = 240) -> void:
-	for _i in range(max_frames):
+	for i in range(max_frames):
 		if not mc.is_busy:
 			return
 		await get_tree().process_frame
@@ -27,6 +32,8 @@ func _wait_until_not_busy(mc: MovementController, max_frames: int = 240) -> void
 
 func _spawn_player() -> Player:
 	var player: Player = PLAYER_SCENE.instantiate()
+	player.movement_config = MOVEMENT_CONFIG.duplicate()
+	player.camera_retreat_distance = 0.0
 	add_child_autofree(player)
 	player.input_actions_enabled = true
 	player.movement_config.smooth_mode = false
@@ -51,8 +58,9 @@ func test_blocked_step_emits_decision_and_preserves_state() -> void:
 	mc.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var outcomes: Array[MovementOutcome] = []
-	mc.movement_outcome.connect(func(outcome: MovementOutcome) -> void:
-		outcomes.append(outcome)
+	mc.movement_outcome.connect(
+		func(outcome: MovementOutcome) -> void:
+			outcomes.append(outcome)
 	)
 
 	var ok := mc.execute_command(GridCommand.Type.STEP_FORWARD)
@@ -74,8 +82,9 @@ func test_snap_turn_emits_start_then_complete_with_stable_payload_shape() -> voi
 	var mc := _make_controller(false)
 
 	var outcomes: Array[MovementOutcome] = []
-	mc.movement_outcome.connect(func(outcome: MovementOutcome) -> void:
-		outcomes.append(outcome)
+	mc.movement_outcome.connect(
+		func(outcome: MovementOutcome) -> void:
+			outcomes.append(outcome)
 	)
 
 	var ok := mc.execute_command(GridCommand.Type.TURN_RIGHT)
@@ -99,8 +108,9 @@ func test_smooth_move_emits_start_then_complete() -> void:
 	var mc := _make_controller(true, 0.04, 0.03)
 
 	var phases: Array[String] = []
-	mc.movement_outcome.connect(func(outcome: MovementOutcome) -> void:
-		phases.append(outcome.phase)
+	mc.movement_outcome.connect(
+		func(outcome: MovementOutcome) -> void:
+			phases.append(outcome.phase)
 	)
 
 	assert_true(mc.execute_command(GridCommand.Type.STEP_FORWARD))
@@ -133,8 +143,9 @@ func _run_mixed_commands_with_seed(seed_value: int) -> Array[Dictionary]:
 	]
 
 	var event_log: Array[Dictionary] = []
-	mc.movement_outcome.connect(func(outcome: MovementOutcome) -> void:
-		event_log.append(_serialize_outcome(outcome))
+	mc.movement_outcome.connect(
+		func(outcome: MovementOutcome) -> void:
+			event_log.append(_serialize_outcome(outcome))
 	)
 
 	for _i in range(200):
@@ -174,7 +185,7 @@ func test_player_blocked_feedback_animates_and_returns_to_canonical_position() -
 	await get_tree().process_frame
 	assert_true(player.global_position.distance_to(canonical_pos) > 0.0001)
 
-	for _i in range(12):
+	for i in range(12):
 		await get_tree().process_frame
 
 	assert_eq(player.grid_state.cell, Vector2i.ZERO)
@@ -190,8 +201,9 @@ func test_player_blocked_strafe_emits_cue_without_positional_bump() -> void:
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var cue_commands: Array[GridCommand.Type] = []
-	player.blocked_feedback_cue.connect(func(cmd: GridCommand.Type) -> void:
-		cue_commands.append(cmd)
+	player.blocked_feedback_cue.connect(
+		func(cmd: GridCommand.Type) -> void:
+			cue_commands.append(cmd)
 	)
 
 	var canonical_pos := player.global_position

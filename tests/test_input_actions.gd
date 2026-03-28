@@ -8,9 +8,7 @@ func test_required_actions_exist() -> void:
         &"move_right",
         &"turn_left",
         &"turn_right",
-        &"combat_attack",
-        &"combat_defend",
-        &"combat_use_item",
+        &"interact",
     ]
 
     for action in required_actions:
@@ -24,11 +22,10 @@ func test_required_actions_have_at_least_one_binding() -> void:
         &"move_right",
         &"turn_left",
         &"turn_right",
-        &"combat_attack",
-        &"combat_defend",
-        &"combat_use_item",
+        &"interact",
     ]
 
     for action in required_actions:
-        var events := InputMap.action_get_events(action)
-        assert_gt(events.size(), 0, "Action has no bindings: %s" % [action])
+        if InputMap.has_action(action):
+            var events := InputMap.action_get_events(action)
+            assert_gt(events.size(), 0, "Action has no bindings: %s" % [action])

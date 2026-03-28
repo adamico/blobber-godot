@@ -14,6 +14,7 @@ const ACTION_SCRIPT: Array[StringName] = [
 
 func _spawn_player() -> Player:
 	var player: Player = PLAYER_SCENE.instantiate()
+	player.movement_config = preload("res://resources/movement_config.tres").duplicate()
 	add_child_autofree(player)
 	player.input_actions_enabled = true
 	player.debug_log_input_actions = false

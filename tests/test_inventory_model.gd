@@ -9,11 +9,10 @@ func _spawn_player() -> Player:
 	return player
 
 
-func _make_item(item_name: String, effects: Dictionary, item_type: int = ItemData.ItemType.CONSUMABLE):
+func _make_item(item_name: String, properties: Array[StringName] = []) -> ItemData:
 	var item := ItemData.new()
 	item.item_name = item_name
-	item.stat_effect = effects
-	item.item_type = item_type as ItemData.ItemType
+	item.properties = properties
 	return item
 
 
@@ -25,35 +24,47 @@ func test_player_initializes_inventory() -> void:
 
 func test_add_and_remove_item_through_player() -> void:
 	var player := _spawn_player()
-	var potion: Variant = _make_item("Potion", {"heal": 2})
+	var trash := _make_item("Trash", [&"messy"])
 
-	assert_true(player.add_item(potion))
+	assert_true(player.add_item(trash))
 	assert_eq(player.inventory.size(), 1)
-	assert_true(player.remove_item(potion))
+	assert_true(player.remove_item(trash))
 	assert_eq(player.inventory.size(), 0)
 
 
-func test_use_consumable_heals_and_is_removed() -> void:
+func test_inventory_capacity_scaling() -> void:
 	var player := _spawn_player()
-	player.stats.take_damage(5)
-	assert_eq(player.stats.health, 5)
+	player.inventory.max_capacity = 3
 
-	var potion: Variant = _make_item("Potion", {"heal": 3})
-	player.add_item(potion)
+	var item1 := _make_item("Item1")
+	var item2 := _make_item("Item2")
+	var item3 := _make_item("Item3")
 
-	assert_true(player.use_item(0))
-	assert_eq(player.stats.health, 8)
-	assert_eq(player.inventory.size(), 0)
+	player.add_item(item1)
+	player.add_item(item2)
+	player.add_item(item3)
+
+	assert_eq(player.inventory.size(), 3)
+
+	# Simulate stamina drop to 50%
+	player.inventory.max_capacity = 2
+	# Force enforcement
+	player.call(&"_enforce_inventory_capacity")
+
+	assert_eq(player.inventory.size(), 2)
+	assert_eq(player.inventory.get_items()[0], item1)
+	assert_eq(player.inventory.get_items()[1], item2)
 
 
-func test_use_item_can_modify_combat_stats() -> void:
+func test_add_item_at_capacity_returns_false() -> void:
 	var player := _spawn_player()
-	var tonic: Variant = _make_item("Tonic", {"attack": 2, "defence": 1}, ItemData.ItemType.EQUIPMENT)
-	player.add_item(tonic)
+	player.inventory.max_capacity = 1
 
-	assert_true(player.use_item(0))
-	assert_eq(player.stats.attack, 4)
-	assert_eq(player.stats.defence, 1)
+	var item1 := _make_item("Item1")
+	var item2 := _make_item("Item2")
+
+	assert_true(player.add_item(item1))
+	assert_false(player.add_item(item2))
 	assert_eq(player.inventory.size(), 1)
 
 

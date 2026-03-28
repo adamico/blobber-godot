@@ -36,6 +36,7 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 		"input_orchestrator": world.get("_input_orchestrator"),
 		"event_bus": world.get("_event_bus"),
 		"event_router_orchestrator": world.get("_event_router_orchestrator"),
+		"hazard_module": world.get("_hazard_module"),
 		"overlay_mount": resolved_context.get("overlay_mount"),
 		"debug_panel": resolved_context.get("debug_panel"),
 		"grid_coords_label": resolved_context.get("grid_coords_label"),
@@ -56,10 +57,10 @@ func build_bootstrap_context(world: Node3D, resolved_context: Dictionary) -> Dic
 	}
 
 
-func assert_required_modules(root: Node, required_nodes: Dictionary) -> bool:
+func assert_required_modules(_root: Node, required_nodes: Dictionary) -> bool:
 	for node_name in required_nodes.keys():
 		if required_nodes[node_name] == null:
-			root.push_error("Missing required node: %s" % String(node_name))
+			push_error("Missing required node: %s" % String(node_name))
 			return false
 	return true
 
@@ -78,6 +79,7 @@ func configure_modules(ctx: Dictionary) -> void:
 	var event_bus := ctx["event_bus"] as WorldEventBus
 	var event_router_orchestrator := \
 		ctx["event_router_orchestrator"] as WorldEventRouterOrchestrator
+	var hazard_module := ctx["hazard_module"] as WorldHazardModule
 	if not overlay_module.restart_requested.is_connected(event_bus.emit_overlay_restart_requested):
 		overlay_module.restart_requested.connect(event_bus.emit_overlay_restart_requested)
 	if not overlay_module.return_to_title_requested.is_connected(
@@ -116,6 +118,7 @@ func configure_modules(ctx: Dictionary) -> void:
 		ui_module,
 		grid_module,
 		run_outcome_module,
+		hazard_module,
 		root,
 		player,
 		ctx["is_gameplay_state_active"],

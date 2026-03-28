@@ -25,6 +25,7 @@ func default_node_paths() -> Dictionary:
 		"minimap_overlay": "OverlayLayer/MinimapOverlay",
 		"btn_toggle_minimap": "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap",
 		"btn_close_overlay": "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay",
+		"hazard_module": "HazardModule",
 	}
 
 
@@ -51,6 +52,7 @@ func assign_resolved_world_context(world: Node, resolved: Dictionary) -> void:
 	world.set("_movement_orchestrator", resolved.get("movement_orchestrator"))
 	world.set("_event_bus", resolved.get("event_bus"))
 	world.set("_event_router_orchestrator", resolved.get("event_router_orchestrator"))
+	world.set("_hazard_module", resolved.get("hazard_module"))
 
 
 func build_required_modules_from_world(world: Node) -> Dictionary:
@@ -69,6 +71,7 @@ func build_required_modules_from_world(world: Node) -> Dictionary:
 		"EventBus": world.get("_event_bus"),
 		"EventRouterOrchestrator": world.get("_event_router_orchestrator"),
 		"ContextOrchestrator": world.get("_context_orchestrator"),
+		"HazardModule": world.get("_hazard_module"),
 	}
 
 

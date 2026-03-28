@@ -25,7 +25,7 @@ func _ready() -> void:
 		stats = CharacterStats.new()
 
 	grid_state = GridState.new(initial_cell, initial_facing)
-	_apply_canonical_transform()
+	apply_canonical_transform()
 
 	movement_controller = MovementController.new()
 	movement_controller.grid_state = grid_state
@@ -57,7 +57,7 @@ func resume_commands() -> void:
 	_drain_queued_command()
 
 
-func _apply_canonical_transform() -> void:
+func apply_canonical_transform() -> void:
 	if grid_state == null or movement_config == null:
 		return
 	var world_pos := GridMapper.cell_to_world(grid_state.cell, movement_config.cell_size, 0.0)
@@ -68,7 +68,7 @@ func _apply_canonical_transform() -> void:
 # Virtual — subclasses must call super()
 func _on_action_completed(cmd: GridCommand.Type, new_state: GridState) -> void:
 	grid_state = new_state
-	_apply_canonical_transform()
+	apply_canonical_transform()
 	command_completed.emit(cmd, new_state)
 	_drain_queued_command()
 

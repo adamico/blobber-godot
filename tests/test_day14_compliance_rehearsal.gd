@@ -6,6 +6,8 @@ const CARDINAL_YAWS := [0.0, 90.0, 180.0, 270.0]
 
 func _spawn_player() -> Player:
 	var player := PLAYER_SCENE.instantiate() as Player
+	player.movement_config = preload("res://resources/movement_config.tres").duplicate()
+	player.camera_retreat_distance = 0.0
 	add_child_autofree(player)
 	player.movement_config.smooth_mode = false
 	return player
@@ -45,12 +47,19 @@ func test_compliance_grid_commands_move_exactly_one_cell_or_noop_when_blocked() 
 		assert_eq(manhattan, 1, "Traversal command must move exactly one grid cell")
 
 	player.grid_state = GridState.new(Vector2i.ZERO, GridDefinitions.Facing.NORTH)
-	player._apply_canonical_transform()
+	player.apply_canonical_transform()
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var blocked_before := player.grid_state.cell
-	assert_false(player.execute_command(GridCommand.Type.STEP_FORWARD), "Blocked forward step must no-op")
-	assert_eq(player.grid_state.cell, blocked_before, "Blocked forward step must preserve grid cell")
+	assert_false(
+		player.execute_command(GridCommand.Type.STEP_FORWARD),
+		"Blocked forward step must no-op",
+	)
+	assert_eq(
+		player.grid_state.cell,
+		blocked_before,
+		"Blocked forward step must preserve grid cell",
+	)
 
 
 func test_compliance_turns_are_cardinal_quarter_steps_only() -> void:
@@ -89,5 +98,12 @@ func test_compliance_camera_yaw_remains_cardinal_during_mixed_script() -> void:
 
 	for cmd in script:
 		assert_true(player.execute_command(cmd))
-		assert_true(_is_cardinal(camera.global_rotation_degrees.y), "Camera yaw must remain cardinal")
-		assert_eq(camera.global_position, player.global_position + Vector3(0.0, player.camera_height, 0.0), "Camera must stay first-person centered")
+		assert_true(
+			_is_cardinal(camera.global_rotation_degrees.y),
+			"Camera yaw must remain cardinal",
+		)
+		assert_eq(
+			camera.global_position,
+			player.global_position + Vector3(0.0, player.camera_height, 0.0),
+			"Camera must stay first-person centered",
+		)

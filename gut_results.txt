@@ -1,0 +1,341 @@
+Godot Engine v4.6.stable.official.89cea1439 - https://godotengine.org
+
+---  GUT  ---
+[1m[INFO]:  [0musing [/Users/kc00l/Library/Application Support/Godot/app_userdata/blobber-base] for temporary output.
+Godot version:  4.6.0
+GUT version:  9.6.0
+[4m
+
+res://tests/test_day12_presets.gd
+[0m* test_day12_preset_resources_define_snap_and_smooth_modes
+* test_day12_world_can_swap_presets_without_code_edits
+[Occupancy] layer=0 wired
+* test_day12_snap_and_smooth_presets_match_regression_outcome
+[Occupancy] layer=0 wired
+[Occupancy] layer=0 wired
+[1m3/3 passed.
+[0m[4m
+
+res://tests/test_day14_compliance_rehearsal.gd
+[0m* test_compliance_grid_commands_move_exactly_one_cell_or_noop_when_blocked
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, 0) facing=NORTH world_pos=(0.0, 0.0, 0.0) yaw=-0.0
+[PlayerState] cell=(-1, 0) facing=NORTH world_pos=(-1.0, 0.0, 0.0) yaw=-0.0
+[PlayerState] cell=(0, 0) facing=NORTH world_pos=(0.0, 0.0, 0.0) yaw=-0.0
+* test_compliance_turns_are_cardinal_quarter_steps_only
+[PlayerState] cell=(0, 0) facing=WEST world_pos=(0.0, 0.0, 0.0) yaw=-270.0
+[PlayerState] cell=(0, 0) facing=NORTH world_pos=(0.0, 0.0, 0.0) yaw=-0.0
+* test_compliance_camera_yaw_remains_cardinal_during_mixed_script
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(0, -2) facing=EAST world_pos=(0.0, 0.0, -2.0) yaw=-90.0
+[PlayerState] cell=(0, -2) facing=NORTH world_pos=(0.0, 0.0, -2.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[1m3/3 passed.
+[0m[4m
+
+res://tests/test_facing_transitions.gd
+[0m* test_transitions_from_north
+* test_transitions_from_east
+* test_transitions_from_south
+* test_transitions_from_west
+[1m4/4 passed.
+[0m[4m
+
+res://tests/test_game_state_machine.gd
+[0m* test_world_starts_in_gameplay_state_by_default
+[Occupancy] layer=0 wired
+* test_menu_state_blocks_exploration_commands_until_gameplay
+[Occupancy] layer=0 wired
+* test_failure_and_success_states_disable_exploration
+[Occupancy] layer=0 wired
+[31m    [Failed]:  [0m[STRING_NAME()] expected to equal [STRING_NAME(defeat)]:  
+      at line 65
+[31m    [Failed] [0m
+      at line 66
+[LevelManager] Floor scene missing: res://scenes/levels/floor_2.tscn
+* test_gameover_overlay_restart_signal_returns_to_gameplay
+[Occupancy] layer=0 wired
+[31m    [Failed]:  [0mExpected [<null>] to be anything but NULL:  Defeat overlay must be present in the tree
+      at line 106
+[31m    [Failed]:  [0mOld world must be freed after restart
+      at line 114
+[31m    [Failed]:  [0m[STRING_NAME(gameover_failure)] expected to equal [STRING_NAME(gameplay)]:  
+      at line 117
+[1m2/4 passed.
+[0m[4m
+
+res://tests/test_grid_coords_overlay.gd
+[0m* test_grid_coords_overlay_hidden_by_default_toggle
+[Occupancy] layer=0 wired
+* test_minimap_overlay_hidden_by_default_toggle
+[Occupancy] layer=0 wired
+* test_minimap_overlay_debug_button_toggles_visibility
+[Occupancy] layer=0 wired
+* test_grid_coords_overlay_updates_after_player_move
+[Occupancy] layer=0 wired
+* test_minimap_overlay_updates_player_state_after_player_move
+[Occupancy] layer=0 wired
+[1m5/5 passed.
+[0m[4m
+
+res://tests/test_grid_entity.gd
+[0m* test_stats_initialised_on_ready
+* test_execute_command_moves_cell
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_execute_command_blocked_while_paused
+* test_resume_commands_re_enables_execution
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_queue_accepts_one_command_while_busy
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+* test_canonical_transform_applied_after_command
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_command_completed_signal_emitted
+[PlayerState] cell=(0, 0) facing=EAST world_pos=(0.0, 0.0, 0.0) yaw=-90.0
+* test_pause_exploration_commands_blocks_input_and_execution
+* test_resume_exploration_commands_restores_input_and_execution
+[1m9/9 passed.
+[0m[4m
+
+res://tests/test_grid_mapper_roundtrip.gd
+[0m* test_grid_mapper_round_trip_for_121_cells
+[1m1/1 passed.
+[0m[4m
+
+res://tests/test_grid_occupancy.gd
+[0m* test_empty_map_all_passable
+* test_set_blocked_makes_cell_impassable
+* test_unblocking_restores_passability
+* test_blocking_does_not_affect_adjacent_cells
+* test_no_passability_fn_all_moves_pass
+* test_blocked_translation_returns_false_and_emits_nothing
+* test_blocked_translation_does_not_mutate_state
+* test_valid_translation_completes_exactly_once
+* test_turns_never_blocked_even_with_always_false_passability_fn
+* test_all_four_translation_directions_checked_individually
+[1m10/10 passed.
+[0m[4m
+
+res://tests/test_input_actions.gd
+[0m* test_required_actions_exist
+* test_required_actions_have_at_least_one_binding
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_inventory_model.gd
+[0m* test_player_initializes_inventory
+* test_add_and_remove_item_through_player
+* test_inventory_capacity_scaling
+* test_add_item_at_capacity_returns_false
+* test_use_item_invalid_index_returns_false
+[1m5/5 passed.
+[0m[4m
+
+res://tests/test_passability_scenarios.gd
+[0m* test_all_translational_commands_blocked_when_surrounded
+* test_turns_unaffected_when_grid_fully_blocked
+* test_corridor_traversal_forward_and_back
+* test_l_shaped_path_requires_turn_to_navigate
+* test_blocked_state_unchanged_for_all_facing_and_move_combos
+[1m5/5 passed.
+[0m[4m
+
+res://tests/test_player_day10_camera_blocked.gd
+[0m* test_camera_position_canonical_after_blocked_forward
+* test_camera_yaw_unchanged_after_blocked_forward
+* test_camera_position_canonical_after_blocked_strafe
+* test_camera_follows_turn_after_prior_blocked_forward
+[PlayerState] cell=(0, 0) facing=WEST world_pos=(0.0, 0.0, 0.0) yaw=-270.0
+[1m4/4 passed.
+[0m[4m
+
+res://tests/test_player_day2_acceptance.gd
+[0m* test_transform_matches_grid_state_projection
+* test_yaw_is_cardinal_for_all_facings
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_player_day3_movement.gd
+[0m* test_step_forward_advances_cell
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_step_back_retreats_cell
+[PlayerState] cell=(0, 1) facing=NORTH world_pos=(0.0, 0.0, 1.0) yaw=-0.0
+* test_strafe_left_moves_perpendicular
+[PlayerState] cell=(-1, 0) facing=NORTH world_pos=(-1.0, 0.0, 0.0) yaw=-0.0
+* test_strafe_right_moves_perpendicular
+[PlayerState] cell=(1, 0) facing=NORTH world_pos=(1.0, 0.0, 0.0) yaw=-0.0
+* test_turn_left_updates_facing
+[PlayerState] cell=(0, 0) facing=WEST world_pos=(0.0, 0.0, 0.0) yaw=-270.0
+* test_turn_right_updates_facing
+[PlayerState] cell=(0, 0) facing=EAST world_pos=(0.0, 0.0, 0.0) yaw=-90.0
+* test_transform_sync_after_command
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_scripted_sequence_yields_expected_final_state
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(1, -1) facing=EAST world_pos=(1.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(1, -1) facing=NORTH world_pos=(1.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(1, 0) facing=NORTH world_pos=(1.0, 0.0, 0.0) yaw=-0.0
+* test_execute_command_queues_one_command_while_busy
+* test_smooth_mode_single_step_reaches_expected_state
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+* test_smooth_mode_turn_reaches_expected_facing_and_yaw
+[PlayerState] cell=(0, 0) facing=WEST world_pos=(0.0, 0.0, 0.0) yaw=-270.0
+* test_smooth_mode_queues_overlap_and_executes_in_order
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+* test_snap_and_smooth_modes_match_for_scripted_sequence
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(1, -1) facing=EAST world_pos=(1.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(1, -1) facing=EAST world_pos=(1.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(1, -1) facing=NORTH world_pos=(1.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(1, -1) facing=NORTH world_pos=(1.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(1, 0) facing=NORTH world_pos=(1.0, 0.0, 0.0) yaw=-0.0
+[PlayerState] cell=(1, 0) facing=NORTH world_pos=(1.0, 0.0, 0.0) yaw=-0.0
+[1m13/13 passed.
+[0m[4m
+
+res://tests/test_player_day5_camera_sync.gd
+[0m* test_player_scene_has_camera3d_child
+* test_camera_uses_camera_height_offset
+* test_camera_yaw_is_cardinal_for_all_facings
+* test_snap_and_smooth_modes_match_camera_transform
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+* test_camera_stays_centered_and_cardinal_across_command_loop
+[PlayerState] cell=(0, -1) facing=NORTH world_pos=(0.0, 0.0, -1.0) yaw=-0.0
+[PlayerState] cell=(0, -1) facing=EAST world_pos=(0.0, 0.0, -1.0) yaw=-90.0
+[PlayerState] cell=(0, -2) facing=EAST world_pos=(0.0, 0.0, -2.0) yaw=-90.0
+[PlayerState] cell=(-1, -2) facing=EAST world_pos=(-1.0, 0.0, -2.0) yaw=-90.0
+[PlayerState] cell=(-1, -2) facing=NORTH world_pos=(-1.0, 0.0, -2.0) yaw=-0.0
+[PlayerState] cell=(0, -2) facing=NORTH world_pos=(0.0, 0.0, -2.0) yaw=-0.0
+[PlayerState] cell=(0, -3) facing=NORTH world_pos=(0.0, 0.0, -3.0) yaw=-0.0
+[PlayerState] cell=(0, -3) facing=EAST world_pos=(0.0, 0.0, -3.0) yaw=-90.0
+[PlayerState] cell=(0, -4) facing=EAST world_pos=(0.0, 0.0, -4.0) yaw=-90.0
+[PlayerState] cell=(-1, -4) facing=EAST world_pos=(-1.0, 0.0, -4.0) yaw=-90.0
+[PlayerState] cell=(-1, -4) facing=NORTH world_pos=(-1.0, 0.0, -4.0) yaw=-0.0
+[PlayerState] cell=(0, -4) facing=NORTH world_pos=(0.0, 0.0, -4.0) yaw=-0.0
+[1m5/5 passed.
+[0m[4m
+
+res://tests/test_player_day7_input_normalization.gd
+[0m* test_keyboard_gamepad_and_ui_harness_share_identical_state_history
+* test_input_actions_enabled_false_blocks_keyboard_gamepad_and_ui_harness
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_player_day8_input_queue.gd
+[0m* test_busy_state_accepts_one_queued_and_drops_extra_inputs
+* test_input_actions_held_stress_keeps_order_without_double_executes
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_player_day9_collision_feedback.gd
+[0m* test_blocked_step_emits_decision_and_preserves_state
+* test_snap_turn_emits_start_then_complete_with_stable_payload_shape
+* test_smooth_move_emits_start_then_complete
+* test_200_mixed_actions_event_log_is_deterministic_and_blocked_preserves_state
+* test_player_blocked_feedback_animates_and_returns_to_canonical_position
+* test_player_blocked_strafe_emits_cue_without_positional_bump
+[1m6/6 passed.
+[0m[4m
+
+res://tests/test_player_input_bridge.gd
+[0m* test_input_action_move_forward_executes_player_command
+* test_input_action_turn_right_updates_facing_only
+* test_smooth_input_queues_overlap_and_preserves_order
+[1m3/3 passed.
+[0m[4m
+
+res://tests/test_player_projection.gd
+[0m* test_player_transform_projects_from_grid_state
+* test_player_yaw_is_cardinal_for_all_facings
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_reaction_logic.gd
+[0m* test_reaction_matching_with_table
+* test_no_reaction_returns_null
+[1m2/2 passed.
+[0m[4m
+
+res://tests/test_stamina_system.gd
+[0m* test_stamina_drain_and_restore
+* test_heavy_item_drain_over_steps
+* test_exhaustion_slowdown
+[1m3/3 passed.
+[0m[4m
+
+res://tests/test_title_scene.gd
+[0m* test_title_scene_has_start_and_quit_buttons
+[1m1/1 passed.
+[0m[4m
+
+res://tests/test_world_end_conditions.gd
+[0m* test_reaching_active_exit_triggers_victory_overlay
+[Occupancy] layer=0 wired
+[31m    [Failed]:  [0m[1] expected to equal [2]:  
+      at line 55
+* test_reaching_failure_goal_cell_triggers_defeat_overlay
+[Occupancy] layer=0 wired
+[31m    [Failed]:  [0m[STRING_NAME(gameplay)] expected to equal [STRING_NAME(gameover_failure)]:  
+      at line 77
+[31m    [Failed]:  [0m[STRING_NAME()] expected to equal [STRING_NAME(defeat)]:  
+      at line 78
+[31m    [Failed] [0m
+      at line 79
+* test_disabled_end_conditions_do_not_change_state
+[Occupancy] layer=0 wired
+[1m1/3 passed.
+[0m
+
+
+
+[33m==============================================
+[0m[33m= Run Summary
+[0m[33m==============================================
+[0m[4m
+res://tests/test_game_state_machine.gd
+[0m- test_failure_and_success_states_disable_exploration
+[31m    [Failed]:  [0m[STRING_NAME()] expected to equal [STRING_NAME(defeat)]:  
+          at line 65
+[31m    [Failed]:  [0m
+          at line 66
+- test_gameover_overlay_restart_signal_returns_to_gameplay
+[31m    [Failed]:  [0mExpected [<null>] to be anything but NULL:  Defeat overlay must be present in the tree
+          at line 106
+[31m    [Failed]:  [0mOld world must be freed after restart
+          at line 114
+[31m    [Failed]:  [0m[STRING_NAME(gameover_failure)] expected to equal [STRING_NAME(gameplay)]:  
+          at line 117
+[4m
+res://tests/test_world_end_conditions.gd
+[0m- test_reaching_active_exit_triggers_victory_overlay
+[31m    [Failed]:  [0m[1] expected to equal [2]:  
+          at line 55
+- test_reaching_failure_goal_cell_triggers_defeat_overlay
+[31m    [Failed]:  [0m[STRING_NAME(gameplay)] expected to equal [STRING_NAME(gameover_failure)]:  
+          at line 77
+[31m    [Failed]:  [0m[STRING_NAME()] expected to equal [STRING_NAME(defeat)]:  
+          at line 78
+[31m    [Failed]:  [0m
+          at line 79
+
+Totals
+------
+Scripts              24
+Tests                99
+Passing Tests        95
+Failing Tests         4
+Asserts           677/686
+Time              6.616s
+
+
+[31m---- 4 failing tests ----
+[0m
