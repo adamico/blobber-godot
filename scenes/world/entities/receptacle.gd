@@ -1,5 +1,5 @@
 class_name Receptacle
-extends Node3D
+extends Sprite3D
 
 signal item_cleaned(item: ItemData, points: int)
 
@@ -12,7 +12,19 @@ enum Type { DISPOSAL, SMELTER, RITUAL }
 
 func _ready() -> void:
 	add_to_group(&"interactable")
+	
+	match receptacle_type:
+		Type.DISPOSAL:
+			texture = load("res://assets/textures/receptacle_disposal.png")
+		Type.SMELTER:
+			texture = load("res://assets/textures/receptacle_smelter.png")
+		Type.RITUAL:
+			texture = load("res://assets/textures/receptacle_ritual.png")
+
+	billboard = StandardMaterial3D.BILLBOARD_FIXED_Y
+	pixel_size = 0.0008 # Scale 1024px to ~0.8 units
 	_sync_position()
+	print("[Receptacle] Ready at grid %s, world %s, type %s" % [grid_cell, global_position, receptacle_type])
 
 
 func matches_cell(cell: Vector2i) -> bool:
@@ -34,7 +46,7 @@ func interact(player: Player) -> void:
 
 
 func _sync_position() -> void:
-	global_position = GridMapper.cell_to_world(grid_cell, 1.0, 0.0)
+	global_position = GridMapper.cell_to_world(grid_cell, 1.0, 0.4)
 
 
 func _play_cleanup_feedback() -> void:

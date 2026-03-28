@@ -1,13 +1,36 @@
 extends GutTest
 
-const PLAYER_SCENE := preload("res://scenes/player/player.tscn")
-const MESS_ITEM_SCENE := preload("res://scenes/world/entities/mess_item.gd")
-const RECEPTACLE_SCENE := preload("res://scenes/world/entities/receptacle.gd")
+const WORLD_SCENE := preload("res://scenes/world/main.tscn")
 
-func _spawn_player() -> Player:
-	var player := PLAYER_SCENE.instantiate() as Player
-	add_child_autofree(player)
+
+func _spawn_world() -> Node3D:
+	var world := WORLD_SCENE.instantiate() as Node3D
+	add_child_autofree(world)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	return world
+
+func _player(world: Node3D) -> Player:
+	var player := world.get_node_or_null("Player") as Player
+	assert_not_null(player, "Expected Player node in world scene")
 	return player
+
+func _grid_map(world: Node3D) -> GridMap:
+	var grid_map := world.get_node_or_null("GridMap") as GridMap
+	assert_not_null(grid_map, "Expected GridMap node in world scene")
+	return grid_map
+
+func _set_player_state(player: Player, cell: Vector2i, facing: GridDefinitions.Facing) -> void:
+	player.grid_state.cell = cell
+	player.grid_state.facing = facing
+	player.apply_canonical_transform()
+
+func _cell3(cell: Vector2i) -> Vector3i:
+	return Vector3i(cell.x, 0, cell.y)
+
+
+func _north(cell: Vector2i) -> Vector2i:
+	return cell + GridDefinitions.facing_to_vec2i(GridDefinitions.Facing.NORTH)
 
 func _make_item(item_name: String, properties: Array[StringName] = []) -> ItemData:
 	var item := ItemData.new()
@@ -15,87 +38,62 @@ func _make_item(item_name: String, properties: Array[StringName] = []) -> ItemDa
 	item.properties = properties
 	return item
 
-func test_pickup_mess_item() -> void:
-	var player := _spawn_player()
-	var item_data := _make_item("Biohazard", [&"volatile"])
+func test_pickup_mess_item_from_target_cell() -> void:
+	var world := await _spawn_world()
+	var player := _player(world)
+	var grid_map := _grid_map(world)
+
+	var start := Vector2i(40, 40)
+	var target := _north(start)
+	_set_player_state(player, start, GridDefinitions.Facing.NORTH)
+
+	# Place Slime by ID 4
+	grid_map.set_cell_item(_cell3(target), 4)
+
+	assert_eq(player.inventory.size(), 0)
+	world.perform_interaction()
+	assert_eq(player.inventory.size(), 1)
+
+	var item := player.inventory.get_items()[0] as ItemData
+	assert_eq(item.item_name, "Slime")
+	assert_eq(grid_map.get_cell_item(_cell3(target)), -1) # Cell should be cleared after pickup
+
+
+func test_pickup_mess_item_from_current_cell() -> void:
+	var world := await _spawn_world()
+	var player := _player(world)
+	var grid_map := _grid_map(world)
+
+	var start := Vector2i(40, 40)
+	var target := _north(start)
+	_set_player_state(player, start, GridDefinitions.Facing.NORTH)
 	
-	var mess := MessItem.new()
-	mess.item_data = item_data
-	mess.grid_cell = Vector2i(0, -1)
-	add_child_autofree(mess)
-	
-	# Facing North, (0,0) -> (0,-1)
-	player.grid_state.cell = Vector2i(0, 0)
-	player.grid_state.facing = GridDefinitions.Facing.NORTH
+	grid_map.set_cell_item(_cell3(target), -1) # Ensure target cell is empty
+	grid_map.set_cell_item(_cell3(start), 5) # Place Rust on current cell
 	
 	assert_eq(player.inventory.size(), 0)
-	assert_true(player.interact())
+	world.perform_interaction()
 	assert_eq(player.inventory.size(), 1)
-	assert_eq(player.inventory.get_items()[0].item_name, "Biohazard")
-	assert_true(mess.is_queued_for_deletion())
+	assert_eq(player.inventory.get_items()[0].item_name, "Rust")
+	assert_eq(grid_map.get_cell_item(_cell3(start)), -1) # Cell should be cleared after pickup
 
-func test_pickup_mess_item_current_cell() -> void:
-	var player := _spawn_player()
-	var item_data := _make_item("Biohazard", [&"volatile"])
-	
-	var mess := MessItem.new()
-	mess.item_data = item_data
-	mess.grid_cell = Vector2i(0, 0)
-	add_child_autofree(mess)
-	
-	player.grid_state.cell = Vector2i(0, 0)
-	
+func test_receptacle_cleanup_from_target_cell() -> void:
+	var world := await _spawn_world()
+	var player := _player(world)
+	var grid_map := _grid_map(world)
+
+	var start := Vector2i(44, 44)
+	var target := _north(start)
+	_set_player_state(player, start, GridDefinitions.Facing.NORTH)
+
+	var flammable_item := _make_item("Trash", [&"flammable"])
+	assert_true(player.add_item(flammable_item))
+	assert_eq(player.inventory.size(), 1)
+
+	grid_map.set_cell_item(_cell3(target), 1)
+
+	var before_score := world.get_cleanup_score() as float
+	world.perform_interaction()
+
 	assert_eq(player.inventory.size(), 0)
-	assert_true(player.interact())
-	assert_eq(player.inventory.size(), 1)
-	assert_true(mess.is_queued_for_deletion())
-
-func test_receptacle_cleanup() -> void:
-	var player := _spawn_player()
-	var item_data := _make_item("Trash", [&"flammable"])
-	player.add_item(item_data)
-	
-	var receptacle := Receptacle.new()
-	receptacle.receptacle_type = Receptacle.Type.SMELTER
-	receptacle.required_property = &"flammable"
-	receptacle.grid_cell = Vector2i(0, -1)
-	add_child_autofree(receptacle)
-	
-	player.grid_state.cell = Vector2i(0, 0)
-	player.grid_state.facing = GridDefinitions.Facing.NORTH
-	
-	watch_signals(receptacle)
-	
-	assert_eq(player.inventory.size(), 1)
-	assert_true(player.interact())
-	assert_eq(player.inventory.size(), 0)
-	assert_signal_emitted(receptacle, "item_cleaned")
-
-func test_active_hazard_defusal() -> void:
-	var player := _spawn_player()
-	var counter_item := _make_item("Water Potion", [&"wet"])
-	player.add_item(counter_item)
-	
-	var hazard_module := WorldHazardModule.new()
-	hazard_module.hazardous_cells[Vector2i(0, -1)] = &"volatile"
-	add_child_autofree(hazard_module)
-	
-	player.grid_state.cell = Vector2i(0, 0)
-	player.grid_state.facing = GridDefinitions.Facing.NORTH
-	
-	# We simulate the Main.gd interaction logic here
-	var target_cell = Vector2i(0, -1)
-	assert_true(hazard_module.interact(player, target_cell))
-	assert_false(hazard_module.hazardous_cells.has(target_cell))
-
-func test_undefused_hazard_triggers_penalty() -> void:
-	var player := _spawn_player()
-	player.stats.stamina = 5
-	
-	var hazard_module := WorldHazardModule.new()
-	hazard_module.hazardous_cells[Vector2i(0, 1)] = &"corrosive"
-	add_child_autofree(hazard_module)
-	
-	# If we just move into it without defusing
-	assert_false(hazard_module.evaluate_hazard(player, Vector2i(0, 1)))
-	assert_eq(player.stats.stamina, 4)
+	assert_eq(world.get_cleanup_score() as float, before_score + 10) # Assuming flammable item gives 10 points

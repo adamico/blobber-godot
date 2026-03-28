@@ -86,7 +86,7 @@ func _ready() -> void:
 		return
 	_input_orchestrator.wire_overlay_controls()
 	_setup_game_state_machine()
-	_add_world_environment()
+	# _add_world_environment()
 	apply_movement_preset(active_movement_preset)
 
 	# Wire immediately to ensure tests can execute commands right after bootstrap
@@ -99,7 +99,6 @@ func _ready() -> void:
 	_refresh_minimap_overlay()
 	_refresh_debug_buttons()
 	_add_hud.call_deferred()
-	_connect_receptacles.call_deferred()
 
 
 func _add_world_environment() -> void:
@@ -320,14 +319,21 @@ func perform_interaction() -> void:
 	var current_cell := _player.grid_state.cell
 	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
 	var target_cell := current_cell + facing_vec
+	var grid_map := get_node_or_null("GridMap") as GridMap
+
+	if grid_map == null:
+		print("[Main] Warning: GridMap not found, cannot determine cell interactions.")
+		return
+
+	# 1. Try interaction at a specific cell
+	var interaction_occurred := _try_cell_interaction(grid_map, target_cell)
+
+	# 2. If no interaction at target cell, try current cell
+	if not interaction_occurred:
+		interaction_occurred = _try_cell_interaction(grid_map, current_cell)
 	
-	print("[Main] perform_interaction triggered from %s facing %s" % [current_cell, target_cell])
-	
-	# 1. Player-driven entity interaction (pickups, receptacles)
-	var interact_occurred := _player.interact()
-	
-	# 2. Module-driven grid interaction (hazards)
-	if not interact_occurred and _hazard_module != null:
+	# 3. If still no interaction, check for hazards at both cells
+	if not interaction_occurred and _hazard_module != null:
 		# Check target cell first
 		if _hazard_module.interact(_player, target_cell):
 			print("[Main] Found hazard interaction at target_cell: %s" % target_cell)
@@ -337,8 +343,103 @@ func perform_interaction() -> void:
 			print("[Main] Found hazard interaction at current_cell: %s" % current_cell)
 			return
 	
-	if not interact_occurred:
+	if not interaction_occurred:
 		print("[Main] No interaction occurred.")
+
+
+func get_cleanup_score() -> float:
+	return _level_manager.cleanup_score
+
+
+func _try_cell_interaction(grid_map: GridMap, cell: Vector2i) -> bool:
+	# Convert 2D cell to 3D for GridMap lookup
+	var cell_3d := Vector3i(cell.x, 0, cell.y)
+	var cell_id := grid_map.get_cell_item(cell_3d)
+
+	match cell_id:
+		1, 2, 3: # Receptacles: Smelter, Disposal, Ritual
+			return _handle_receptacle_interaction(cell_id, cell)
+		4, 5, 6: # Mess items: Slime, Rust, Grime
+			return _handle_pickup_interaction(cell_id, cell, grid_map)
+		_:
+			return false
+
+
+func _handle_receptacle_interaction(cell_id: int, cell: Vector2i) -> bool:
+	if _player == null or _player.inventory == null:
+		return false
+
+	var required_property: StringName = _get_receptacle_property(cell_id)
+	print("[Main] Attempting receptacle interaction at cell %s with required property '%s'" % [
+		cell,
+		required_property
+	])
+
+	var items := _player.inventory.get_items()
+	for item in items:
+		if required_property == &"" or item.has_property(required_property):
+			if _player.inventory.remove_item(item):
+				print("[Main] Item '%s' cleaned in receptacle at cell %s" % [item.item_name, cell])
+				_on_item_cleaned(item, 10) # Award points for cleaning
+				return true
+
+	print("[Main] No suitable item found for receptacle interaction at cell %s" % cell)
+	return false
+
+
+func _handle_pickup_interaction(cell_id: int, cell: Vector2i, grid_map: GridMap) -> bool:
+	if _player == null or _player.inventory == null:
+		return false
+
+	var item := _create_item_from_cell_id(cell_id)
+	if item == null:
+		print("[Main] No item created for cell_id %d at cell %s" % [cell_id, cell])
+		return false
+
+	print ("[Main] Attempting pickup interaction at cell %s for item '%s'" % [cell, item.item_name])
+
+	if _player.add_item(item):
+		print("[Main] Picked up item '%s' at cell %s" % [item.item_name, cell])
+		# Clear the item from the grid
+		grid_map.set_cell_item(Vector3i(cell.x, 0, cell.y), -1)
+		return true
+	else:
+		print("[Main] Inventory full, cannot pick up item '%s' at cell %s" % [item.item_name, cell])
+		return false
+
+
+func _create_item_from_cell_id(cell_id: int) -> ItemData:
+	var item := ItemData.new()
+
+	match cell_id:
+		4: # Slime
+			item.item_name = "Slime"
+			item.properties.append(&"volatile")
+			item.properties.append(&"flammable")
+		5: # Rust
+			item.item_name = "Rust"
+			item.properties.append(&"corrosive")
+			item.properties.append(&"disposable")
+		6: # Grime
+			item.item_name = "Grime"
+			item.properties.append(&"sticky")
+			item.properties.append(&"disposable")
+		_:
+			return null
+
+	return item
+
+
+func _get_receptacle_property(cell_id: int) -> StringName:
+	match cell_id:
+		1: # Smelter
+			return &"flammable"
+		2: # Disposal
+			return &"disposable"
+		3: # Ritual
+			return &"magical"
+		_:
+			return &""
 
 
 func _wire_end_conditions() -> void:
@@ -371,13 +472,6 @@ func _wire_occupancy() -> void:
 	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
-
-
-func _connect_receptacles() -> void:
-	for node in get_tree().get_nodes_in_group(&"interactable"):
-		if node is Receptacle:
-			if not node.item_cleaned.is_connected(_on_item_cleaned):
-				node.item_cleaned.connect(_on_item_cleaned)
 
 
 func _on_item_cleaned(_item: ItemData, points: int) -> void:

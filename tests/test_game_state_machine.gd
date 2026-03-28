@@ -78,8 +78,6 @@ func test_failure_and_success_states_disable_exploration() -> void:
 		assert_eq(world.get("_level_manager").current_floor, 2)
 
 
-
-
 func test_gameover_overlay_restart_signal_returns_to_gameplay() -> void:
 	var world := await _spawn_world()
 	world.finish_with_failure()
@@ -106,3 +104,8 @@ func test_gameover_overlay_restart_signal_returns_to_gameplay() -> void:
 	assert_not_null(replacement)
 	assert_eq(replacement.current_game_state(), &"gameplay")
 	assert_false(replacement.has_active_overlay())
+
+# TODO: additional tests for:
+#	1. Hazard interaction coverage from the old file is no longer present.
+#	2. Receptacle IDs 2 and 3 are untested.
+#	3. Negative-case receptacle test is missing (item without required property should not be removed/scored).
