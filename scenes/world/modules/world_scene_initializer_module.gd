@@ -1,9 +1,11 @@
 extends Node
+
 class_name WorldSceneInitializerModule
 
 const GRID_PLANE_SUBDIVISIONS := 9
-const GRID_PLANE_SIZE := Vector2(20, 20)
+const GRID_PLANE_SIZE := Vector2(64, 64)
 const CEILING_HEIGHT := 1.0
+
 
 func add_environment(root: Node3D) -> void:
 	_add_floor(root)

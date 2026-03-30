@@ -5,7 +5,12 @@ extends Node3D
 @export var show_debug_panel := false
 @export var show_grid_coordinates_overlay := false
 @export var show_minimap_overlay := false
-@export_enum("Menu", "Gameplay", "GameOverFailure", "GameOverSuccess") var initial_game_state := "Gameplay"
+@export_enum(
+	"Menu",
+	"Gameplay",
+	"GameOverFailure",
+	"GameOverSuccess"
+) var initial_game_state := "Gameplay"
 @export var enable_cell_end_conditions := true
 @export var failure_goal_cell := Vector2i(-2, 2)
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
@@ -56,7 +61,10 @@ func _ready() -> void:
 		push_error("Missing required node: %s" % NODE_CONTEXT_ORCHESTRATOR)
 		return
 
-	var resolved_context := _context_orchestrator.resolve_world_context(self, _context_orchestrator.default_node_paths())
+	var resolved_context := _context_orchestrator.resolve_world_context(
+		self,
+		_context_orchestrator.default_node_paths()
+	)
 	_context_orchestrator.assign_resolved_world_context(self, resolved_context)
 	if _turn_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_TURN_ORCHESTRATOR)
