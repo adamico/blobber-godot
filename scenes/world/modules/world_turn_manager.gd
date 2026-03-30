@@ -366,6 +366,8 @@ func _tick_debris_revert() -> void:
 		return
 	var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
 	for node in pickups:
+		if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
 		if node is WorldPickup and node.revert_turns_remaining > 0:
 			if node.tick_revert():
 				_respawn_hazard_from_revert(node)
