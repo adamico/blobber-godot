@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://ui/stamina_hud.gd" id="1"]
+[ext_resource type="Script" path="res://ui/hp_hud.gd" id="1"]
 
-[node name="StaminaHUD" type="Control"]
+[node name="HPHUD" type="Control"]
 layout_mode = 1
 anchors_preset = 0
 offset_right = 220.0
@@ -20,7 +20,7 @@ grow_vertical = 2
 [node name="Label" type="Label" parent="VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "STAMINA: 10/10"
+text = "HP: 10/10"
 
 [node name="ProgressBar" type="ProgressBar" parent="VBox"]
 custom_minimum_size = Vector2(200, 20)
@@ -34,4 +34,4 @@ visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
 theme_override_font_sizes/font_size = 12
-text = "⚠ EXHAUSTED — TOOLS LOCKED"
+text = "⚠ OPERATIVE TERMINATED — CRITICAL FAILURE"

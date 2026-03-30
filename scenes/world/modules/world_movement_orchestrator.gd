@@ -8,22 +8,21 @@ func apply_preset(
 		player,
 		preset_name: String,
 		active_preset_name: String,
-		preset_snap_path: String,
-		preset_smooth_path: String,
+		snap_config: MovementConfig,
+		smooth_config: MovementConfig,
 ) -> Dictionary:
 	if player == null:
 		return { "ok": false, "active_name": active_preset_name }
 
 	var selected_name := preset_name if not preset_name.is_empty() else active_preset_name
 	var preset_key := selected_name.strip_edges().to_lower()
-	var selected_path := preset_smooth_path
+	var selected_preset := smooth_config
 	var resolved_active_name := "Smooth"
 
 	if preset_key == PRESET_SNAP:
-		selected_path = preset_snap_path
+		selected_preset = snap_config
 		resolved_active_name = "Snap"
 
-	var selected_preset := load(selected_path) as MovementConfig
 	if selected_preset == null:
 		return { "ok": false, "active_name": active_preset_name }
 

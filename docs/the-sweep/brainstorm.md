@@ -30,8 +30,8 @@ Each piece of dungeon hazard has a **material class**. Your equipment is rated t
 
 ## Mechanics
 
-- **Clean%:** Your corporate KPI. Each hazard cleared increases this. Reaching 100% on a floor grants a Stamina ration for the next one. Failing to hit a threshold gets noted in your permanent record.
-- **Stamina (HP):** Your operative's biological integrity. Drains when hazards make contact. 0 Stamina = **Exhausted** — tools are locked, you can only move. Taking any hit while Exhausted = extraction not viable (Game Over). Find a Synth-Gel Packet to recover.
+- **Clean%:** Your corporate KPI. Each hazard cleared increases this. Reaching 100% on a floor grants a HP ration for the next one. Failing to hit a threshold gets noted in your permanent record.
+- **HP:** Your operative's biological integrity. Drains when hazards make contact. 0 HP = Game Over. Find a Synth-Gel Packet to recover.
 - **Utility Belt (3 Slots):** Standard-issue loadout capacity. You carry what you pick up. You can't pick up everything. Plan accordingly.
 
 ---
@@ -68,7 +68,7 @@ Each piece of dungeon hazard has a **material class**. Your equipment is rated t
 | 2 | Day 3 | **RPS Interaction:** Damage logic, property-matching bonus, 100% Clean system. |
 | 3 | Day 4-5 | **Enemy AI & Leveling:** Patrol paths, proximity triggers, loading 5 floor layouts. |
 | 4 | Day 6 | **Asset Pass:** 2D Billboards for the 5 items and 5 messes. Simple dungeon textures. |
-| 5 | Day 7 | **Polishing:** UI (Stamina Bar, Clean%), SFX, Win/Fail screens. |
+| 5 | Day 7 | **Polishing:** UI (HP Bar, Clean%), SFX, Win/Fail screens. |
 
 ---
 
@@ -76,6 +76,6 @@ Each piece of dungeon hazard has a **material class**. Your equipment is rated t
 - **Environment:** 1 Wall Texture, 1 Floor Texture, 1 Door Node.
 - **Item Billboards (5):** Flask, Candle, Ward, Mop, Potion.
 - **Mess Billboards (5):** Corpse, Fire, Slime, Armor, Trap.
-- **UI:** Stamina Bar, Clean Counter, Tool Slots.
+- **UI:** HP Bar, Clean Counter, Tool Slots.
 
 **Total: ~15-18 Assets.** No complex 3D models. Everything is represented as sprite billboards.

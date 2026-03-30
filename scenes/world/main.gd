@@ -8,8 +8,21 @@ extends Node3D
 @export var show_debug_panel := false
 @export var show_minimap_overlay := false
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
-@export var preset_snap_path := "res://resources/presets/movement_config_snap.tres"
-@export var preset_smooth_path := "res://resources/presets/movement_config_smooth.tres"
+@export var preset_snap_config: MovementConfig
+@export var preset_smooth_config: MovementConfig
+
+@export_group("HUD Scenes")
+@export var hp_hud_scene: PackedScene
+@export var belt_hud_scene: PackedScene
+@export var clean_hud_scene: PackedScene
+
+@export_group("Entities & Items")
+@export var hazard_scene: PackedScene
+@export var mop_item: ItemData
+@export var vac_item: ItemData
+@export var sponge_item: ItemData
+
+@export_group("Overlays")
 @export_file("*.tscn") \
 var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
 @export_file("*.tscn") \
@@ -48,15 +61,6 @@ var _event_bus: WorldEventBus
 var _event_router_orchestrator: WorldEventRouterOrchestrator
 # New turn manager
 var _turn_manager: WorldTurnManager
-
-const StaminaHUDScene := preload("res://ui/stamina_hud.tscn")
-const BeltHUDScene := preload("res://ui/belt_hud.tscn")
-const CleanHUDScene := preload("res://ui/clean_hud.tscn")
-
-const HazardScene := preload("res://scenes/hazards/hazard.tscn")
-const MopItem := preload("res://resources/items/hydro_mop.tres")
-const VacItem := preload("res://resources/items/spectral_vac.tres")
-const SpongeItem := preload("res://resources/items/inert_sponge.tres")
 
 
 func _ready() -> void:
@@ -179,8 +183,8 @@ func apply_movement_preset(preset_name: String = "") -> bool:
 		_player,
 		preset_name,
 		active_movement_preset,
-		preset_snap_path,
-		preset_smooth_path,
+		preset_snap_config,
+		preset_smooth_config,
 	)
 	active_movement_preset = String(result.get("active_name", active_movement_preset))
 	return bool(result.get("ok", false))
@@ -258,17 +262,20 @@ func _add_huds() -> void:
 	if layer == null:
 		return
 
-	var stamina_hud := StaminaHUDScene.instantiate()
-	layer.add_child(stamina_hud)
-	stamina_hud.configure(_player)
+	if hp_hud_scene != null:
+		var hp_hud := hp_hud_scene.instantiate()
+		layer.add_child(hp_hud)
+		hp_hud.configure(_player)
 
-	var belt_hud := BeltHUDScene.instantiate()
-	layer.add_child(belt_hud)
-	belt_hud.configure(_player)
+	if belt_hud_scene != null:
+		var belt_hud := belt_hud_scene.instantiate()
+		layer.add_child(belt_hud)
+		belt_hud.configure(_player)
 
-	var clean_hud := CleanHUDScene.instantiate()
-	layer.add_child(clean_hud)
-	clean_hud.configure(_turn_manager)
+	if clean_hud_scene != null:
+		var clean_hud := clean_hud_scene.instantiate()
+		layer.add_child(clean_hud)
+		clean_hud.configure(_turn_manager)
 
 
 func _author_floor_1() -> void:
@@ -291,9 +298,9 @@ func _author_floor_1() -> void:
 	valid_cells.shuffle()
 
 	if valid_cells.size() >= 6:
-		_spawn_pickup(valid_cells.pop_back(), MopItem)
-		_spawn_pickup(valid_cells.pop_back(), VacItem)
-		_spawn_pickup(valid_cells.pop_back(), SpongeItem)
+		_spawn_pickup(valid_cells.pop_back(), mop_item)
+		_spawn_pickup(valid_cells.pop_back(), vac_item)
+		_spawn_pickup(valid_cells.pop_back(), sponge_item)
 
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.FLAMMABLE)
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.UNDEAD)
@@ -301,7 +308,9 @@ func _author_floor_1() -> void:
 
 
 func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardClass) -> void:
-	var h = HazardScene.instantiate() as Hazard
+	if hazard_scene == null:
+		return
+	var h = hazard_scene.instantiate() as Hazard
 	h.hazard_class = htype
 	h.initial_cell = cell
 

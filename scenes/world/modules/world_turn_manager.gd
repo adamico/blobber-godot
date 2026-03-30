@@ -5,11 +5,9 @@ extends Node
 
 signal turn_completed
 signal clean_status_changed(cleared: int, total: int)
-signal player_exhausted
 signal player_died
 
 const HAZARD_GROUP := &"hazards"
-const WALL_BUMP_STAMINA_COST := 1
 
 var _player: Player
 var _encounter_module: WorldEncounterModule
@@ -54,20 +52,14 @@ func process_slot_use(slot_index: int) -> void:
 	if _player == null or _player.inventory == null:
 		return
 
-	if _player.is_exhausted:
-		return # Tools locked while exhausted
-
 	var item = _player.inventory.get_item_at(slot_index) as ItemData
 	if item == null:
 		return
 
 	if item.item_type == ItemData.ItemType.CONSUMABLE:
 		_player.inventory.use_item(slot_index, _player.stats)
-		_update_exhausted_state()
 	else:
 		_use_tool_on_facing(item, slot_index)
-		if _player.stats != null:
-			_player.stats.take_damage(1)
 
 	_tick_enemies()
 	_check_contact_damage_from_enemies()
@@ -76,16 +68,15 @@ func process_slot_use(slot_index: int) -> void:
 
 
 func process_wall_bump() -> void:
-	## Called when player bumps a wall or stationary hazard (pass turn).
-	if _player != null and _player.stats != null and not _player.is_exhausted:
-		var target_cell := _player.grid_state.cell + GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+	## Pass turn when player bumps a wall or stationary hazard.
+	if _player != null and _player.stats != null:
+		var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+		var target_cell := _player.grid_state.cell + facing_vec
 		var hazards = _get_hazards_at(target_cell)
-		
+
 		if hazards.size() > 0:
 			for h in hazards:
 				h.deal_contact_damage(_player.stats)
-		else:
-			_player.stats.take_damage(WALL_BUMP_STAMINA_COST)
 
 	_tick_enemies()
 	_check_contact_damage_from_enemies()
@@ -166,34 +157,23 @@ func _check_contact_damage_from_enemies() -> void:
 	for hazard in _get_all_active_hazards():
 		if hazard.grid_state == null:
 			continue
-			
+
 		var ai = hazard.get_node_or_null("EnemyAI")
 		var is_mobile := false
 		if ai != null and "behavior" in ai and ai.behavior != 0: # 0 = STATIONARY
 			is_mobile = true
-			
+
 		var delta: Vector2i = hazard.grid_state.cell - _player.grid_state.cell
 		var manhattan := absi(delta.x) + absi(delta.y)
-		
+
 		if is_mobile and manhattan == 1:
 			hazard.deal_contact_damage(_player.stats)
 
 
 func _post_turn_checks() -> void:
-	_update_exhausted_state()
-
 	if _player != null and _player.stats != null:
-		if _player.is_exhausted and _player.stats.health <= 0:
+		if _player.stats.health <= 0:
 			player_died.emit()
-
-
-func _update_exhausted_state() -> void:
-	if _player == null or _player.stats == null:
-		return
-	var was_exhausted := _player.is_exhausted
-	_player.is_exhausted = _player.stats.health <= 0
-	if _player.is_exhausted and not was_exhausted:
-		player_exhausted.emit()
 
 
 func _collect_pickups(player_cell: Vector2i) -> void:

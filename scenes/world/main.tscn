@@ -2,13 +2,22 @@
 
 [ext_resource type="Script" uid="uid://gu3lsi7vt4st" path="res://scenes/world/main.gd" id="1_wbupf"]
 [ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="2_7tdlr"]
+[ext_resource type="Resource" path="res://resources/presets/movement_config_snap.tres" id="2_713oj"]
+[ext_resource type="Resource" path="res://resources/presets/movement_config_smooth.tres" id="3_r3w6i"]
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
+[ext_resource type="PackedScene" path="res://ui/hp_hud.tscn" id="4_ggkmy"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
+[ext_resource type="PackedScene" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
+[ext_resource type="PackedScene" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
+[ext_resource type="PackedScene" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
+[ext_resource type="Resource" path="res://resources/items/hydro_mop.tres" id="8_5ebq0"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
 [ext_resource type="Script" uid="uid://03i62ypeorjw" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
+[ext_resource type="Resource" path="res://resources/items/spectral_vac.tres" id="9_tsn8l"]
+[ext_resource type="Resource" path="res://resources/items/inert_sponge.tres" id="10_1notw"]
 [ext_resource type="Script" uid="uid://cbe2icf2qc83t" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
 [ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
@@ -47,7 +56,19 @@ emission_energy_multiplier = 1.5
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
+occupancy_wall_layer = null
+auto_align_gridmap_visual = null
 show_debug_panel = true
+show_minimap_overlay = null
+preset_snap_config = ExtResource("2_713oj")
+preset_smooth_config = ExtResource("3_r3w6i")
+hp_hud_scene = ExtResource("4_ggkmy")
+belt_hud_scene = ExtResource("5_28gua")
+clean_hud_scene = ExtResource("6_e3mvx")
+hazard_scene = ExtResource("7_8ap0l")
+mop_item = ExtResource("8_5ebq0")
+vac_item = ExtResource("9_tsn8l")
+sponge_item = ExtResource("10_1notw")
 
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -3)

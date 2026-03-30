@@ -15,7 +15,6 @@ signal wall_bumped
 var _active_tween: Tween
 var _blocked_tween: Tween
 var inventory
-var is_exhausted: bool = false
 
 
 func _ready() -> void:
@@ -60,16 +59,13 @@ func execute_action(action: StringName) -> bool:
 	# Handle slot use actions directly (not grid commands)
 	match action:
 		&"use_slot_1":
-			if not is_exhausted:
-				turn_action_performed.emit(GridCommand.Type.USE_SLOT_1)
+			turn_action_performed.emit(GridCommand.Type.USE_SLOT_1)
 			return true
 		&"use_slot_2":
-			if not is_exhausted:
-				turn_action_performed.emit(GridCommand.Type.USE_SLOT_2)
+			turn_action_performed.emit(GridCommand.Type.USE_SLOT_2)
 			return true
 		&"use_slot_3":
-			if not is_exhausted:
-				turn_action_performed.emit(GridCommand.Type.USE_SLOT_3)
+			turn_action_performed.emit(GridCommand.Type.USE_SLOT_3)
 			return true
 
 	var cmd: int = _command_for_action(action)

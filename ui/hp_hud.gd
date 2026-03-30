@@ -1,6 +1,6 @@
 extends Control
 
-## Always-visible Stamina bar. Shows "EXHAUSTED" warning when Stamina = 0.
+## Always-visible HP bar.
 
 @onready var _bar: ProgressBar = $VBox/ProgressBar
 @onready var _label: Label = $VBox/Label
@@ -27,11 +27,11 @@ func _refresh() -> void:
 		_bar.value = _player.stats.health
 
 	if _label != null:
-		_label.text = "STAMINA: %d/%d" % [_player.stats.health, _player.stats.max_health]
+		_label.text = "HP: %d/%d" % [_player.stats.health, _player.stats.max_health]
 
 	if _status_label != null:
-		if _player.is_exhausted:
-			_status_label.text = "⚠ EXHAUSTED — TOOLS LOCKED"
+		if _player.stats.health <= 0:
+			_status_label.text = "⚠ OPERATIVE TERMINATED"
 			_status_label.visible = true
 			if _bar != null:
 				_bar.modulate = Color(1.0, 0.3, 0.3)
