@@ -93,18 +93,31 @@ func process_player_pickup() -> void:
 	if _player == null or _player.grid_state == null:
 		return
 	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
-	var target_cell := _player.grid_state.cell + facing_vec
+	var current_tile := _player.grid_state.cell
+	var target_cell := current_tile + facing_vec
 	var picked_any := false
 
 	if _world_root != null:
-		for node in _world_root.get_tree().get_nodes_in_group(&"world_pickups"):
-			if node is WorldPickup and node.grid_cell == target_cell:
-				# Use existing collection logic but manually triggered
+		var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+
+		# Priority 1: Current tile
+		for node in pickups:
+			if node is WorldPickup and node.grid_cell == current_tile:
 				if _player.add_item(node.item_data):
 					node.collected.emit(node.item_data)
 					node.queue_free()
 					picked_any = true
 					break
+
+		# Priority 2: Facing tile
+		if not picked_any:
+			for node in pickups:
+				if node is WorldPickup and node.grid_cell == target_cell:
+					if _player.add_item(node.item_data):
+						node.collected.emit(node.item_data)
+						node.queue_free()
+						picked_any = true
+						break
 
 	if picked_any:
 		_tick_enemies()
