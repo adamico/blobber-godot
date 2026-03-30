@@ -14,6 +14,8 @@ var _encounter_module: WorldEncounterModule
 var _grid_module: WorldGridModule
 var _world_root: Node
 
+const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
+
 var _total_hazards: int = 0
 var _cleared_hazards: int = 0
 
@@ -37,10 +39,10 @@ func initialize_floor() -> void:
 	clean_status_changed.emit(_cleared_hazards, _total_hazards)
 
 
-func process_player_move(new_state: GridState) -> void:
+func process_player_move(_new_state: GridState) -> void:
 	## Called after player successfully moved/turned on the grid.
-	_collect_pickups(new_state.cell)
-	_check_contact_damage_from_tile(new_state.cell)
+	if _player != null and _player.grid_state != null:
+		_check_contact_damage_from_tile(_player.grid_state.cell)
 	_tick_enemies()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
@@ -82,6 +84,88 @@ func process_wall_bump() -> void:
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
 	turn_completed.emit()
+
+
+func process_player_pickup() -> void:
+	## Manual pickup action (costs one turn).
+	if _player == null or _player.grid_state == null:
+		return
+	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+	var target_cell := _player.grid_state.cell + facing_vec
+	var picked_any := false
+
+	if _world_root != null:
+		for node in _world_root.get_tree().get_nodes_in_group(&"world_pickups"):
+			if node is WorldPickup and node.grid_cell == target_cell:
+				# Use existing collection logic but manually triggered
+				if _player.add_item(node.item_data):
+					node.collected.emit(node.item_data)
+					node.queue_free()
+					picked_any = true
+					break
+
+	if picked_any:
+		_tick_enemies()
+		_check_contact_damage_from_enemies()
+		_post_turn_checks()
+		turn_completed.emit()
+
+
+func process_player_drop(slot_index: int) -> void:
+	## Drop item from inventory (free action).
+	if _player == null or _player.inventory == null or _player.grid_state == null:
+		return
+
+	var item: ItemData = _player.inventory.get_item_at(slot_index)
+	if item == null:
+		return
+
+	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+	var target_cell := _player.grid_state.cell + facing_vec
+
+	# Logic: Can only drop into empty/passable tiles (not walls)
+	if _grid_module != null and _grid_module.occupancy() != null:
+		if not _grid_module.occupancy().is_passable(target_cell):
+			return
+
+	if _player.inventory.remove_at(slot_index):
+		spawn_pickup(target_cell, item)
+		# Free action: no turn tick, but emit completion for UI sync
+		turn_completed.emit()
+
+
+func spawn_pickup(cell: Vector2i, item: ItemData) -> void:
+	if _world_root == null:
+		return
+
+	var p := WorldPickup.new()
+	p.grid_cell = cell
+	p.item_data = item
+	p.name = "Pickup_%s_%d_%d" % [item.item_name.replace(" ", "_"), cell.x, cell.y]
+
+	# Add visual representation (placeholder until art pass)
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.3, 0.3, 0.3)
+	mesh.mesh = box
+	mesh.position.y = 0.15
+
+	var mat := StandardMaterial3D.new()
+	if item.item_type == ItemData.ItemType.DEBRIS:
+		mat.albedo_color = Color.GRAY
+	else:
+		mat.albedo_color = Color.YELLOW
+	mesh.set_surface_override_material(0, mat)
+
+	var lbl := Label3D.new()
+	lbl.text = item.item_name
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.pixel_size = 0.005
+	lbl.position = Vector3(0, 0.4, 0)
+	p.add_child(lbl)
+	p.add_child(mesh)
+
+	_world_root.add_child(p)
 
 
 func get_clean_cleared() -> int:
@@ -215,6 +299,10 @@ func _connect_hazard_signals() -> void:
 			node.hazard_cleared.connect(_on_hazard_cleared)
 
 
-func _on_hazard_cleared(_hazard: Hazard) -> void:
+func _on_hazard_cleared(hazard: Hazard) -> void:
 	_cleared_hazards += 1
 	clean_status_changed.emit(_cleared_hazards, _total_hazards)
+
+	# Spawn debris on cleared hazard cell
+	if hazard != null and hazard.grid_state != null:
+		spawn_pickup(hazard.grid_state.cell, DEBRIS_ITEM)

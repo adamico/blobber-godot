@@ -56,10 +56,7 @@ emission_energy_multiplier = 1.5
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
-occupancy_wall_layer = null
-auto_align_gridmap_visual = null
 show_debug_panel = true
-show_minimap_overlay = null
 preset_snap_config = ExtResource("2_713oj")
 preset_smooth_config = ExtResource("3_r3w6i")
 hp_hud_scene = ExtResource("4_ggkmy")
@@ -176,7 +173,6 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="MinimapOverlay" type="Control" parent="OverlayLayer" unique_id=211122344]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_left = 1016.0
@@ -187,7 +183,6 @@ mouse_filter = 2
 script = ExtResource("5_1h5vq")
 
 [node name="GridCoordsLabel" type="Label" parent="OverlayLayer/MinimapOverlay" unique_id=211122343]
-visible = false
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0

@@ -4,6 +4,7 @@ extends Resource
 enum ItemType {
 	CONSUMABLE,
 	TOOL,
+	DEBRIS,
 }
 
 @export var item_name: String = ""

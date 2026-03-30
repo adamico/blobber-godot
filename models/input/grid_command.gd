@@ -11,5 +11,9 @@ enum Type {
     USE_SLOT_1,
     USE_SLOT_2,
     USE_SLOT_3,
+    PICKUP,
+    DROP_SLOT_1,
+    DROP_SLOT_2,
+    DROP_SLOT_3,
     PASS_TURN,
 }

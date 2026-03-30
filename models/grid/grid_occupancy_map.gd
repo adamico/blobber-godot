@@ -1,7 +1,7 @@
 class_name GridOccupancyMap
 extends RefCounted
 
-var _blocked: Dictionary  # Vector2i -> true
+var _blocked: Dictionary # Vector2i -> true
 
 
 static func from_grid_map(gm: GridMap, wall_layer: int = 0) -> GridOccupancyMap:
@@ -14,6 +14,10 @@ static func from_grid_map(gm: GridMap, wall_layer: int = 0) -> GridOccupancyMap:
 
 func is_passable(cell: Vector2i) -> bool:
 	return not _blocked.has(cell)
+
+
+func get_blocked_count() -> int:
+	return _blocked.size()
 
 
 func set_blocked(cell: Vector2i, blocked: bool) -> void:

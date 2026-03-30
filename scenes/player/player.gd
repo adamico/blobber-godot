@@ -22,8 +22,33 @@ func _ready() -> void:
 	if inventory == null:
 		inventory = Inventory.new()
 	_sync_camera_height()
+	_ensure_input_mappings()
 	movement_controller.action_started.connect(_on_action_started)
 	movement_controller.movement_outcome.connect(_on_movement_outcome)
+
+
+func _ensure_input_mappings() -> void:
+	# Programmatically map Shift + Physical (1, 2, 3) to drop_slot actions.
+	# Ensures functionality across keyboard layouts (Azerty/Qwerty/etc).
+	for i in range(1, 4):
+		var action := &"drop_slot_%d" % i
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+
+		if InputMap.action_get_events(action).is_empty():
+			var ev := InputEventKey.new()
+			ev.physical_keycode = (int(KEY_1) + (i - 1)) as Key
+			ev.shift_pressed = true
+			InputMap.action_add_event(action, ev)
+
+	# Ensure pickup is also mapped to space if not set
+	if not InputMap.has_action(&"pickup"):
+		InputMap.add_action(&"pickup")
+
+	if InputMap.action_get_events(&"pickup").is_empty():
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_SPACE
+		InputMap.action_add_event(&"pickup", ev)
 
 
 func add_item(item) -> bool:
@@ -66,6 +91,18 @@ func execute_action(action: StringName) -> bool:
 			return true
 		&"use_slot_3":
 			turn_action_performed.emit(GridCommand.Type.USE_SLOT_3)
+			return true
+		&"pickup":
+			turn_action_performed.emit(GridCommand.Type.PICKUP)
+			return true
+		&"drop_slot_1":
+			turn_action_performed.emit(GridCommand.Type.DROP_SLOT_1)
+			return true
+		&"drop_slot_2":
+			turn_action_performed.emit(GridCommand.Type.DROP_SLOT_2)
+			return true
+		&"drop_slot_3":
+			turn_action_performed.emit(GridCommand.Type.DROP_SLOT_3)
 			return true
 
 	var cmd: int = _command_for_action(action)
@@ -189,19 +226,23 @@ func _resolve_target_yaw(start_yaw: float, base_target_yaw: float) -> float:
 
 func _find_pressed_action(event: InputEvent) -> StringName:
 	var actions: Array[StringName] = [
+		&"drop_slot_1",
+		&"drop_slot_2",
+		&"drop_slot_3",
+		&"use_slot_1",
+		&"use_slot_2",
+		&"use_slot_3",
 		&"move_forward",
 		&"move_back",
 		&"move_left",
 		&"move_right",
 		&"turn_left",
 		&"turn_right",
-		&"use_slot_1",
-		&"use_slot_2",
-		&"use_slot_3",
+		&"pickup",
 	]
 
 	for action in actions:
-		if event.is_action_pressed(action):
+		if event.is_action_pressed(action, false, true):
 			return action
 
 	return StringName()

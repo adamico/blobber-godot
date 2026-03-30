@@ -93,12 +93,11 @@ func _ready() -> void:
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
 
-	_author_floor_1()
 	_wire_occupancy.call_deferred()
-	_wire_enemies.call_deferred()
 	_wire_turn_manager.call_deferred()
-	_apply_debug_panel_visibility()
-	_apply_minimap_overlay_visibility()
+	_author_floor_1.call_deferred()
+	_wire_enemies.call_deferred()
+	_initialize_floor.call_deferred()
 	_refresh_minimap_overlay()
 	_add_huds.call_deferred()
 
@@ -129,14 +128,6 @@ func open_overlay(kind: StringName) -> void:
 func close_active_overlay() -> void:
 	if _overlay_module != null:
 		_overlay_module.close_overlay()
-
-
-func _apply_debug_panel_visibility() -> void:
-	_ui_module.apply_debug_panel_visibility(show_debug_panel)
-
-
-func _apply_minimap_overlay_visibility() -> void:
-	_ui_module.apply_minimap_visibility(show_minimap_overlay)
 
 
 func _refresh_minimap_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
@@ -253,8 +244,12 @@ func get_enemies() -> Array:
 	return _encounter_module.get_enemies()
 
 
+func get_pickups() -> Array:
+	return get_tree().get_nodes_in_group(&"world_pickups")
+
+
 func _is_player_cell_passable(cell: Vector2i) -> bool:
-	return _grid_module.is_player_cell_passable(cell, get_enemies())
+	return _grid_module.is_player_cell_passable(cell, get_enemies(), get_pickups())
 
 
 func _add_huds() -> void:
@@ -298,9 +293,9 @@ func _author_floor_1() -> void:
 	valid_cells.shuffle()
 
 	if valid_cells.size() >= 6:
-		_spawn_pickup(valid_cells.pop_back(), mop_item)
-		_spawn_pickup(valid_cells.pop_back(), vac_item)
-		_spawn_pickup(valid_cells.pop_back(), sponge_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), mop_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), vac_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), sponge_item)
 
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.FLAMMABLE)
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.UNDEAD)
@@ -322,32 +317,6 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardClass) -> void:
 			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
 
 	add_child(h)
-
-
-func _spawn_pickup(cell: Vector2i, item: ItemData) -> void:
-	var p = WorldPickup.new()
-	p.grid_cell = cell
-	p.item_data = item
-
-	var mesh = MeshInstance3D.new()
-	var box = BoxMesh.new()
-	box.size = Vector3(0.3, 0.3, 0.3)
-	mesh.mesh = box
-	mesh.position.y = 0.15
-
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = Color.YELLOW
-	mesh.set_surface_override_material(0, mat)
-
-	var lbl := Label3D.new()
-	lbl.text = item.item_name
-	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.pixel_size = 0.005
-	lbl.position = Vector3(0, 0.4, 0)
-	p.add_child(lbl)
-
-	p.add_child(mesh)
-	add_child(p)
 
 
 func _wire_occupancy() -> void:
@@ -376,7 +345,6 @@ func _wire_turn_manager() -> void:
 	_turn_manager.name = "TurnManager"
 	add_child(_turn_manager)
 	_turn_manager.configure(_player, _encounter_module, _grid_module, self)
-	_turn_manager.initialize_floor()
 
 	# Wire player signals to turn manager
 	if not _player.turn_action_performed.is_connected(_on_player_turn_action):
@@ -402,6 +370,14 @@ func _on_player_turn_action(cmd: GridCommand.Type) -> void:
 			_turn_manager.process_slot_use(1)
 		GridCommand.Type.USE_SLOT_3:
 			_turn_manager.process_slot_use(2)
+		GridCommand.Type.PICKUP:
+			_turn_manager.process_player_pickup()
+		GridCommand.Type.DROP_SLOT_1:
+			_turn_manager.process_player_drop(0)
+		GridCommand.Type.DROP_SLOT_2:
+			_turn_manager.process_player_drop(1)
+		GridCommand.Type.DROP_SLOT_3:
+			_turn_manager.process_player_drop(2)
 		GridCommand.Type.TURN_LEFT, GridCommand.Type.TURN_RIGHT:
 			if _player != null and _player.grid_state != null:
 				_ui_module.refresh_minimap(_player.grid_state.cell, _grid_module.occupancy())
@@ -428,6 +404,11 @@ func _on_turn_completed() -> void:
 	# Check floor exit
 	if _turn_manager.is_floor_clean():
 		_check_exit_condition()
+
+
+func _initialize_floor() -> void:
+	if _turn_manager != null:
+		_turn_manager.initialize_floor()
 
 
 func _check_exit_condition() -> void:

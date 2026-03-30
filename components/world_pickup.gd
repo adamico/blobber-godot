@@ -7,8 +7,12 @@ signal collected(item: ItemData)
 @export var item_data: ItemData
 @export var world_y: float = 0.0
 
+var blocks_movement: bool = false
+
 
 func _ready() -> void:
+	if item_data != null and item_data.item_type == ItemData.ItemType.DEBRIS:
+		blocks_movement = true
 	add_to_group(&"world_pickups")
 	_sync_world_position()
 
