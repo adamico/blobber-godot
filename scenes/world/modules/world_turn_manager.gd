@@ -288,9 +288,11 @@ func _check_contact_damage_from_enemies() -> void:
 			is_mobile = true
 
 		var delta: Vector2i = hazard.grid_state.cell - _player.grid_state.cell
+		var prev_delta: Vector2i = hazard.grid_state.previous_cell - _player.grid_state.cell
 		var manhattan := absi(delta.x) + absi(delta.y)
+		var prev_manhattan := absi(prev_delta.x) + absi(prev_delta.y)
 
-		if is_mobile and manhattan == 1:
+		if is_mobile and (manhattan <= 1 or prev_manhattan <= 1):
 			hazard.deal_contact_damage(_player.stats)
 
 

@@ -50,6 +50,7 @@ func execute_command(cmd: GridCommand.Type) -> bool:
 		return false
 
 	is_busy = true
+	grid_state.previous_cell = grid_state.cell
 	var outcome_type := _outcome_type_for_command(cmd)
 
 	match cmd:
@@ -168,6 +169,7 @@ func _on_smooth_timer_timeout() -> void:
 	var completed_duration := _pending_duration
 
 	is_busy = false
+	grid_state.previous_cell = grid_state.cell
 	_emit_outcome(
 		completed_cmd,
 		completed_outcome_type,

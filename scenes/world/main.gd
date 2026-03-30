@@ -318,6 +318,10 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 		elif htype == RpsSystem.HazardProperty.BURNING:
 			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
 
+	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
+	if mcfg != null:
+		h.movement_config = mcfg
+
 	add_child(h)
 
 
@@ -335,6 +339,10 @@ func _wire_occupancy() -> void:
 
 func _wire_enemies() -> void:
 	_encounter_module.wire_enemies()
+	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
+	for enemy in get_enemies():
+		if mcfg != null:
+			enemy.movement_config = mcfg
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
 

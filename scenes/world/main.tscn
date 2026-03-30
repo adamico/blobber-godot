@@ -58,11 +58,7 @@ emission_energy_multiplier = 1.5
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
-occupancy_wall_layer = null
-auto_align_gridmap_visual = null
 show_debug_panel = true
-show_minimap_overlay = null
-active_movement_preset = null
 preset_snap_config = ExtResource("2_713oj")
 preset_smooth_config = ExtResource("3_r3w6i")
 hp_hud_scene = ExtResource("4_ggkmy")
@@ -74,9 +70,6 @@ candle_item = ExtResource("9_tsn8l")
 flask_item = ExtResource("10_1notw")
 ward_item = ExtResource("11_ironward")
 potion_item = ExtResource("12_potion")
-overlay_victory_scene_path = null
-overlay_defeat_scene_path = null
-title_scene_path = null
 
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -3)

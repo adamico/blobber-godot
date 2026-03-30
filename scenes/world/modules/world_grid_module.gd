@@ -29,7 +29,7 @@ func is_player_cell_passable(cell: Vector2i, enemies: Array, pickups: Array = []
 			continue
 		if enemy.stats != null and enemy.stats.is_dead():
 			continue
-		if enemy.grid_state.cell == cell:
+		if enemy.grid_state.cell == cell or enemy.grid_state.previous_cell == cell:
 			return false
 
 	for pickup in pickups:
@@ -51,7 +51,7 @@ func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array, pickups: Arra
 			continue
 		if other.stats != null and other.stats.is_dead():
 			continue
-		if other.grid_state.cell == cell:
+		if other.grid_state.cell == cell or other.grid_state.previous_cell == cell:
 			return false
 
 	for pickup in pickups:
