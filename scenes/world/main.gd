@@ -318,6 +318,15 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 		elif htype == RpsSystem.HazardProperty.BURNING:
 			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
 
+	# Speed: how many player turns between each AI tick (1 = every turn).
+	match htype:
+		RpsSystem.HazardProperty.BURNING:
+			h.speed = 2  # Sluggish reanimated NPC — acts every other turn
+		RpsSystem.HazardProperty.CORROSIVE:
+			h.speed = 1  # Acid Crawler — fast, acts every turn
+		_:
+			h.speed = 1  # Cursed prop and others: every turn
+
 	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
 	if mcfg != null:
 		h.movement_config = mcfg

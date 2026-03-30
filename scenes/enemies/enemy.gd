@@ -2,10 +2,14 @@ class_name Enemy
 extends GridEntity
 
 @export var ai_enabled: bool = true
+## How many player turns pass between each AI tick.
+## 1 = acts every turn, 2 = acts every other turn, etc.
+@export var speed: int = 1
 
 @onready var _ai: EnemyAI = get_node_or_null("EnemyAI") as EnemyAI
 
 var _active_tween: Tween
+var _turn_counter: int = 0
 
 
 func _ready() -> void:
@@ -15,6 +19,10 @@ func _ready() -> void:
 
 
 func tick_ai(player) -> bool:
+	_turn_counter += 1
+	if speed > 1 and _turn_counter % speed != 0:
+		return false
+
 	if not ai_enabled or _ai == null:
 		return false
 	if movement_controller == null or movement_controller.is_busy:

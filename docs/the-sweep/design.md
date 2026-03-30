@@ -55,6 +55,8 @@ Face an enemy, select a tool from inventory, resolve damage. Matching a tool's t
 
 Debris on the floor also blocks movement — tiles occupied by debris cannot be entered. In tight corridors this creates spatial pressure independent of the revert timer.
 
+*Note on stacked debris:* Because debris occupies a cell and makes it non-walkable, two debris items should never logically occupy the same cell. A player dropping debris on an already debris-occupied cell is prevented by the drop logic filtering out impassable target cells.
+
 ### Inventory
 Three generic slots shared between tools and debris. No dedicated slot types — the player decides the mix. Carrying debris consumes slots that could hold tools, creating a natural tension between combat readiness and cleanup progress.
 
@@ -112,17 +114,22 @@ Letter grade per floor based on clean% at exit.
 
 ## Hazards (Enemies)
 
-| Hazard Name | Class | Weakness | Behavior |
-|---|---|---|---|
-| **Burning Reanimated NPC** | `burning` | `soaked` | Animatronic NPC still running combat loop. Moves toward player. |
-| **Thermal Overspill** | `burning` | `soaked` | Boss fight leftovers. Stationary, but deals damage if bumped. |
-| **Cursed Combat Prop** | `cursed` | `cleansed` | Haunted armor abandoned by the hero. Patrols fixed paths. |
-| **Acid Crawler** | `corrosive` | `inert` | Escaped from the boss fight. Fast movement. Threatens adjacent tiles. |
-| **Trap Module (Hot)** | `burning` | `soaked` | Left active. Stationary, triggers proximity blast if ignored. |
+**Speed** is an internal stat (not shown to player) that controls how many player turns pass before the enemy AI ticks. `speed=1` means the AI acts every player turn; `speed=2` means every other turn, etc. This allows slow/lumbering enemies and fast threats without changing the core 1-action-per-turn engine.
+
+| Hazard Name | Class | Weakness | Speed | Behavior |
+|---|---|---|---|---|
+| **Burning Reanimated NPC** | `burning` | `soaked` | 2 (slow) | Animatronic NPC still running combat loop. Moves toward player every other turn. |
+| **Thermal Overspill** | `burning` | `soaked` | — | Boss fight leftovers. Stationary, but deals damage if bumped. |
+| **Cursed Combat Prop** | `cursed` | `cleansed` | 1 | Haunted armor abandoned by the hero. Patrols fixed paths every turn. |
+| **Acid Crawler** | `corrosive` | `inert` | 1 (fast) | Escaped from the boss fight. Acts every player turn. Threatens adjacent tiles. |
+| **Trap Module (Hot)** | `burning` | `soaked` | — | Left active. Stationary, triggers proximity blast if ignored. |
 
 ---
 
 ## Floor Design
+
+**Known AI Limitations (Milestone 5 Polish):**
+- **Patrol loops & walls:** Patrol enemies currently do not flip direction if they hit a wall before their step counter resets. They will lose turns until the step counter reaches the limit.
 
 Five hand-crafted floors, each introducing one new element. Topology drawn from five room shapes: corridor, open room, T-junction, loop, dead end. Each floor combines two shapes. Enemy placement considers chute distance — enemies near chutes are easier to clean, enemies in dead ends create the hardest debris routing challenges.
 

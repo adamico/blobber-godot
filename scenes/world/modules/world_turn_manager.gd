@@ -46,6 +46,7 @@ func process_player_move(_new_state: GridState) -> void:
 	if _player != null and _player.grid_state != null:
 		_check_contact_damage_from_tile(_player.grid_state.cell)
 	_tick_enemies()
+	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
 	turn_completed.emit()
@@ -66,6 +67,7 @@ func process_slot_use(slot_index: int) -> void:
 		_use_tool_on_facing(item, slot_index)
 
 	_tick_enemies()
+	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
 	turn_completed.emit()
@@ -83,6 +85,7 @@ func process_wall_bump() -> void:
 				h.deal_contact_damage(_player.stats)
 
 	_tick_enemies()
+	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
 	turn_completed.emit()
@@ -121,6 +124,7 @@ func process_player_pickup() -> void:
 
 	if picked_any:
 		_tick_enemies()
+		_tick_debris_revert()
 		_check_contact_damage_from_enemies()
 		_post_turn_checks()
 		turn_completed.emit()
@@ -144,14 +148,16 @@ func process_player_drop(slot_index: int) -> void:
 			return
 
 	if _player.inventory.remove_at(slot_index):
-		spawn_pickup(target_cell, item)
+		var p = spawn_pickup(target_cell, item)
+		if p != null and item.origin_hazard_property != -1:
+			p.setup_revert(item.revert_turns_base, item.origin_hazard_property)
 		# Free action: no turn tick, but emit completion for UI sync
 		turn_completed.emit()
 
 
-func spawn_pickup(cell: Vector2i, item: ItemData) -> void:
+func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
 	if _world_root == null:
-		return
+		return null
 
 	var p := WorldPickup.new()
 	p.grid_cell = cell
@@ -181,6 +187,7 @@ func spawn_pickup(cell: Vector2i, item: ItemData) -> void:
 	p.add_child(mesh)
 
 	_world_root.add_child(p)
+	return p
 
 
 func get_clean_cleared() -> int:
@@ -347,4 +354,33 @@ func _on_hazard_cleared(hazard: Hazard) -> void:
 
 	# Spawn debris on cleared hazard cell
 	if hazard != null and hazard.grid_state != null:
-		spawn_pickup(hazard.grid_state.cell, DEBRIS_ITEM)
+		var dupe := DEBRIS_ITEM.duplicate() as ItemData
+		dupe.origin_hazard_property = hazard.hazard_property
+		dupe.revert_turns_base = hazard.revert_turns_base
+		var p = spawn_pickup(hazard.grid_state.cell, dupe)
+		if p != null:
+			p.setup_revert(hazard.revert_turns_base, hazard.hazard_property)
+
+func _tick_debris_revert() -> void:
+	if _world_root == null:
+		return
+	var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+	for node in pickups:
+		if node is WorldPickup and node.revert_turns_remaining > 0:
+			if node.tick_revert():
+				_respawn_hazard_from_revert(node)
+				node.queue_free()
+
+func _respawn_hazard_from_revert(pickup: WorldPickup) -> void:
+	if _world_root == null or pickup.origin_hazard_property == -1:
+		return
+		
+	# Spawn hazard
+	if _world_root.has_method("_spawn_hazard"):
+		_world_root.call("_spawn_hazard", pickup.grid_cell, pickup.origin_hazard_property)
+		
+	# Update clean percent state
+	_total_hazards += 1
+	_connect_hazard_signals()
+	clean_status_changed.emit(_cleared_hazards, _total_hazards)
+

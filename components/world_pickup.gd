@@ -8,13 +8,45 @@ signal collected(item: ItemData)
 @export var world_y: float = 0.0
 
 var blocks_movement: bool = false
+var revert_turns_remaining: int = 0
+var origin_hazard_property: int = -1
+
+var _timer_label: Label3D
 
 
 func _ready() -> void:
 	if item_data != null and item_data.item_type == ItemData.ItemType.DEBRIS:
 		blocks_movement = true
 	add_to_group(&"world_pickups")
+
+	_timer_label = Label3D.new()
+	_timer_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_timer_label.pixel_size = 0.005
+	_timer_label.position = Vector3(0, 0.6, 0)
+	_timer_label.modulate = Color(1, 0.4, 0) # Orange-red color for timer
+	add_child(_timer_label)
+	_update_label()
+
 	_sync_world_position()
+
+func setup_revert(turns: int, origin_property: int) -> void:
+	revert_turns_remaining = turns
+	origin_hazard_property = origin_property
+	_update_label()
+
+func tick_revert() -> bool:
+	if revert_turns_remaining <= 0:
+		return false
+	revert_turns_remaining -= 1
+	_update_label()
+	return revert_turns_remaining <= 0
+
+func _update_label() -> void:
+	if _timer_label != null:
+		if revert_turns_remaining > 0:
+			_timer_label.text = str(revert_turns_remaining)
+		else:
+			_timer_label.text = ""
 
 
 func collect_if_player_on_cell(player, player_cell: Vector2i) -> bool:

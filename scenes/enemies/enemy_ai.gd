@@ -5,11 +5,13 @@ const NO_COMMAND := -1
 
 
 var _grid_module: WorldGridModule
+var _world_root: Node
 var _last_seen_player_pos: Vector2i = Vector2i(-1, -1)
 
 
-func set_grid_module(gm) -> void:
+func set_grid_module(gm, world_root: Node = null) -> void:
 	_grid_module = gm
+	_world_root = world_root
 
 
 func choose_command(enemy, player) -> int:
@@ -78,6 +80,14 @@ func _is_cell_passable(_enemy, cell: Vector2i) -> bool:
 	var occ := _grid_module.occupancy()
 	if occ != null and not occ.is_passable(cell):
 		return false
+
+	if _world_root != null:
+		var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+		for pickup in pickups:
+			if pickup != null and is_instance_valid(pickup):
+				if pickup.get("grid_cell") == cell and pickup.get("blocks_movement"):
+					return false
+
 	return true
 
 

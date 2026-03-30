@@ -16,3 +16,7 @@ enum ItemType {
 @export var is_aoe: bool = false
 # TODO: make this a resource post jam
 @export var stat_effect: Dictionary = { } ## e.g. {"heal": 2} for consumables
+
+# Runtime tracking for DEBRIS items
+var origin_hazard_property: int = -1
+var revert_turns_base: int = 5

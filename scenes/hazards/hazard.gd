@@ -6,6 +6,7 @@ signal hazard_cleared(hazard: Hazard)
 @export var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.BURNING
 @export var contact_damage: int = 1
 @export var hazard_hp: int = 3 ## Hits needed with non-matching tools
+@export var revert_turns_base: int = 5 ## Default turns until debris reverts to this hazard
 
 var _current_hp: int = 1
 
