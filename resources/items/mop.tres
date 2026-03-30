@@ -1,15 +1,9 @@
-[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://7ujyorbpecsq"]
 
-[ext_resource type="Script" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Mop"
-description = "Veridian Tactical Mop. Reduces incoming damage by 1 for one hit."
-item_type = 1
-tool_class = 0
-use_range = 1
-is_reusable = true
-is_defense = true
-is_aoe = false
-stat_effect = {}
+description = "Veridian Tactical Mop. Standard damage, bonus vs burning enemies."
+tool_property = 0

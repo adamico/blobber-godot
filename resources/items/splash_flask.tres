@@ -1,15 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cxyhqs44n3ose"]
 
-[ext_resource type="Script" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Splash Flask"
-description = "AoE front tile. High damage vs Burning."
-item_type = 1
-tool_class = 0
-use_range = 1
+description = "A flask of industrial solvent. Douses the front tile and adjacent tiles, bonus vs burning enemies."
+tool_property = 0
 is_reusable = false
-is_defense = false
 is_aoe = true
-stat_effect = {}

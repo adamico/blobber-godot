@@ -299,23 +299,23 @@ func _author_floor_1() -> void:
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), candle_item)
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
 
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.BURNING)
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.CURSED)
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.CORROSIVE)
+		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.BURNING)
+		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CURSED)
+		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CORROSIVE)
 
 
-func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardClass) -> void:
+func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 	if hazard_scene == null:
 		return
 	var h = hazard_scene.instantiate() as Hazard
-	h.hazard_class = htype
+	h.hazard_property = htype
 	h.initial_cell = cell
 
 	var ai = h.get_node_or_null("EnemyAI")
 	if ai != null:
-		if htype == RpsSystem.HazardClass.CURSED:
+		if htype == RpsSystem.HazardProperty.CURSED:
 			ai.set("behavior", 2) # HazardAI.Behavior.CHASE
-		elif htype == RpsSystem.HazardClass.BURNING:
+		elif htype == RpsSystem.HazardProperty.BURNING:
 			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
 
 	add_child(h)

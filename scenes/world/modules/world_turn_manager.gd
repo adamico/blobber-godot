@@ -206,9 +206,9 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 
 			# Special logic for Debris as a weapon
 			if item.item_type == ItemData.ItemType.DEBRIS:
-				if hazard.hazard_class == RpsSystem.HazardClass.CORROSIVE:
+				if hazard.hazard_property == RpsSystem.HazardProperty.CORROSIVE:
 					# Instantly clear corrosive hazard
-					hazard.receive_tool_hit(RpsSystem.ToolClass.INERT, _player.stats)
+					hazard.receive_tool_hit(RpsSystem.ToolProperty.INERT, _player.stats)
 					debris_consumed_as_weapon.emit(cell)
 					action_feedback.emit("DEBRIS WEAPON!", true)
 					debris_consumed = true
@@ -219,8 +219,8 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 					continue
 
 			# Normal tool logic
-			var is_effective := RpsSystem.is_effective(item.tool_class, hazard.hazard_class)
-			var cleared = hazard.receive_tool_hit(item.tool_class, _player.stats) as bool
+			var is_effective := RpsSystem.is_effective(item.tool_property, hazard.hazard_property)
+			var cleared = hazard.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
 
 			if is_effective:

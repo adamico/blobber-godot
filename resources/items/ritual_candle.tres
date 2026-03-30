@@ -1,15 +1,9 @@
-[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://dp2w75kvwchxk"]
 
-[ext_resource type="Script" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Ritual Candle"
-description = "Purifies cursed entities. Standard damage, bonus vs Cursed."
-item_type = 1
-tool_class = 2
-use_range = 1
-is_reusable = true
-is_defense = false
-is_aoe = false
-stat_effect = {}
+description = "A ceremonial candle infused with sanctifying wax. Standard damage, bonus vs cursed enemies."
+tool_property = 2

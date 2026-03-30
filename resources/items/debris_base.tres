@@ -1,13 +1,11 @@
-[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://gpif3rpuvf2y"]
 
-[ext_resource type="Script" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Debris"
 description = "Inert waste. Blocks movement. Dispose at chute."
 item_type = 2
-tool_class = 2
-use_range = 1
+tool_property = 1
 is_reusable = false
-stat_effect = {}

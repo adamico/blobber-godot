@@ -1,15 +1,14 @@
-[gd_resource type="Resource" script_class="ItemData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cbshjds4a3ref"]
 
-[ext_resource type="Script" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Potion"
-description = "Veridian Restorative Fluid. Restores HP."
+description = "Veridian Restorative Fluid. Restores HP on use."
 item_type = 0
-tool_class = 3
 use_range = 0
 is_reusable = false
-is_defense = false
-is_aoe = false
-stat_effect = {"heal": 2}
+stat_effect = {
+"heal": 2
+}

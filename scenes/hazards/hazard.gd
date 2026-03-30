@@ -3,7 +3,7 @@ extends Enemy
 
 signal hazard_cleared(hazard: Hazard)
 
-@export var hazard_class: RpsSystem.HazardClass = RpsSystem.HazardClass.BURNING
+@export var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.BURNING
 @export var contact_damage: int = 1
 @export var hazard_hp: int = 3 ## Hits needed with non-matching tools
 
@@ -16,15 +16,18 @@ func _ready() -> void:
 	add_to_group("hazards")
 
 	var lbl := Label3D.new()
-	lbl.text = RpsSystem.HazardClass.keys()[hazard_class].capitalize()
+	lbl.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
 	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	lbl.pixel_size = 0.005
 	lbl.position = Vector3(0, 0.6, 0)
 	add_child(lbl)
 
 
-func receive_tool_hit(tool_class: RpsSystem.ToolClass, target_stats: CharacterStats = null) -> bool:
-	var damage := RpsSystem.compute_damage(tool_class, hazard_class)
+func receive_tool_hit(
+		tool_property: RpsSystem.ToolProperty,
+		target_stats: CharacterStats = null,
+) -> bool:
+	var damage := RpsSystem.compute_damage(tool_property, hazard_property)
 	_current_hp -= damage
 	if _current_hp <= 0:
 		_clear()
