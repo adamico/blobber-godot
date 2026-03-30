@@ -25,12 +25,6 @@ func choose_command(enemy, player) -> int:
 	return _step_vector_to_command(enemy.grid_state.facing, step)
 
 
-func choose_combat_intent(enemy, player) -> int:
-	if enemy == null or player == null:
-		return NO_COMMAND
-	return GridCommand.Type.ATTACK
-
-
 func _step_vector_to_command(facing: GridDefinitions.Facing, step: Vector2i) -> int:
 	if step == Vector2i.ZERO:
 		return NO_COMMAND

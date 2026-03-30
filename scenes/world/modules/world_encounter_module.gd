@@ -31,8 +31,11 @@ func wire_enemies() -> void:
 		var captured_enemy = enemy
 		enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
 			return _enemy_cell_passable(captured_enemy, cell)
-		if not enemy.movement_controller.action_completed.is_connected(_on_enemy_action_completed.bind(enemy)):
-			enemy.movement_controller.action_completed.connect(_on_enemy_action_completed.bind(enemy))
+			
+		var action_sig: Signal = enemy.movement_controller.action_completed
+		var bind_cb := _on_enemy_action_completed.bind(enemy)
+		if not action_sig.is_connected(bind_cb):
+			action_sig.connect(bind_cb)
 
 
 func collect() -> void:
@@ -100,6 +103,8 @@ func check_combat_trigger() -> bool:
 
 
 func _enemy_cell_passable(enemy, cell: Vector2i) -> bool:
+	if _player != null and _player.grid_state != null and _player.grid_state.cell == cell:
+		return false
 	if _grid_module != null:
 		return _grid_module.is_enemy_cell_passable(enemy, cell, _enemies)
 	return true

@@ -5,6 +5,8 @@ signal item_added(item)
 signal item_removed(item)
 signal item_used(item)
 
+const MAX_SLOTS := 3
+
 var _items: Array = []
 
 
@@ -12,6 +14,8 @@ func add_item(item) -> bool:
 	if not (item is ItemData):
 		return false
 	if item == null:
+		return false
+	if _items.size() >= MAX_SLOTS:
 		return false
 	_items.append(item)
 	item_added.emit(item)
@@ -28,12 +32,31 @@ func remove_item(item) -> bool:
 	return true
 
 
+func remove_at(index: int) -> bool:
+	if index < 0 or index >= _items.size():
+		return false
+	var removed = _items[index]
+	_items.remove_at(index)
+	item_removed.emit(removed)
+	return true
+
+
 func get_items() -> Array:
 	return _items.duplicate()
 
 
+func get_item_at(index: int) -> ItemData:
+	if index < 0 or index >= _items.size():
+		return null
+	return _items[index]
+
+
 func size() -> int:
 	return _items.size()
+
+
+func is_full() -> bool:
+	return _items.size() >= MAX_SLOTS
 
 
 func use_item(index: int, target_stats: CharacterStats) -> bool:
@@ -49,7 +72,7 @@ func use_item(index: int, target_stats: CharacterStats) -> bool:
 	_apply_stat_effects(item.stat_effect, target_stats)
 	item_used.emit(item)
 
-	if item.item_type == ItemData.ItemType.CONSUMABLE:
+	if not item.is_reusable:
 		_items.remove_at(index)
 		item_removed.emit(item)
 
@@ -59,20 +82,3 @@ func use_item(index: int, target_stats: CharacterStats) -> bool:
 func _apply_stat_effects(stat_effect: Dictionary, target_stats: CharacterStats) -> void:
 	if stat_effect.has("heal"):
 		target_stats.heal(int(stat_effect["heal"]))
-
-	if stat_effect.has("max_health"):
-		target_stats.max_health = maxi(1, target_stats.max_health + int(stat_effect["max_health"]))
-		target_stats.health = clampi(target_stats.health, 0, target_stats.max_health)
-
-	if stat_effect.has("attack"):
-		target_stats.attack += int(stat_effect["attack"])
-
-	if stat_effect.has("defence"):
-		target_stats.defence += int(stat_effect["defence"])
-
-	if stat_effect.has("health"):
-		var delta := int(stat_effect["health"])
-		if delta > 0:
-			target_stats.heal(delta)
-		elif delta < 0:
-			target_stats.take_damage(-delta)

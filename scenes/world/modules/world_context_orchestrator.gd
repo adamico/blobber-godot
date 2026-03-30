@@ -1,6 +1,5 @@
-extends Node
 class_name WorldContextOrchestrator
-
+extends Node
 
 func default_node_paths() -> Dictionary:
 	return {
@@ -24,16 +23,12 @@ func default_node_paths() -> Dictionary:
 		"debug_panel": "OverlayLayer/DebugPanel",
 		"grid_coords_label": "OverlayLayer/MinimapOverlay/GridCoordsLabel",
 		"minimap_overlay": "OverlayLayer/MinimapOverlay",
-		"btn_open_inventory": "OverlayLayer/DebugPanel/Margin/VBox/OpenInventory",
-		"btn_open_combat": "OverlayLayer/DebugPanel/Margin/VBox/OpenCombat",
-		"btn_open_town": "OverlayLayer/DebugPanel/Margin/VBox/OpenTown",
 		"btn_toggle_minimap": "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap",
-		"btn_close_overlay": "OverlayLayer/DebugPanel/Margin/VBox/CloseOverlay",
 	}
 
 
 func resolve_world_context(root: Node, node_paths: Dictionary) -> Dictionary:
-	var resolved := {}
+	var resolved := { }
 	for key in node_paths.keys():
 		resolved[key] = root.get_node_or_null(String(node_paths[key]))
 	return resolved
@@ -51,7 +46,6 @@ func assign_resolved_world_context(world: Node, resolved: Dictionary) -> void:
 	world.set("_state_orchestrator", resolved.get("state_orchestrator"))
 	world.set("_turn_orchestrator", resolved.get("turn_orchestrator"))
 	world.set("_composition_orchestrator", resolved.get("composition_orchestrator"))
-	world.set("_policy_orchestrator", resolved.get("policy_orchestrator"))
 	world.set("_input_orchestrator", resolved.get("input_orchestrator"))
 	world.set("_movement_orchestrator", resolved.get("movement_orchestrator"))
 	world.set("_event_bus", resolved.get("event_bus"))
@@ -69,7 +63,6 @@ func build_required_modules_from_world(world: Node) -> Dictionary:
 		"StateOrchestrator": world.get("_state_orchestrator"),
 		"TurnOrchestrator": world.get("_turn_orchestrator"),
 		"CompositionOrchestrator": world.get("_composition_orchestrator"),
-		"PolicyOrchestrator": world.get("_policy_orchestrator"),
 		"InputOrchestrator": world.get("_input_orchestrator"),
 		"MovementOrchestrator": world.get("_movement_orchestrator"),
 		"EventBus": world.get("_event_bus"),
@@ -80,9 +73,6 @@ func build_required_modules_from_world(world: Node) -> Dictionary:
 
 func build_overlay_paths_from_world(world: Node) -> Dictionary:
 	return {
-		&"inventory": world.get("overlay_inventory_scene_path"),
-		&"combat": world.get("overlay_combat_scene_path"),
-		&"town": world.get("overlay_town_scene_path"),
 		&"victory": world.get("overlay_victory_scene_path"),
 		&"defeat": world.get("overlay_defeat_scene_path"),
 	}

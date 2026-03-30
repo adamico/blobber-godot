@@ -1,5 +1,5 @@
-extends Node
 class_name WorldEventRouterOrchestrator
+extends Node
 
 var _event_bus: WorldEventBus
 var _restart_run_fn: Callable
@@ -21,7 +21,8 @@ func configure(
 		process_enemy_action_fn: Callable,
 		process_player_action_fn: Callable,
 		start_combat_fn: Callable,
-		is_gameplay_state_active_fn: Callable) -> void:
+		is_gameplay_state_active_fn: Callable,
+) -> void:
 	_event_bus = event_bus
 	_restart_run_fn = restart_run_fn
 	_return_to_title_fn = return_to_title_fn

@@ -24,16 +24,5 @@ func tick_ai(player) -> bool:
 	return execute_command(cmd as GridCommand.Type)
 
 
-func choose_combat_intent(player) -> GridCommand.Type:
-	if _ai == null:
-		return GridCommand.Type.ATTACK
-
-	var cmd := _ai.choose_combat_intent(self, player)
-	if cmd == EnemyAI.NO_COMMAND:
-		return GridCommand.Type.DEFEND
-
-	return cmd as GridCommand.Type
-
-
 func _on_action_completed(cmd: GridCommand.Type, new_state: GridState) -> void:
 	super(cmd, new_state)

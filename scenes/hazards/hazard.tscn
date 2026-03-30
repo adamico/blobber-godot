@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://bs1aafm4hvs1x" path="res://scenes/hazards/hazard.gd" id="1_hazard"]
+[ext_resource type="Script" uid="uid://s6v85n88v444" path="res://scenes/hazards/hazard_ai.gd" id="2_ai"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
+radius = 0.25
+height = 0.8
+
+[node name="Hazard" type="Node3D"]
+script = ExtResource("1_hazard")
+initial_cell = Vector2i(2, 0)
+initial_facing = 3
+
+[node name="EnemyAI" type="Node" parent="."]
+script = ExtResource("2_ai")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_enemy")

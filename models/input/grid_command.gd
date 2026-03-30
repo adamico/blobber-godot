@@ -8,7 +8,8 @@ enum Type {
     MOVE_RIGHT,
     TURN_LEFT,
     TURN_RIGHT,
-    ATTACK,
-    DEFEND,
-    USE_ITEM,
+    USE_SLOT_1,
+    USE_SLOT_2,
+    USE_SLOT_3,
+    PASS_TURN,
 }

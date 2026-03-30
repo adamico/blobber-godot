@@ -10,7 +10,7 @@ Five milestones. M1 is a strict prerequisite for everything else. M4 model work 
 
 **Delivered:**
 - `CharacterStats` (`res://models/character_stats.gd`) — `take_damage`, `heal`, `fill`, `is_dead`, `damaged`/`healed` signals, defence-reduced clamped damage
-- `GridEntity` (`res://components/grid_entity.gd`) — base class with `grid_state`, `movement_controller`, `stats`, one-command queue, `execute_command`, `pause/resume_commands`, `_apply_canonical_transform`, virtual `_on_action_completed`
+- `GridEntity` (`res://components/grid_entity.gd`) — base class with `grid_state`, `movement_controller`, `stats`, one-command queue, `execute_command`, `pause/resume_commands`, `apply_canonical_transform`, virtual `_on_action_completed`
 - `Player` (`res://scenes/player/player.gd`) — `extends GridEntity`; camera, input pipeline, smooth tween, blocked-feedback animation
 - `GameStateMachine` — `COMBAT` state, `to_combat()`, `is_combat()`
 - HP bar HUD wired in `main.gd` via `_add_hp_bar()` → `WorldUIModule.setup_hp_bar()`
