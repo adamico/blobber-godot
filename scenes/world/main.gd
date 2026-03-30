@@ -23,6 +23,7 @@ extends Node3D
 @export var flask_item: ItemData
 @export var ward_item: ItemData
 @export var potion_item: ItemData
+@export var disposal_chute_scene: PackedScene
 
 @export_group("Overlays")
 @export_file("*.tscn") \
@@ -330,11 +331,11 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 	# Speed: how many player turns between each AI tick (1 = every turn).
 	match htype:
 		RpsSystem.HazardProperty.BURNING:
-			h.speed = 2  # Sluggish reanimated NPC — acts every other turn
+			h.speed = 2 # Sluggish reanimated NPC — acts every other turn
 		RpsSystem.HazardProperty.CORROSIVE:
-			h.speed = 1  # Acid Crawler — fast, acts every turn
+			h.speed = 1 # Acid Crawler — fast, acts every turn
 		_:
-			h.speed = 1  # Cursed prop and others: every turn
+			h.speed = 1 # Cursed prop and others: every turn
 
 	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
 	if mcfg != null:
@@ -344,9 +345,14 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 
 
 func _spawn_chute(cell: Vector2i) -> void:
-	var chute := DisposalChute.new()
+	var chute: DisposalChute
+	if disposal_chute_scene != null:
+		chute = disposal_chute_scene.instantiate() as DisposalChute
+	if chute == null:
+		chute = DisposalChute.new()
 	chute.grid_cell = cell
 	chute.name = "DisposalChute_%d_%d" % [cell.x, cell.y]
+
 	add_child(chute)
 
 
