@@ -42,7 +42,7 @@ func is_player_cell_passable(cell: Vector2i, enemies: Array, pickups: Array = []
 	return true
 
 
-func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array) -> bool:
+func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array, pickups: Array = []) -> bool:
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
 
@@ -53,6 +53,13 @@ func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array) -> bool:
 			continue
 		if other.grid_state.cell == cell:
 			return false
+
+	for pickup in pickups:
+		if pickup == null or not is_instance_valid(pickup):
+			continue
+		if "grid_cell" in pickup and "blocks_movement" in pickup:
+			if pickup.grid_cell == cell and pickup.blocks_movement:
+				return false
 
 	return true
 

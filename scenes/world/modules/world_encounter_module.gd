@@ -106,7 +106,10 @@ func _enemy_cell_passable(enemy, cell: Vector2i) -> bool:
 	if _player != null and _player.grid_state != null and _player.grid_state.cell == cell:
 		return false
 	if _grid_module != null:
-		return _grid_module.is_enemy_cell_passable(enemy, cell, _enemies)
+		var pickups := []
+		if _world_root != null:
+			pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+		return _grid_module.is_enemy_cell_passable(enemy, cell, _enemies, pickups)
 	return true
 
 
