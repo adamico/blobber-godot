@@ -8,9 +8,9 @@ func test_required_actions_exist() -> void:
         &"move_right",
         &"turn_left",
         &"turn_right",
-        &"combat_attack",
-        &"combat_defend",
-        &"combat_use_item",
+        &"use_slot_1",
+        &"use_slot_2",
+        &"use_slot_3",
     ]
 
     for action in required_actions:
@@ -24,9 +24,9 @@ func test_required_actions_have_at_least_one_binding() -> void:
         &"move_right",
         &"turn_left",
         &"turn_right",
-        &"combat_attack",
-        &"combat_defend",
-        &"combat_use_item",
+        &"use_slot_1",
+        &"use_slot_2",
+        &"use_slot_3",
     ]
 
     for action in required_actions:

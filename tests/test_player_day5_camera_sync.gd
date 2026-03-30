@@ -55,7 +55,7 @@ func test_player_scene_has_camera3d_child() -> void:
 func test_camera_uses_camera_height_offset() -> void:
 	var player := _spawn_player()
 	player.camera_height = 1.25
-	player._apply_canonical_transform()
+	player.apply_canonical_transform()
 
 	_assert_camera_centered(player)
 
@@ -67,7 +67,7 @@ func test_camera_yaw_is_cardinal_for_all_facings() -> void:
 
 	for facing in GridDefinitions.Facing.values():
 		player.grid_state = GridState.new(Vector2i.ZERO, facing)
-		player._apply_canonical_transform()
+		player.apply_canonical_transform()
 
 		assert_true(_is_cardinal_yaw(camera.global_rotation_degrees.y), "Camera yaw must stay cardinal")
 		assert_true(is_equal_approx(_normalized_degrees(camera.global_rotation_degrees.y), CARDINAL_YAWS[facing]), "Camera yaw should match cardinal facing")

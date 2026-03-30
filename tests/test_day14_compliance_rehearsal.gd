@@ -45,7 +45,7 @@ func test_compliance_grid_commands_move_exactly_one_cell_or_noop_when_blocked() 
 		assert_eq(manhattan, 1, "Traversal command must move exactly one grid cell")
 
 	player.grid_state = GridState.new(Vector2i.ZERO, GridDefinitions.Facing.NORTH)
-	player._apply_canonical_transform()
+	player.apply_canonical_transform()
 	player.movement_controller.passability_fn = func(_cell: Vector2i) -> bool: return false
 
 	var blocked_before := player.grid_state.cell
