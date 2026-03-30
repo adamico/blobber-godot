@@ -13,14 +13,16 @@
 [ext_resource type="PackedScene" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
-[ext_resource type="Resource" path="res://resources/items/hydro_mop.tres" id="8_5ebq0"]
+[ext_resource type="Resource" path="res://resources/items/mop.tres" id="8_5ebq0"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
 [ext_resource type="Script" uid="uid://03i62ypeorjw" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
-[ext_resource type="Resource" path="res://resources/items/spectral_vac.tres" id="9_tsn8l"]
-[ext_resource type="Resource" path="res://resources/items/inert_sponge.tres" id="10_1notw"]
+[ext_resource type="Resource" path="res://resources/items/ritual_candle.tres" id="9_tsn8l"]
+[ext_resource type="Resource" path="res://resources/items/splash_flask.tres" id="10_1notw"]
 [ext_resource type="Script" uid="uid://cbe2icf2qc83t" path="res://scenes/world/modules/world_run_outcome_module.gd" id="10_q8k5u"]
+[ext_resource type="Resource" path="res://resources/items/iron_ward.tres" id="11_ironward"]
 [ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
+[ext_resource type="Resource" path="res://resources/items/potion.tres" id="12_potion"]
 [ext_resource type="Script" uid="uid://ctchp8tibfuv1" path="res://scenes/world/modules/world_turn_orchestrator.gd" id="13_p7vna"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
 [ext_resource type="Script" uid="uid://cngjknn253s42" path="res://scenes/world/modules/world_policy_orchestrator.gd" id="15_8m9uz"]
@@ -64,8 +66,10 @@ belt_hud_scene = ExtResource("5_28gua")
 clean_hud_scene = ExtResource("6_e3mvx")
 hazard_scene = ExtResource("7_8ap0l")
 mop_item = ExtResource("8_5ebq0")
-vac_item = ExtResource("9_tsn8l")
-sponge_item = ExtResource("10_1notw")
+candle_item = ExtResource("9_tsn8l")
+flask_item = ExtResource("10_1notw")
+ward_item = ExtResource("11_ironward")
+potion_item = ExtResource("12_potion")
 
 [node name="Player" parent="." unique_id=1354958968 instance=ExtResource("2_7tdlr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, -3)

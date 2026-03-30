@@ -68,9 +68,26 @@ func _set_slot(
 
 	if label != null:
 		if item != null:
-			label.text = item.item_name
+			var tag := ""
+			if item.item_type == ItemData.ItemType.TOOL:
+				tag = " (%s)" % RpsSystem.ToolClass.keys()[item.tool_class].capitalize()
+			elif item.item_type == ItemData.ItemType.DEBRIS:
+				tag = " [DEBRIS]"
+			label.text = item.item_name + tag
 		else:
 			label.text = "- Empty -"
 
 	if panel != null:
 		panel.modulate.a = 0.4 if item == null else 1.0
+		if item != null:
+			match item.tool_class:
+				RpsSystem.ToolClass.SOAKED:
+					panel.self_modulate = Color(0.2, 0.5, 1.0) # Blue
+				RpsSystem.ToolClass.INERT:
+					panel.self_modulate = Color(0.6, 0.6, 0.6) # Gray
+				RpsSystem.ToolClass.CLEANSED:
+					panel.self_modulate = Color(1.0, 0.9, 0.2) # Yellow
+				_:
+					panel.self_modulate = Color.WHITE
+		else:
+			panel.self_modulate = Color.WHITE

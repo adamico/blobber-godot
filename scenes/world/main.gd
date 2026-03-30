@@ -19,8 +19,10 @@ extends Node3D
 @export_group("Entities & Items")
 @export var hazard_scene: PackedScene
 @export var mop_item: ItemData
-@export var vac_item: ItemData
-@export var sponge_item: ItemData
+@export var candle_item: ItemData
+@export var flask_item: ItemData
+@export var ward_item: ItemData
+@export var potion_item: ItemData
 
 @export_group("Overlays")
 @export_file("*.tscn") \
@@ -294,11 +296,11 @@ func _author_floor_1() -> void:
 
 	if valid_cells.size() >= 6:
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), mop_item)
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), vac_item)
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), sponge_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), candle_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
 
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.FLAMMABLE)
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.UNDEAD)
+		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.BURNING)
+		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.CURSED)
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardClass.CORROSIVE)
 
 
@@ -311,9 +313,9 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardClass) -> void:
 
 	var ai = h.get_node_or_null("EnemyAI")
 	if ai != null:
-		if htype == RpsSystem.HazardClass.UNDEAD or htype == RpsSystem.HazardClass.CURSED:
+		if htype == RpsSystem.HazardClass.CURSED:
 			ai.set("behavior", 2) # HazardAI.Behavior.CHASE
-		elif htype == RpsSystem.HazardClass.VOLATILE:
+		elif htype == RpsSystem.HazardClass.BURNING:
 			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
 
 	add_child(h)

@@ -2,37 +2,34 @@ class_name RpsSystem
 extends RefCounted
 
 enum HazardClass {
-	FLAMMABLE,
-	VOLATILE,
-	UNDEAD,
-	CURSED,
+	BURNING,
 	CORROSIVE,
-	ACID,
+	CURSED,
 }
 
 enum ToolClass {
-	AQUEOUS,
-	SPECTRAL,
+	SOAKED,
 	INERT,
-	UTILITY,
+	CLEANSED,
+	OTHER,
 }
 
 const WEAKNESS_TABLE: Dictionary = {
-	ToolClass.AQUEOUS: [HazardClass.FLAMMABLE, HazardClass.VOLATILE],
-	ToolClass.SPECTRAL: [HazardClass.UNDEAD, HazardClass.CURSED],
-	ToolClass.INERT: [HazardClass.CORROSIVE, HazardClass.ACID],
+	ToolClass.SOAKED: [HazardClass.BURNING],
+	ToolClass.INERT: [HazardClass.CORROSIVE],
+	ToolClass.CLEANSED: [HazardClass.CURSED],
 }
 
-const EFFECTIVE_DAMAGE := 999
+const BONUS_DAMAGE := 3
 const BASE_DAMAGE := 1
 
 
 static func is_effective(tool_class: ToolClass, hazard_class: HazardClass) -> bool:
-	var weaknesses: Array = WEAKNESS_TABLE.get(tool_class, [])
+	var weaknesses = WEAKNESS_TABLE.get(tool_class, [])
 	return weaknesses.has(hazard_class)
 
 
 static func compute_damage(tool_class: ToolClass, hazard_class: HazardClass) -> int:
 	if is_effective(tool_class, hazard_class):
-		return EFFECTIVE_DAMAGE
+		return BONUS_DAMAGE
 	return BASE_DAMAGE

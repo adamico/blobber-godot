@@ -3,7 +3,7 @@ extends Enemy
 
 signal hazard_cleared(hazard: Hazard)
 
-@export var hazard_class: RpsSystem.HazardClass = RpsSystem.HazardClass.FLAMMABLE
+@export var hazard_class: RpsSystem.HazardClass = RpsSystem.HazardClass.BURNING
 @export var contact_damage: int = 1
 @export var hazard_hp: int = 3 ## Hits needed with non-matching tools
 
@@ -23,12 +23,17 @@ func _ready() -> void:
 	add_child(lbl)
 
 
-func receive_tool_hit(tool_class: RpsSystem.ToolClass) -> bool:
+func receive_tool_hit(tool_class: RpsSystem.ToolClass, target_stats: CharacterStats = null) -> bool:
 	var damage := RpsSystem.compute_damage(tool_class, hazard_class)
 	_current_hp -= damage
 	if _current_hp <= 0:
 		_clear()
 		return true
+
+	# Immediate retaliation if player is present
+	if target_stats != null:
+		deal_contact_damage(target_stats)
+
 	return false
 
 

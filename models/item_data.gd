@@ -10,7 +10,9 @@ enum ItemType {
 @export var item_name: String = ""
 @export var description: String = ""
 @export var item_type: ItemType = ItemType.TOOL
-@export var tool_class: RpsSystem.ToolClass = RpsSystem.ToolClass.UTILITY
+@export var tool_class: RpsSystem.ToolClass = RpsSystem.ToolClass.OTHER
 @export var use_range: int = 1  ## 1 = adjacent, 2 = one tile ahead
-@export var is_reusable: bool = true  ## false for Synth-Gel Packet
+@export var is_reusable: bool = true
+@export var is_defense: bool = false
+@export var is_aoe: bool = false
 @export var stat_effect: Dictionary = {}  ## e.g. {"heal": 2} for consumables

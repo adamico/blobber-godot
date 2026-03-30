@@ -6,6 +6,8 @@ extends Node
 signal turn_completed
 signal clean_status_changed(cleared: int, total: int)
 signal player_died
+signal debris_consumed_as_weapon(cell: Vector2i)
+signal action_feedback(text: String, is_positive: bool)
 
 const HAZARD_GROUP := &"hazards"
 
@@ -195,16 +197,41 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 		cells_to_check.append(target_cell + facing_vec)
 
 	var hit_any := false
+	var debris_consumed := false
+
 	for cell in cells_to_check:
 		for hazard in _get_hazards_at(cell):
 			if hazard.is_cleared():
 				continue
-			var cleared = hazard.receive_tool_hit(item.tool_class) as bool
+
+			# Special logic for Debris as a weapon
+			if item.item_type == ItemData.ItemType.DEBRIS:
+				if hazard.hazard_class == RpsSystem.HazardClass.CORROSIVE:
+					# Instantly clear corrosive hazard
+					hazard.receive_tool_hit(RpsSystem.ToolClass.INERT, _player.stats)
+					debris_consumed_as_weapon.emit(cell)
+					action_feedback.emit("DEBRIS WEAPON!", true)
+					debris_consumed = true
+					hit_any = true
+					break
+				else:
+					# Debris does nothing to other hazards
+					continue
+
+			# Normal tool logic
+			var is_effective := RpsSystem.is_effective(item.tool_class, hazard.hazard_class)
+			var cleared = hazard.receive_tool_hit(item.tool_class, _player.stats) as bool
 			hit_any = true
+
+			if is_effective:
+				action_feedback.emit("EFFECTIVE!", true)
+			else:
+				action_feedback.emit("HIT!", false)
+
 			if cleared:
 				break
 
-	if hit_any and not item.is_reusable:
+	if (hit_any and not item.is_reusable) or debris_consumed:
 		_player.inventory.remove_at(slot_index)
 
 
