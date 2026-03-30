@@ -20,3 +20,4 @@ enum ItemType {
 # Runtime tracking for DEBRIS items
 var origin_hazard_property: int = -1
 var revert_turns_base: int = 5
+var cleanup_value: int = 1

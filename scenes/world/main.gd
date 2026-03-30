@@ -26,12 +26,12 @@ extends Node3D
 
 @export_group("Overlays")
 @export_file("*.tscn") \
-var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
+var overlay_floor_complete_scene_path := "res://scenes/overlays/floor_complete_overlay.tscn"
 @export_file("*.tscn") \
 var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 
-const OVERLAY_VICTORY := &"victory"
+const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
 const OVERLAY_DEFEAT := &"defeat"
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
@@ -122,7 +122,7 @@ func active_overlay_kind() -> StringName:
 
 
 func open_overlay(kind: StringName) -> void:
-	if kind == OVERLAY_VICTORY or kind == OVERLAY_DEFEAT:
+	if kind == OVERLAY_FLOOR_COMPLETE or kind == OVERLAY_DEFEAT:
 		if _overlay_module != null:
 			_overlay_module.open_overlay(kind)
 
@@ -155,7 +155,13 @@ func finish_with_failure() -> void:
 
 func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
-	open_overlay(OVERLAY_VICTORY)
+	open_overlay(OVERLAY_FLOOR_COMPLETE)
+	# Pass the final clean% to the dedicated overlay so it can show the job rating.
+	if _overlay_module != null:
+		var overlay := _overlay_module.active_overlay()
+		if overlay != null and overlay.has_method("configure_result"):
+			var pct := _turn_manager.get_clean_percent() if _turn_manager != null else 0
+			overlay.call("configure_result", pct)
 
 
 func _setup_game_state_machine() -> void:
@@ -303,6 +309,9 @@ func _author_floor_1() -> void:
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CURSED)
 		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CORROSIVE)
 
+		# Place a disposal chute near the centre of the floor.
+		_spawn_chute(Vector2i(6, 5))
+
 
 func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 	if hazard_scene == null:
@@ -332,6 +341,13 @@ func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
 		h.movement_config = mcfg
 
 	add_child(h)
+
+
+func _spawn_chute(cell: Vector2i) -> void:
+	var chute := DisposalChute.new()
+	chute.grid_cell = cell
+	chute.name = "DisposalChute_%d_%d" % [cell.x, cell.y]
+	add_child(chute)
 
 
 func _wire_occupancy() -> void:
@@ -420,9 +436,8 @@ func _on_turn_completed() -> void:
 	if _player != null and _player.grid_state != null:
 		_ui_module.refresh_minimap(_player.grid_state.cell, _grid_module.occupancy())
 
-	# Check floor exit
-	if _turn_manager.is_floor_clean():
-		_check_exit_condition()
+	# Check floor exit after every turn (rated completion — exit is always possible).
+	_check_exit_condition()
 
 
 func _initialize_floor() -> void:
@@ -436,6 +451,6 @@ func _check_exit_condition() -> void:
 
 	for node in get_tree().get_nodes_in_group(&"world_exit_cells"):
 		if node is WorldExit and node.matches_cell(_player.grid_state.cell):
-			if node.can_trigger(not _turn_manager.is_floor_clean()):
+			if node.can_trigger(false):
 				finish_with_success()
 				return

@@ -10,6 +10,7 @@ signal debris_consumed_as_weapon(cell: Vector2i)
 signal action_feedback(text: String, is_positive: bool)
 
 const HAZARD_GROUP := &"hazards"
+const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 
 var _player: Player
 var _encounter_module: WorldEncounterModule
@@ -18,8 +19,8 @@ var _world_root: Node
 
 const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
 
-var _total_hazards: int = 0
-var _cleared_hazards: int = 0
+var _total_cleanup_value: int = 0
+var _disposed_cleanup_value: int = 0
 
 
 func configure(
@@ -35,10 +36,10 @@ func configure(
 
 
 func initialize_floor() -> void:
-	_cleared_hazards = 0
-	_total_hazards = _count_hazards()
+	_disposed_cleanup_value = 0
+	_total_cleanup_value = _count_cleanup_value()
 	_connect_hazard_signals()
-	clean_status_changed.emit(_cleared_hazards, _total_hazards)
+	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 
 
 func process_player_move(_new_state: GridState) -> void:
@@ -142,6 +143,19 @@ func process_player_drop(slot_index: int) -> void:
 	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
 	var target_cell := _player.grid_state.cell + facing_vec
 
+	# If facing a disposal chute, route eligible debris into it instead of floor-dropping.
+	var chute = _get_disposal_chute_at(target_cell)
+	if chute != null:
+		if not chute.accepts_item(item):
+			action_feedback.emit("CHUTE REJECTED", false)
+			turn_completed.emit()
+			return
+		if _player.inventory.remove_at(slot_index):
+			_register_disposal(item)
+			action_feedback.emit("DISPOSED", true)
+			turn_completed.emit()
+		return
+
 	# Logic: Can only drop into empty/passable tiles (not walls)
 	if _grid_module != null and _grid_module.occupancy() != null:
 		if not _grid_module.occupancy().is_passable(target_cell):
@@ -191,15 +205,21 @@ func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
 
 
 func get_clean_cleared() -> int:
-	return _cleared_hazards
+	return _disposed_cleanup_value
 
 
 func get_clean_total() -> int:
-	return _total_hazards
+	return _total_cleanup_value
+
+
+func get_clean_percent() -> int:
+	if _total_cleanup_value <= 0:
+		return 0
+	return int(round(float(_disposed_cleanup_value) / float(_total_cleanup_value) * 100.0))
 
 
 func is_floor_clean() -> bool:
-	return _total_hazards > 0 and _cleared_hazards >= _total_hazards
+	return _total_cleanup_value > 0 and _disposed_cleanup_value >= _total_cleanup_value
 
 # --- Private ---
 
@@ -320,14 +340,14 @@ func _collect_pickups(player_cell: Vector2i) -> void:
 		node.call("collect_if_player_on_cell", _player, player_cell)
 
 
-func _count_hazards() -> int:
+func _count_cleanup_value() -> int:
 	if _world_root == null:
 		return 0
-	var count := 0
+	var total := 0
 	for node in _world_root.get_tree().get_nodes_in_group(HAZARD_GROUP):
 		if node is Hazard and not node.is_cleared():
-			count += 1
-	return count
+			total += maxi(node.cleanup_value, 1)
+	return total
 
 
 func _get_all_active_hazards() -> Array:
@@ -349,14 +369,13 @@ func _connect_hazard_signals() -> void:
 
 
 func _on_hazard_cleared(hazard: Hazard) -> void:
-	_cleared_hazards += 1
-	clean_status_changed.emit(_cleared_hazards, _total_hazards)
-
-	# Spawn debris on cleared hazard cell
+	# No clean% credit on hazard defeat — credit comes only from chute disposal.
+	# Spawn debris on cleared hazard cell.
 	if hazard != null and hazard.grid_state != null:
 		var dupe := DEBRIS_ITEM.duplicate() as ItemData
 		dupe.origin_hazard_property = hazard.hazard_property
 		dupe.revert_turns_base = hazard.revert_turns_base
+		dupe.cleanup_value = maxi(hazard.cleanup_value, 1)
 		var p = spawn_pickup(hazard.grid_state.cell, dupe)
 		if p != null:
 			p.setup_revert(hazard.revert_turns_base, hazard.hazard_property)
@@ -380,9 +399,23 @@ func _respawn_hazard_from_revert(pickup: WorldPickup) -> void:
 	# Spawn hazard
 	if _world_root.has_method("_spawn_hazard"):
 		_world_root.call("_spawn_hazard", pickup.grid_cell, pickup.origin_hazard_property)
-		
-	# Update clean percent state
-	_total_hazards += 1
 	_connect_hazard_signals()
-	clean_status_changed.emit(_cleared_hazards, _total_hazards)
+
+
+func _get_disposal_chute_at(cell: Vector2i):
+	if _world_root == null or _world_root.get_tree() == null:
+		return null
+	for node in _world_root.get_tree().get_nodes_in_group(DISPOSAL_CHUTE_GROUP):
+		if node == null or not is_instance_valid(node):
+			continue
+		if node.has_method("matches_cell") and bool(node.call("matches_cell", cell)):
+			return node
+	return null
+
+
+func _register_disposal(item: ItemData) -> void:
+	if item == null or item.item_type != ItemData.ItemType.DEBRIS:
+		return
+	_disposed_cleanup_value += maxi(item.cleanup_value, 1)
+	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 

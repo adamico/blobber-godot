@@ -10,7 +10,7 @@ func _spawn_player() -> Player:
 
 
 func _wait_until_not_busy(entity: GridEntity, max_frames: int = 180) -> void:
-	for _i in range(max_frames):
+	for frame in range(max_frames):
 		if not entity.movement_controller.is_busy:
 			return
 		await get_tree().process_frame
@@ -69,7 +69,12 @@ func test_queue_accepts_one_command_while_busy() -> void:
 func test_canonical_transform_applied_after_command() -> void:
 	var player := _spawn_player()
 	player.execute_command(GridCommand.Type.STEP_FORWARD)
-	var expected_pos := GridMapper.cell_to_world(player.grid_state.cell, player.movement_config.cell_size, 0.0)
+	await _wait_until_not_busy(player)
+	var expected_pos := GridMapper.cell_to_world(
+		player.grid_state.cell,
+		player.movement_config.cell_size,
+		0.0,
+	)
 	assert_eq(player.global_position, expected_pos)
 
 
@@ -77,6 +82,7 @@ func test_command_completed_signal_emitted() -> void:
 	var player := _spawn_player()
 	watch_signals(player)
 	player.execute_command(GridCommand.Type.TURN_RIGHT)
+	await _wait_until_not_busy(player)
 	assert_signal_emitted(player, "command_completed")
 
 

@@ -7,6 +7,7 @@ signal hazard_cleared(hazard: Hazard)
 @export var contact_damage: int = 1
 @export var hazard_hp: int = 3 ## Hits needed with non-matching tools
 @export var revert_turns_base: int = 5 ## Default turns until debris reverts to this hazard
+@export var cleanup_value: int = 1
 
 var _current_hp: int = 1
 

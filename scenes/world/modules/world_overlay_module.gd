@@ -29,6 +29,12 @@ func active_overlay_kind() -> StringName:
 	return _active_overlay_kind
 
 
+func active_overlay() -> Control:
+	if not has_active_overlay():
+		return null
+	return _active_overlay
+
+
 func open_overlay(kind: StringName) -> bool:
 	if _overlay_mount == null:
 		return false

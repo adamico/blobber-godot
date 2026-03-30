@@ -73,7 +73,7 @@ func build_required_modules_from_world(world: Node) -> Dictionary:
 
 func build_overlay_paths_from_world(world: Node) -> Dictionary:
 	return {
-		&"victory": world.get("overlay_victory_scene_path"),
+		&"floor_complete": world.get("overlay_floor_complete_scene_path"),
 		&"defeat": world.get("overlay_defeat_scene_path"),
 	}
 
