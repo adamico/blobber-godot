@@ -1,7 +1,7 @@
 [gd_resource type="MeshLibrary" format=3 uid="uid://bxgdx6gy414a7"]
 
 [ext_resource type="Material" uid="uid://cik42vibq4xqs" path="res://assets/textures/Bricks068_1K-PNG.tres" id="1_8b8d0"]
-[ext_resource type="Material" path="res://assets/textures/Tiles085_1K-PNG.tres" id="2_ainu4"]
+[ext_resource type="Material" uid="uid://wk1fk8ywws1j" path="res://assets/textures/Tiles085_1K-PNG.tres" id="2_ainu4"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_rb6gl"]
 material = ExtResource("1_8b8d0")

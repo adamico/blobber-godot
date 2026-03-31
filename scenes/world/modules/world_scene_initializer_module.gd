@@ -43,8 +43,8 @@ func _add_floor(root: Node3D) -> void:
 	# 	Color(0.75, 0.75, 0.75),
 	# 	_make_floor_texture(),
 	# )
-	# mat.emission_enabled = true
-	# mat.emission = Color(0.06, 0.06, 0.06)
+	mat.emission_enabled = true
+	mat.emission = Color(0.06, 0.06, 0.06)
 	# mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
 
 	mesh_instance.material_override = mat
@@ -66,7 +66,6 @@ func _add_ceiling(root: Node3D) -> void:
 	# 	Color(0.26, 0.26, 0.26),
 	# 	_make_ceiling_texture(),
 	# )
-	# mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 	# mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
 	mat.albedo_color = Color(0.26, 0.26, 0.26)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
