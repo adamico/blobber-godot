@@ -1,6 +1,8 @@
+class_name WorldSceneInitializerModule
 extends Node
 
-class_name WorldSceneInitializerModule
+@export var floor_material: StandardMaterial3D
+@export var ceiling_material: StandardMaterial3D
 
 const GRID_PLANE_SUBDIVISIONS := 9
 const GRID_PLANE_SIZE := Vector2(64, 64)
@@ -12,51 +14,64 @@ func add_environment(root: Node3D) -> void:
 	_add_ceiling(root)
 
 
-func _add_floor(root: Node3D) -> void:
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = "DebugFloor"
-	mesh_instance.position = _get_grid_visual_offset(root)
+func _add_texture(mat: StandardMaterial3D, albedo_color: Color, albedo_texture: Texture2D) -> void:
+	mat.albedo_color = albedo_color
+	mat.albedo_texture = albedo_texture
+	mat.texture_repeat = 1
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
 
+
+func _create_plane_mesh() -> PlaneMesh:
 	var plane := PlaneMesh.new()
 	plane.size = GRID_PLANE_SIZE
 	plane.subdivide_depth = GRID_PLANE_SUBDIVISIONS
 	plane.subdivide_width = GRID_PLANE_SUBDIVISIONS
+	return plane
+
+
+func _add_floor(root: Node3D) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	# mesh_instance.name = "DebugFloor"
+	# mesh_instance.position = _get_grid_visual_offset(root)
+
+	var plane := _create_plane_mesh()
 	mesh_instance.mesh = plane
 
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.75, 0.75, 0.75)
-	mat.albedo_texture = _make_floor_texture()
-	mat.texture_repeat = 1
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
-	mat.emission_enabled = true
-	mat.emission = Color(0.06, 0.06, 0.06)
-	mesh_instance.material_override = mat
+	var mat := floor_material.duplicate() as StandardMaterial3D
+	# _add_texture(
+	# 	mat,
+	# 	Color(0.75, 0.75, 0.75),
+	# 	_make_floor_texture(),
+	# )
+	# mat.emission_enabled = true
+	# mat.emission = Color(0.06, 0.06, 0.06)
+	# mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
 
+	mesh_instance.material_override = mat
 	root.add_child(mesh_instance)
 
 
 func _add_ceiling(root: Node3D) -> void:
 	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = "DebugCeiling"
+	# mesh_instance.name = "DebugCeiling"
 	mesh_instance.position = _get_grid_visual_offset(root) + Vector3(0.0, CEILING_HEIGHT, 0.0)
-	mesh_instance.rotate_x(PI)
+	# mesh_instance.rotate_x(PI)
 
-	var plane := PlaneMesh.new()
-	plane.size = GRID_PLANE_SIZE
-	plane.subdivide_depth = GRID_PLANE_SUBDIVISIONS
-	plane.subdivide_width = GRID_PLANE_SUBDIVISIONS
+	var plane := _create_plane_mesh()
 	mesh_instance.mesh = plane
 
-	var mat := StandardMaterial3D.new()
+	var mat := ceiling_material.duplicate() as StandardMaterial3D
+	# _add_texture(
+	# 	mat,
+	# 	Color(0.26, 0.26, 0.26),
+	# 	_make_ceiling_texture(),
+	# )
+	# mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+	# mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
 	mat.albedo_color = Color(0.26, 0.26, 0.26)
-	mat.albedo_texture = _make_ceiling_texture()
-	mat.texture_repeat = 1
-	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
-	mat.uv1_scale = _uv_scale_for_grid(root, plane.size)
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mesh_instance.material_override = mat
 
+	mesh_instance.material_override = mat
 	root.add_child(mesh_instance)
 
 
