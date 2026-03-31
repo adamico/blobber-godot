@@ -6,11 +6,11 @@
 [ext_resource type="Resource" path="res://resources/presets/movement_config_smooth.tres" id="3_r3w6i"]
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
-[ext_resource type="PackedScene" path="res://ui/hp_hud.tscn" id="4_ggkmy"]
+[ext_resource type="PackedScene" uid="uid://k4eo6chcrluc" path="res://ui/hp_hud.tscn" id="4_ggkmy"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
-[ext_resource type="PackedScene" path="res://ui/belt_hud.tscn" id="5_28gua"]
+[ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
-[ext_resource type="PackedScene" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
+[ext_resource type="PackedScene" uid="uid://1rq7cemd3thf" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
 [ext_resource type="PackedScene" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
 [ext_resource type="Resource" uid="uid://7ujyorbpecsq" path="res://resources/items/mop.tres" id="8_5ebq0"]
@@ -37,7 +37,7 @@
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8ap0l"]
 shader = ExtResource("14_5ebq0")
 shader_parameter/resolution = Vector2(320, 180)
-shader_parameter/scan_line_amount = 0.5
+shader_parameter/scan_line_amount = 0.246000011685
 shader_parameter/warp_amount = 0.05
 shader_parameter/vignette_amount = 0.814000038665
 shader_parameter/vignette_intensity = 0.5010000237975
@@ -108,9 +108,9 @@ mouse_filter = 2
 layout_mode = 3
 anchors_preset = 0
 offset_left = 1016.0
-offset_top = 56.0
+offset_top = 16.0
 offset_right = 1264.0
-offset_bottom = 304.0
+offset_bottom = 264.0
 mouse_filter = 2
 script = ExtResource("5_1h5vq")
 blocked_color = Color(1, 1, 1, 0.9019608)

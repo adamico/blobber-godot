@@ -2,8 +2,8 @@ extends Control
 
 @export_file("*.tscn") var gameplay_scene_path := "res://scenes/world/main.tscn"
 
-@onready var _start_button: Button = get_node_or_null("Center/Panel/Margin/VBox/StartButton")
-@onready var _quit_button: Button = get_node_or_null("Center/Panel/Margin/VBox/QuitButton")
+@onready var _start_button: Button = %StartButton
+@onready var _quit_button: Button = %QuitButton
 
 
 func _ready() -> void:
@@ -23,7 +23,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_accept"):
 		_start_game()
-		get_viewport().set_input_as_handled()
 
 
 func _on_start_pressed() -> void:

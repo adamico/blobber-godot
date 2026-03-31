@@ -195,7 +195,7 @@ func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
 	var lbl := Label3D.new()
 	lbl.text = item.item_name
 	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.pixel_size = 0.005
+	lbl.pixel_size = 0.0025
 	lbl.position = Vector3(0, 0.4, 0)
 	p.add_child(lbl)
 	p.add_child(mesh)
@@ -380,6 +380,7 @@ func _on_hazard_cleared(hazard: Hazard) -> void:
 		if p != null:
 			p.setup_revert(hazard.revert_turns_base, hazard.hazard_property)
 
+
 func _tick_debris_revert() -> void:
 	if _world_root == null:
 		return
@@ -392,10 +393,11 @@ func _tick_debris_revert() -> void:
 				_respawn_hazard_from_revert(node)
 				node.queue_free()
 
+
 func _respawn_hazard_from_revert(pickup: WorldPickup) -> void:
 	if _world_root == null or pickup.origin_hazard_property == -1:
 		return
-		
+
 	# Spawn hazard
 	if _world_root.has_method("_spawn_hazard"):
 		_world_root.call("_spawn_hazard", pickup.grid_cell, pickup.origin_hazard_property)
@@ -418,4 +420,3 @@ func _register_disposal(item: ItemData) -> void:
 		return
 	_disposed_cleanup_value += maxi(item.cleanup_value, 1)
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
-

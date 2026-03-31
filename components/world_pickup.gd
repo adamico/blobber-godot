@@ -25,14 +25,17 @@ func _ready() -> void:
 	_timer_label.position = Vector3(0, 0.6, 0)
 	_timer_label.modulate = Color(1, 0.4, 0) # Orange-red color for timer
 	add_child(_timer_label)
+
 	_update_label()
 
 	_sync_world_position()
+
 
 func setup_revert(turns: int, origin_property: int) -> void:
 	revert_turns_remaining = turns
 	origin_hazard_property = origin_property
 	_update_label()
+
 
 func tick_revert() -> bool:
 	if revert_turns_remaining <= 0:
@@ -40,6 +43,7 @@ func tick_revert() -> bool:
 	revert_turns_remaining -= 1
 	_update_label()
 	return revert_turns_remaining <= 0
+
 
 func _update_label() -> void:
 	if _timer_label != null:

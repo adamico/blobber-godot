@@ -1,9 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://wfhusc5x0ssf"]
 
-[ext_resource type="Script" path="res://ui/belt_hud.gd" id="1"]
+[ext_resource type="Script" uid="uid://cgk5klc7c2su7" path="res://ui/belt_hud.gd" id="1"]
+[ext_resource type="StyleBox" uid="uid://csyeloxw1tymv" path="res://resources/gui/new_style_box_flat.tres" id="2_ax6ya"]
 
-[node name="BeltHUD" type="Control"]
-layout_mode = 1
+[node name="BeltHUD" type="Control" unique_id=262300838]
+layout_mode = 3
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
@@ -13,67 +14,105 @@ grow_horizontal = 2
 grow_vertical = 0
 script = ExtResource("1")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=217518123]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-alignment = 1
 theme_override_constants/separation = 12
+alignment = 1
 
-[node name="Slot1" type="PanelContainer" parent="HBox"]
+[node name="Slot1" type="PanelContainer" parent="HBox" unique_id=94384596]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 60)
 layout_mode = 2
+theme_override_styles/panel = ExtResource("2_ax6ya")
 
-[node name="VBox" type="VBoxContainer" parent="HBox/Slot1"]
+[node name="VBox" type="VBoxContainer" parent="HBox/Slot1" unique_id=588055654]
 layout_mode = 2
 alignment = 1
 
-[node name="Key" type="Label" parent="HBox/Slot1"]
+[node name="Key1" type="Label" parent="HBox/Slot1/VBox" unique_id=911670358]
+unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 0.7)
-theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "[1]"
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="HBox/Slot1"]
+[node name="Label1" type="Label" parent="HBox/Slot1/VBox" unique_id=234088475]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "- Empty -"
 horizontal_alignment = 1
 
-[node name="Slot2" type="PanelContainer" parent="HBox"]
+[node name="Property1" type="Label" parent="HBox/Slot1/VBox" unique_id=1436171149]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "(property)"
+horizontal_alignment = 1
+
+[node name="Slot2" type="PanelContainer" parent="HBox" unique_id=1632814879]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 60)
 layout_mode = 2
+theme_override_styles/panel = ExtResource("2_ax6ya")
 
-[node name="Key" type="Label" parent="HBox/Slot2"]
+[node name="VBox" type="VBoxContainer" parent="HBox/Slot2" unique_id=766890938]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 0.7)
-theme_override_font_sizes/font_size = 11
+alignment = 1
+
+[node name="Key2" type="Label" parent="HBox/Slot2/VBox" unique_id=541076144]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "[2]"
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="HBox/Slot2"]
+[node name="Label2" type="Label" parent="HBox/Slot2/VBox" unique_id=1201843453]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "- Empty -"
 horizontal_alignment = 1
 
-[node name="Slot3" type="PanelContainer" parent="HBox"]
+[node name="Property2" type="Label" parent="HBox/Slot2/VBox" unique_id=999681889]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "(property)"
+horizontal_alignment = 1
+
+[node name="Slot3" type="PanelContainer" parent="HBox" unique_id=272504618]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(180, 60)
 layout_mode = 2
+theme_override_styles/panel = ExtResource("2_ax6ya")
 
-[node name="Key" type="Label" parent="HBox/Slot3"]
+[node name="VBox" type="VBoxContainer" parent="HBox/Slot3" unique_id=101812413]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.8, 1, 0.7)
-theme_override_font_sizes/font_size = 11
+alignment = 1
+
+[node name="Key3" type="Label" parent="HBox/Slot3/VBox" unique_id=1848562305]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 text = "[3]"
 horizontal_alignment = 1
 
-[node name="Label" type="Label" parent="HBox/Slot3"]
+[node name="Label3" type="Label" parent="HBox/Slot3/VBox" unique_id=1362062310]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "- Empty -"
+horizontal_alignment = 1
+
+[node name="Property3" type="Label" parent="HBox/Slot3/VBox" unique_id=1722648295]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "(property)"
 horizontal_alignment = 1

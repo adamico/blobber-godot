@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://camp2wonylrfe"]
 
-[ext_resource type="Script" path="res://scenes/title/title_screen.gd" id="1"]
+[ext_resource type="Script" uid="uid://cpehjuqhvfw1p" path="res://scenes/title/title_screen.gd" id="1"]
 
-[node name="TitleScreen" type="Control"]
+[node name="TitleScreen" type="Control" unique_id=696500802]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=1851254981]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -20,9 +20,9 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.055, 0.086, 0.125, 1)
 
-[node name="BackdropBand" type="ColorRect" parent="."]
+[node name="BackdropBand" type="ColorRect" parent="." unique_id=655981614]
 layout_mode = 1
-anchors_preset = 12
+anchors_preset = -1
 anchor_top = 0.2
 anchor_right = 1.0
 anchor_bottom = 0.78
@@ -31,7 +31,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.094, 0.149, 0.204, 0.78)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=1817690867]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,45 +39,48 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Center" unique_id=532294353]
 custom_minimum_size = Vector2(560, 320)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+[node name="Margin" type="MarginContainer" parent="Center/Panel" unique_id=1706588046]
 layout_mode = 2
 theme_override_constants/margin_left = 22
 theme_override_constants/margin_top = 22
 theme_override_constants/margin_right = 22
 theme_override_constants/margin_bottom = 22
 
-[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin" unique_id=1600768271]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Center/Panel/Margin/VBox" unique_id=1067002386]
 layout_mode = 2
 theme_override_font_sizes/font_size = 44
+text = "The SWEEP"
 horizontal_alignment = 1
-text = "BLOBBER TEMPLATE"
 
-[node name="Subtitle" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="Subtitle" type="Label" parent="Center/Panel/Margin/VBox" unique_id=781984435]
+custom_minimum_size = Vector2(512, 0)
 layout_mode = 2
+text = "Grid crawler foundation with state-driven flow."
 horizontal_alignment = 1
 autowrap_mode = 3
-text = "Grid crawler foundation with state-driven flow."
 
-[node name="Divider" type="HSeparator" parent="Center/Panel/Margin/VBox"]
+[node name="Divider" type="HSeparator" parent="Center/Panel/Margin/VBox" unique_id=1060905505]
 layout_mode = 2
 
-[node name="Hint" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="Hint" type="Label" parent="Center/Panel/Margin/VBox" unique_id=1634033790]
 layout_mode = 2
-horizontal_alignment = 1
 text = "Start a run, then trigger victory/defeat from game logic."
+horizontal_alignment = 1
 
-[node name="StartButton" type="Button" parent="Center/Panel/Margin/VBox"]
+[node name="StartButton" type="Button" parent="Center/Panel/Margin/VBox" unique_id=1491042741]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Start Game"
 
-[node name="QuitButton" type="Button" parent="Center/Panel/Margin/VBox"]
+[node name="QuitButton" type="Button" parent="Center/Panel/Margin/VBox" unique_id=891641472]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Quit"

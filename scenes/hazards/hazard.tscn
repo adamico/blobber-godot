@@ -1,19 +1,28 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://lxy8t5xod0cs"]
 
 [ext_resource type="Script" uid="uid://bs1aafm4hvs1x" path="res://scenes/hazards/hazard.gd" id="1_hazard"]
 [ext_resource type="Script" uid="uid://s6v85n88v444" path="res://scenes/hazards/hazard_ai.gd" id="2_ai"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
-radius = 0.25
-height = 0.8
+radius = 0.2
+height = 0.6
 
-[node name="Hazard" type="Node3D"]
+[node name="Hazard" type="Node3D" unique_id=1779973639]
 script = ExtResource("1_hazard")
 initial_cell = Vector2i(2, 0)
 initial_facing = 3
 
-[node name="EnemyAI" type="Node" parent="."]
+[node name="EnemyAI" type="Node" parent="." unique_id=458565086]
 script = ExtResource("2_ai")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=989224241]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 mesh = SubResource("CapsuleMesh_enemy")
+
+[node name="Label3D" type="Label3D" parent="." unique_id=391576828]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.70000005, 0)
+pixel_size = 0.0025
+billboard = 1
+text = "Hazard
+"

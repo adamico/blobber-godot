@@ -9,6 +9,8 @@ signal hazard_cleared(hazard: Hazard)
 @export var revert_turns_base: int = 5 ## Default turns until debris reverts to this hazard
 @export var cleanup_value: int = 1
 
+@onready var label: Label3D = %Label3D
+
 var _current_hp: int = 1
 
 
@@ -16,13 +18,7 @@ func _ready() -> void:
 	super()
 	_current_hp = hazard_hp
 	add_to_group("hazards")
-
-	var lbl := Label3D.new()
-	lbl.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
-	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.pixel_size = 0.005
-	lbl.position = Vector3(0, 0.6, 0)
-	add_child(lbl)
+	label.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
 
 
 func receive_tool_hit(

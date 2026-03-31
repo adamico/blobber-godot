@@ -1,10 +1,8 @@
 extends Control
 
-## Always-visible HP bar.
-
-@onready var _bar: ProgressBar = $VBox/ProgressBar
-@onready var _label: Label = $VBox/Label
-@onready var _status_label: Label = $VBox/StatusLabel
+@onready var _bar: ProgressBar = %ProgressBar
+@onready var _label: Label = %Label
+@onready var _status_label: Label = %StatusLabel
 
 var _player: Player
 

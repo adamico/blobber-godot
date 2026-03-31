@@ -1,8 +1,7 @@
 extends Control
-
 ## Always-visible Clean% HUD. Shows hazards cleared / total.
 
-@onready var _label: Label = $PanelContainer/Label
+@onready var _label: Label = %Label
 
 var _turn_manager: WorldTurnManager
 var _feedback_timer: Timer
