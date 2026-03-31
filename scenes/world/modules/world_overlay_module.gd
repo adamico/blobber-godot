@@ -1,5 +1,5 @@
-extends Node
 class_name WorldOverlayModule
+extends Node
 
 signal restart_requested
 signal return_to_title_requested
@@ -7,7 +7,7 @@ signal overlay_opened(kind: StringName)
 signal overlay_closed(previous_kind: StringName)
 
 var _overlay_mount: Control
-var _overlay_scene_paths: Dictionary = {}
+var _overlay_scene_paths: Dictionary = { }
 var _active_overlay: Control
 var _active_overlay_kind: StringName = StringName()
 

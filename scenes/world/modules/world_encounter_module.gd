@@ -1,5 +1,5 @@
-extends Node
 class_name WorldEncounterModule
+extends Node
 
 signal encounter_detected(encountered: Array)
 signal enemy_acted
@@ -31,14 +31,14 @@ func wire_enemies() -> void:
 		var captured_enemy = enemy
 		enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
 			return _enemy_cell_passable(captured_enemy, cell)
-			
+
 		if enemy.has_method("set_grid_module"):
 			enemy.set_grid_module(_grid_module, _world_root)
 		elif enemy.get_node_or_null("EnemyAI") != null:
 			var ai = enemy.get_node("EnemyAI")
 			if ai.has_method("set_grid_module"):
 				ai.set_grid_module(_grid_module, _world_root)
-			
+
 		var action_sig: Signal = enemy.movement_controller.action_completed
 		var bind_cb := _on_enemy_action_completed.bind(enemy)
 		if not action_sig.is_connected(bind_cb):

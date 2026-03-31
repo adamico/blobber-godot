@@ -1,5 +1,5 @@
-extends Node
 class_name WorldEventBus
+extends Node
 
 signal overlay_restart_requested
 signal overlay_return_to_title_requested

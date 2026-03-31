@@ -9,7 +9,6 @@ const PICKUP_GROUP := &"world_pickups"
 var _ui_module: WorldUIModule
 var _grid_module: WorldGridModule
 var _encounter_module: WorldEncounterModule
-var _run_outcome_module: WorldRunOutcomeModule
 var _world_root: Node
 var _player
 
@@ -18,7 +17,7 @@ func configure(
 		ui_module: WorldUIModule,
 		grid_module: WorldGridModule,
 		encounter_module: WorldEncounterModule,
-		run_outcome_module: WorldRunOutcomeModule,
+		_legacy_placeholder,
 		world_root: Node,
 		player,
 		_is_gameplay_state_active_fn: Callable,
@@ -29,7 +28,6 @@ func configure(
 	_ui_module = ui_module
 	_grid_module = grid_module
 	_encounter_module = encounter_module
-	_run_outcome_module = run_outcome_module
 	_world_root = world_root
 	_player = player
 
@@ -57,6 +55,4 @@ func submit_player_combat_intent(_cmd: GridCommand.Type) -> bool:
 
 
 func is_run_resolved() -> bool:
-	if _run_outcome_module == null:
-		return false
-	return _run_outcome_module.is_resolved()
+	return false

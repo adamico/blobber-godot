@@ -38,7 +38,6 @@ const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
-const NODE_TURN_ORCHESTRATOR := "TurnOrchestrator"
 const NODE_COMPOSITION_ORCHESTRATOR := "CompositionOrchestrator"
 const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
 const NODE_EVENT_ROUTER_ORCHESTRATOR := "EventRouterOrchestrator"
@@ -48,21 +47,13 @@ var _scene_initializer_module: WorldSceneInitializerModule
 var _overlay_module: WorldOverlayModule
 var _grid_module: WorldGridModule
 var _encounter_module: WorldEncounterModule
-@warning_ignore("unused_private_class_variable")
-var _run_outcome_module: WorldRunOutcomeModule
 var _ui_module: WorldUIModule
 var _state_orchestrator: WorldStateOrchestrator
-@warning_ignore("unused_private_class_variable")
-var _turn_orchestrator: WorldTurnOrchestrator
 var _composition_orchestrator: WorldCompositionOrchestrator
-@warning_ignore("unused_private_class_variable")
-var _input_orchestrator: WorldInputOrchestrator
 var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
 @warning_ignore("unused_private_class_variable")
-var _event_bus: WorldEventBus
 var _event_router_orchestrator: WorldEventRouterOrchestrator
-# New turn manager
 var _turn_manager: WorldTurnManager
 
 
@@ -77,16 +68,15 @@ func _ready() -> void:
 		_context_orchestrator.default_node_paths(),
 	)
 	_context_orchestrator.assign_resolved_world_context(self, resolved_context)
-	if _event_router_orchestrator == null:
-		push_error("Missing required node: %s" % NODE_EVENT_ROUTER_ORCHESTRATOR)
-		return
+
 	if _composition_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_COMPOSITION_ORCHESTRATOR)
 		return
+
 	if not _composition_orchestrator.bootstrap_world(
 		self,
 		_context_orchestrator,
-		_context_orchestrator.build_required_modules_from_world(self),
+		_context_orchestrator.build_module_requirements_from_world(self),
 		_context_orchestrator.build_overlay_paths_from_world(self),
 		_composition_orchestrator.build_bootstrap_context(self, resolved_context),
 	):
@@ -107,11 +97,6 @@ func _ready() -> void:
 
 func _add_world_environment() -> void:
 	_scene_initializer_module.add_environment(self)
-
-
-func _unhandled_input(_event: InputEvent) -> void:
-	# All input is now handled by the Player directly
-	pass
 
 
 func has_active_overlay() -> bool:
