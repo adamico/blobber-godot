@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://ckhwsemqis4mn"]
+
+[ext_resource type="PackedScene" uid="uid://1rq7cemd3thf" path="res://ui/clean_hud.tscn" id="1_p23rl"]
+[ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="2_euamy"]
+[ext_resource type="PackedScene" uid="uid://k4eo6chcrluc" path="res://ui/hp_hud.tscn" id="3_3ijby"]
+[ext_resource type="PackedScene" uid="uid://fyuw05stj1rb" path="res://ui/hud_separator.tscn" id="4_s0iee"]
+
+[node name="Control" type="CanvasLayer" unique_id=1568428727]
+
+[node name="CleanHUD" parent="." unique_id=1389235038 instance=ExtResource("1_p23rl")]
+offset_top = -84.0
+offset_bottom = -44.0
+
+[node name="BeltHUD" parent="." unique_id=262300838 instance=ExtResource("2_euamy")]
+
+[node name="HPHUD" parent="." unique_id=1522271836 instance=ExtResource("3_3ijby")]
+offset_top = -96.0
+offset_bottom = -36.0
+
+[node name="Hud Separator" parent="." unique_id=334027125 instance=ExtResource("4_s0iee")]
+offset_top = 248.0
+offset_bottom = 248.0

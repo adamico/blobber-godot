@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
+[ext_resource type="PackedScene" uid="uid://fyuw05stj1rb" path="res://ui/hud_separator.tscn" id="15_28gua"]
 [ext_resource type="Theme" uid="uid://bnwtjlgtjkys8" path="res://hud_theme.tres" id="15_ggkmy"]
 [ext_resource type="Script" uid="uid://dpspbqqs4t1ms" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
 [ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
@@ -104,6 +105,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
+
+[node name="Hud Separator" parent="OverlayLayer" unique_id=334027125 instance=ExtResource("15_28gua")]
+offset_top = 248.0
+offset_bottom = 248.0
 
 [node name="MinimapOverlay" type="Control" parent="OverlayLayer" unique_id=211122344]
 layout_mode = 3

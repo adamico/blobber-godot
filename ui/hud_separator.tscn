@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://fyuw05stj1rb"]
+
+[ext_resource type="Theme" uid="uid://bnwtjlgtjkys8" path="res://hud_theme.tres" id="1_is2a6"]
+
+[node name="Hud Separator" type="Control" unique_id=334027125]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = 260.0
+offset_bottom = 260.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_is2a6")
+
+[node name="HSeparator" type="HSeparator" parent="." unique_id=211365857]
+custom_minimum_size = Vector2(1240, 0)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

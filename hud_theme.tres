@@ -1,4 +1,9 @@
 [gd_resource type="Theme" format=3 uid="uid://bnwtjlgtjkys8"]
 
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_c6s5n"]
+color = Color(0.6509804, 1, 0.5882353, 1)
+thickness = 2
+
 [resource]
+HSeparator/styles/separator = SubResource("StyleBoxLine_c6s5n")
 Label/colors/font_color = Color(0.6509804, 1, 0.5882353, 1)
