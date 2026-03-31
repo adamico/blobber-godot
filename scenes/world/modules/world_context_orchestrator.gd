@@ -11,10 +11,7 @@ func default_node_paths() -> Dictionary:
 		"encounter_module": "EncounterModule",
 		"ui_module": "UIModule",
 		"state_orchestrator": "StateOrchestrator",
-		"turn_orchestrator": "TurnOrchestrator",
 		"composition_orchestrator": "CompositionOrchestrator",
-		"policy_orchestrator": "PolicyOrchestrator",
-		"input_orchestrator": "InputOrchestrator",
 		"movement_orchestrator": "MovementOrchestrator",
 		"event_bus": "EventBus",
 		"event_router_orchestrator": "EventRouterOrchestrator",
@@ -42,40 +39,24 @@ func assign_resolved_world_context(world: Node, resolved: Dictionary) -> void:
 	world.set("_encounter_module", resolved.get("encounter_module"))
 	world.set("_ui_module", resolved.get("ui_module"))
 	world.set("_state_orchestrator", resolved.get("state_orchestrator"))
-	world.set("_turn_orchestrator", resolved.get("turn_orchestrator"))
 	world.set("_composition_orchestrator", resolved.get("composition_orchestrator"))
-	world.set("_input_orchestrator", resolved.get("input_orchestrator"))
 	world.set("_movement_orchestrator", resolved.get("movement_orchestrator"))
-	world.set("_event_bus", resolved.get("event_bus"))
-	world.set("_event_router_orchestrator", resolved.get("event_router_orchestrator"))
 
 
-func build_module_requirements_from_world(world: Node) -> Dictionary:
+func build_required_modules_from_world(world: Node, resolved: Dictionary) -> Dictionary:
 	return {
-		"required": {
-			"SceneInitializerModule": world.get("_scene_initializer_module"),
-			"OverlayModule": world.get("_overlay_module"),
-			"GridModule": world.get("_grid_module"),
-			"EncounterModule": world.get("_encounter_module"),
-			"UIModule": world.get("_ui_module"),
-			"StateOrchestrator": world.get("_state_orchestrator"),
-			"CompositionOrchestrator": world.get("_composition_orchestrator"),
-			"MovementOrchestrator": world.get("_movement_orchestrator"),
-			"ContextOrchestrator": world.get("_context_orchestrator"),
-		},
-		"optional": {
-			"TurnOrchestrator": world.get("_turn_orchestrator"),
-			"InputOrchestrator": world.get("_input_orchestrator"),
-			"PolicyOrchestrator": world.get("_policy_orchestrator"),
-			"EventBus": world.get("_event_bus"),
-			"EventRouterOrchestrator": world.get("_event_router_orchestrator"),
-		},
+		"SceneInitializerModule": world.get("_scene_initializer_module"),
+		"OverlayModule": world.get("_overlay_module"),
+		"GridModule": world.get("_grid_module"),
+		"EncounterModule": world.get("_encounter_module"),
+		"UIModule": world.get("_ui_module"),
+		"StateOrchestrator": world.get("_state_orchestrator"),
+		"CompositionOrchestrator": world.get("_composition_orchestrator"),
+		"MovementOrchestrator": world.get("_movement_orchestrator"),
+		"EventBus": resolved.get("event_bus"),
+		"EventRouterOrchestrator": resolved.get("event_router_orchestrator"),
+		"ContextOrchestrator": world.get("_context_orchestrator"),
 	}
-
-
-func build_required_modules_from_world(world: Node) -> Dictionary:
-	# Compatibility shim for older call sites.
-	return build_module_requirements_from_world(world).get("required", {})
 
 
 func build_overlay_paths_from_world(world: Node) -> Dictionary:

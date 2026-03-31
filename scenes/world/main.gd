@@ -40,7 +40,6 @@ const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_COMPOSITION_ORCHESTRATOR := "CompositionOrchestrator"
 const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
-const NODE_EVENT_ROUTER_ORCHESTRATOR := "EventRouterOrchestrator"
 
 var _player: Player
 var _scene_initializer_module: WorldSceneInitializerModule
@@ -52,8 +51,6 @@ var _state_orchestrator: WorldStateOrchestrator
 var _composition_orchestrator: WorldCompositionOrchestrator
 var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
-@warning_ignore("unused_private_class_variable")
-var _event_router_orchestrator: WorldEventRouterOrchestrator
 var _turn_manager: WorldTurnManager
 
 
@@ -76,7 +73,7 @@ func _ready() -> void:
 	if not _composition_orchestrator.bootstrap_world(
 		self,
 		_context_orchestrator,
-		_context_orchestrator.build_module_requirements_from_world(self),
+		_context_orchestrator.build_required_modules_from_world(self, resolved_context),
 		_context_orchestrator.build_overlay_paths_from_world(self),
 		_composition_orchestrator.build_bootstrap_context(self, resolved_context),
 	):

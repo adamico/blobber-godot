@@ -23,11 +23,8 @@
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
 [ext_resource type="Resource" uid="uid://cbshjds4a3ref" path="res://resources/items/potion.tres" id="12_potion"]
 [ext_resource type="PackedScene" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
-[ext_resource type="Script" uid="uid://ctchp8tibfuv1" path="res://scenes/world/modules/world_turn_orchestrator.gd" id="13_p7vna"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
-[ext_resource type="Script" uid="uid://cngjknn253s42" path="res://scenes/world/modules/world_policy_orchestrator.gd" id="15_8m9uz"]
-[ext_resource type="Script" uid="uid://b36u64mcxmwrh" path="res://scenes/world/modules/world_input_orchestrator.gd" id="16_6f2hc"]
 [ext_resource type="Script" uid="uid://dpspbqqs4t1ms" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
 [ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
@@ -105,17 +102,8 @@ script = ExtResource("20_v0w2m")
 [node name="StateOrchestrator" type="Node" parent="." unique_id=1756513716]
 script = ExtResource("12_4j8kp")
 
-[node name="TurnOrchestrator" type="Node" parent="." unique_id=232148457]
-script = ExtResource("13_p7vna")
-
 [node name="CompositionOrchestrator" type="Node" parent="." unique_id=162870882]
 script = ExtResource("14_wk2mb")
-
-[node name="PolicyOrchestrator" type="Node" parent="." unique_id=1742826120]
-script = ExtResource("15_8m9uz")
-
-[node name="InputOrchestrator" type="Node" parent="." unique_id=492702643]
-script = ExtResource("16_6f2hc")
 
 [node name="MovementOrchestrator" type="Node" parent="." unique_id=1321821013]
 script = ExtResource("17_4a2zs")
