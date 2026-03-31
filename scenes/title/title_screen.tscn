@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.055, 0.086, 0.125, 1)
+color = Color(0.05882353, 0.12941177, 0.06666667, 1)
 
 [node name="BackdropBand" type="ColorRect" parent="." unique_id=655981614]
 layout_mode = 1
@@ -29,7 +29,7 @@ anchor_bottom = 0.78
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.094, 0.149, 0.204, 0.78)
+color = Color(0.14901961, 0.32156864, 0.22352941, 0.78039217)
 
 [node name="Center" type="CenterContainer" parent="." unique_id=1817690867]
 layout_mode = 1
@@ -56,6 +56,7 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="Center/Panel/Margin/VBox" unique_id=1067002386]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.775, 1.261, 0.55, 1)
 theme_override_font_sizes/font_size = 44
 text = "The SWEEP"
 horizontal_alignment = 1

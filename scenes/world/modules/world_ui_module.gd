@@ -85,7 +85,7 @@ func refresh_coords(cell_hint: Vector2i = Vector2i.ZERO) -> void:
 	if _player != null and _player.grid_state != null:
 		coords = _player.grid_state.cell
 
-	_grid_coords_label.text = "Grid X: %d  Y: %d" % [coords.x, coords.y]
+	_grid_coords_label.text = "X: %d  Y: %d" % [coords.x, coords.y]
 
 
 func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:

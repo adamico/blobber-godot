@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
 [ext_resource type="PackedScene" uid="uid://1rq7cemd3thf" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
-[ext_resource type="PackedScene" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
+[ext_resource type="PackedScene" uid="uid://lxy8t5xod0cs" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
 [ext_resource type="Resource" uid="uid://7ujyorbpecsq" path="res://resources/items/mop.tres" id="8_5ebq0"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
+[ext_resource type="Theme" uid="uid://bnwtjlgtjkys8" path="res://hud_theme.tres" id="15_ggkmy"]
 [ext_resource type="Script" uid="uid://dpspbqqs4t1ms" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
 [ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
@@ -112,8 +113,11 @@ offset_top = 16.0
 offset_right = 1264.0
 offset_bottom = 264.0
 mouse_filter = 2
+theme = ExtResource("15_ggkmy")
 script = ExtResource("5_1h5vq")
-blocked_color = Color(1, 1, 1, 0.9019608)
+border_color = Color(0.6509804, 1, 0.5882353, 1)
+blocked_color = Color(0.6509804, 1, 0.5882353, 1)
+player_color = Color(1, 1, 1, 0.9490196)
 
 [node name="GridCoordsLabel" type="Label" parent="OverlayLayer/MinimapOverlay" unique_id=211122343]
 layout_mode = 1
@@ -124,7 +128,7 @@ offset_top = 8.0
 offset_right = -8.0
 offset_bottom = 32.0
 grow_horizontal = 2
-text = "Grid X: 0  Y: 0"
+text = "X: 0  Y: 0"
 horizontal_alignment = 2
 
 [node name="ContextOrchestrator" type="Node" parent="." unique_id=934108474]
