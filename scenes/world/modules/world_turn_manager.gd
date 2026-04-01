@@ -304,7 +304,14 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 			# Special logic for Debris as a weapon
 			if item.item_type == ItemData.ItemType.DEBRIS:
 				var definition = _get_hostile_definition(hostile)
-				if definition != null and definition.instant_clear_on_debris:
+				var instant_clear := definition != null and bool(definition.instant_clear_on_debris)
+				# Fallback for legacy/spawned hostiles missing definition lookup wiring.
+				if not instant_clear and hostile.get("hazard_property") != null:
+					instant_clear = int(hostile.hazard_property) == int(
+						RpsSystem.HazardProperty.CORROSIVE,
+					)
+
+				if instant_clear:
 					# Instantly clear hostile via definition capability
 					hostile.receive_tool_hit(RpsSystem.ToolProperty.INERT, _player.stats)
 					debris_consumed_as_weapon.emit(cell)
