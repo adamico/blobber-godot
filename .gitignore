@@ -16,3 +16,7 @@ export_credentials.cfg
 data_*/
 mono_crash.*.json
 .DS_Store
+
+assets/dungeon/
+assets/monster/
+assets/sounds/
