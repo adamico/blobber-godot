@@ -8,6 +8,9 @@ signal clean_status_changed(cleared: int, total: int)
 signal player_died
 signal debris_consumed_as_weapon(cell: Vector2i)
 signal action_feedback(text: String, is_positive: bool)
+signal analysis_target_changed(target: Dictionary)
+signal analysis_result_ready(result: Dictionary)
+signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
 
 const HOSTILE_GROUP := &"grid_enemies"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
@@ -16,11 +19,20 @@ var _player: Player
 var _encounter_module: WorldEncounterModule
 var _grid_module: WorldGridModule
 var _world_root: Node
+var _analysis_module: WorldAnalysisModule
 
 const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
 
 var _total_cleanup_value: int = 0
 var _disposed_cleanup_value: int = 0
+
+const ANALYSIS_CHUTE_KEY := &"chute:disposal"
+const ANALYSIS_EXIT_KEY := &"exit:world"
+const KNOWLEDGE_BASIC := &"basic_known"
+const KNOWLEDGE_PARTIAL := &"partial_clue_known"
+const KNOWLEDGE_WEAKNESS := &"weakness_known"
+const KNOWLEDGE_DISPOSAL := &"disposal_known"
+const HOVER_SELECTION_RADIUS_PX := 72.0
 
 
 func configure(
@@ -33,6 +45,7 @@ func configure(
 	_encounter_module = encounter_module
 	_grid_module = grid_module
 	_world_root = world_root
+	_ensure_analysis_module()
 
 
 func initialize_floor() -> void:
@@ -124,6 +137,7 @@ func process_player_pickup() -> void:
 						break
 
 	if picked_any:
+		# TODO: unify with a single turn-advance method that can be called from all actions
 		_tick_enemies()
 		_tick_debris_revert()
 		_check_contact_damage_from_enemies()
@@ -167,6 +181,43 @@ func process_player_drop(slot_index: int) -> void:
 			p.setup_revert(item.revert_turns_base, item.origin_hostile_definition_id)
 		# Free action: no turn tick, but emit completion for UI sync
 		turn_completed.emit()
+
+
+func process_cycle_target(direction: int) -> void:
+	_ensure_analysis_module()
+	if _analysis_module == null:
+		return
+
+	var cycle_result := _analysis_module.cycle_target(direction)
+	if not bool(cycle_result.get("ok", false)):
+		action_feedback.emit("NO TARGETS", false)
+
+
+
+func process_analyze_target() -> void:
+	_ensure_analysis_module()
+	if _analysis_module == null:
+		return
+
+	var analysis_result := _analysis_module.analyze_target()
+	if not bool(analysis_result.get("ok", false)):
+		action_feedback.emit("NOTHING TO ANALYZE", false)
+	else:
+		var result: Dictionary = analysis_result.get("result", { })
+		action_feedback.emit(String(result.get("summary", "ANALYZED")), true)
+
+	_tick_enemies()
+	_tick_debris_revert()
+	_check_contact_damage_from_enemies()
+	_post_turn_checks()
+	turn_completed.emit()
+
+
+func process_hover_target(mouse_position: Vector2, camera: Camera3D) -> void:
+	_ensure_analysis_module()
+	if _analysis_module == null or camera == null:
+		return
+	_analysis_module.hover_target(mouse_position, camera)
 
 
 func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
@@ -221,6 +272,12 @@ func get_clean_percent() -> int:
 func is_floor_clean() -> bool:
 	return _total_cleanup_value > 0 and _disposed_cleanup_value >= _total_cleanup_value
 
+
+func get_analysis_result_for_target(payload: Dictionary) -> Dictionary:
+	if payload.is_empty():
+		return { }
+	return _build_analysis_result(payload)
+
 # --- Private ---
 
 
@@ -263,6 +320,7 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hazard_property)
 			var cleared = hostile.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
+			_register_hazard_tool_interaction(hostile, is_effective, cleared)
 
 			if is_effective:
 				action_feedback.emit("EFFECTIVE!", true)
@@ -442,11 +500,80 @@ func _get_disposal_chute_at(cell: Vector2i):
 func _register_disposal(item: ItemData) -> void:
 	if item == null or item.item_type != ItemData.ItemType.DEBRIS:
 		return
+	_ensure_analysis_module()
+	if _analysis_module != null:
+		_analysis_module.register_disposal(item)
 	_disposed_cleanup_value = mini(
 		_disposed_cleanup_value + maxi(item.cleanup_value, 1),
 		_total_cleanup_value,
 	)
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
+
+
+func _register_hazard_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
+	_ensure_analysis_module()
+	if _analysis_module != null:
+		_analysis_module.register_hazard_tool_interaction(hostile, is_effective, cleared)
+
+
+func _ensure_analysis_module() -> void:
+	if _analysis_module == null:
+		_analysis_module = get_node_or_null("AnalysisModule") as WorldAnalysisModule
+	if _analysis_module == null:
+		_analysis_module = WorldAnalysisModule.new()
+		_analysis_module.name = "AnalysisModule"
+		add_child(_analysis_module)
+
+	_analysis_module.configure(_player, _world_root)
+
+	if not _analysis_module.analysis_target_changed.is_connected(_on_analysis_target_changed):
+		_analysis_module.analysis_target_changed.connect(_on_analysis_target_changed)
+	if not _analysis_module.analysis_result_ready.is_connected(_on_analysis_result_ready):
+		_analysis_module.analysis_result_ready.connect(_on_analysis_result_ready)
+	if not _analysis_module.analysis_knowledge_updated.is_connected(_on_analysis_knowledge_updated):
+		_analysis_module.analysis_knowledge_updated.connect(_on_analysis_knowledge_updated)
+
+
+func _unlock_knowledge(key: StringName, unlock_flag: StringName) -> void:
+	_ensure_analysis_module()
+	if _analysis_module == null:
+		return
+	_analysis_module.unlock_knowledge_for_test(key, unlock_flag)
+
+
+func _get_knowledge_snapshot(key: StringName) -> Dictionary:
+	_ensure_analysis_module()
+	if _analysis_module == null:
+		return {
+			KNOWLEDGE_BASIC: false,
+			KNOWLEDGE_PARTIAL: false,
+			KNOWLEDGE_WEAKNESS: false,
+			KNOWLEDGE_DISPOSAL: false,
+		}
+	return _analysis_module.get_knowledge_snapshot_for_test(key)
+
+
+func _build_analysis_result(payload: Dictionary) -> Dictionary:
+	_ensure_analysis_module()
+	if _analysis_module == null:
+		return payload.duplicate(true)
+	return _analysis_module.build_analysis_result_for_test(payload)
+
+
+func _on_analysis_target_changed(target: Dictionary) -> void:
+	analysis_target_changed.emit(target)
+
+
+func _on_analysis_result_ready(result: Dictionary) -> void:
+	analysis_result_ready.emit(result)
+
+
+func _on_analysis_knowledge_updated(
+		key: StringName,
+		snapshot: Dictionary,
+		unlock_flag: StringName,
+) -> void:
+	analysis_knowledge_updated.emit(key, snapshot, unlock_flag)
 
 
 func _is_hostile_node(node) -> bool:

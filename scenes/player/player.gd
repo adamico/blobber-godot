@@ -50,6 +50,27 @@ func _ensure_input_mappings() -> void:
 		ev.physical_keycode = KEY_SPACE
 		InputMap.action_add_event(&"pickup", ev)
 
+	if not InputMap.has_action(&"analyze_target"):
+		InputMap.add_action(&"analyze_target")
+	if InputMap.action_get_events(&"analyze_target").is_empty():
+		var analyze_ev := InputEventKey.new()
+		analyze_ev.physical_keycode = KEY_F
+		InputMap.action_add_event(&"analyze_target", analyze_ev)
+
+	if not InputMap.has_action(&"cycle_target_prev"):
+		InputMap.add_action(&"cycle_target_prev")
+	if InputMap.action_get_events(&"cycle_target_prev").is_empty():
+		var prev_ev := InputEventKey.new()
+		prev_ev.physical_keycode = KEY_R
+		InputMap.action_add_event(&"cycle_target_prev", prev_ev)
+
+	if not InputMap.has_action(&"cycle_target_next"):
+		InputMap.add_action(&"cycle_target_next")
+	if InputMap.action_get_events(&"cycle_target_next").is_empty():
+		var next_ev := InputEventKey.new()
+		next_ev.physical_keycode = KEY_T
+		InputMap.action_add_event(&"cycle_target_next", next_ev)
+
 
 func add_item(item) -> bool:
 	if not (item is ItemData):
@@ -103,6 +124,15 @@ func execute_action(action: StringName) -> bool:
 			return true
 		&"drop_slot_3":
 			turn_action_performed.emit(GridCommand.Type.DROP_SLOT_3)
+			return true
+		&"cycle_target_prev":
+			turn_action_performed.emit(GridCommand.Type.CYCLE_TARGET_PREV)
+			return true
+		&"cycle_target_next":
+			turn_action_performed.emit(GridCommand.Type.CYCLE_TARGET_NEXT)
+			return true
+		&"analyze_target":
+			turn_action_performed.emit(GridCommand.Type.ANALYZE_TARGET)
 			return true
 
 	var cmd: int = _command_for_action(action)
@@ -226,6 +256,9 @@ func _resolve_target_yaw(start_yaw: float, base_target_yaw: float) -> float:
 
 func _find_pressed_action(event: InputEvent) -> StringName:
 	var actions: Array[StringName] = [
+		&"cycle_target_prev",
+		&"cycle_target_next",
+		&"analyze_target",
 		&"drop_slot_1",
 		&"drop_slot_2",
 		&"drop_slot_3",

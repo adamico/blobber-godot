@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/analysis_hud.gd" id="1"]
+[ext_resource type="Theme" uid="uid://bnwtjlgtjkys8" path="res://hud_theme.tres" id="2"]
+
+[node name="AnalysisHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 360.0
+offset_bottom = 264.0
+mouse_filter = 2
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="AnalysisPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 344.0
+offset_bottom = 196.0
+
+[node name="MarginContainer" type="MarginContainer" parent="AnalysisPanel"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 10.0
+offset_right = -12.0
+offset_bottom = -10.0
+
+[node name="VBox" type="VBoxContainer" parent="AnalysisPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeadingLabel" type="Label" parent="AnalysisPanel/MarginContainer/VBox"]
+layout_mode = 2
+text = "FIELD ANALYSIS"
+
+[node name="AnalysisNameLabel" type="Label" parent="AnalysisPanel/MarginContainer/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "No target selected"
+
+[node name="AnalysisMetaLabel" type="Label" parent="AnalysisPanel/MarginContainer/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+modulate = Color(0.8, 0.84, 0.78, 0.9)
+text = "Hover or cycle targets, then analyze to deepen field notes."
+
+[node name="AnalysisBodyLabel" type="Label" parent="AnalysisPanel/MarginContainer/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 92)
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+text = "Known details for the current target will appear here."
+vertical_alignment = 0
+
+[node name="AnalysisToastPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_top = 208.0
+offset_right = 344.0
+offset_bottom = 248.0
+
+[node name="MarginContainer" type="MarginContainer" parent="AnalysisToastPanel"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = -10.0
+offset_bottom = -8.0
+
+[node name="AnalysisToastLabel" type="Label" parent="AnalysisToastPanel/MarginContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+autowrap_mode = 3
+text = ""
+
+[node name="AnalysisToastTimer" type="Timer" parent="."]
+unique_name_in_owner = true
+wait_time = 2.0
+one_shot = true

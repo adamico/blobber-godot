@@ -29,6 +29,14 @@ static func is_effective(tool_property: ToolProperty, hazard_property: HazardPro
 	return weaknesses.has(hazard_property)
 
 
+static func effective_tool_for_hazard(hazard_property: HazardProperty) -> ToolProperty:
+	for tool_property in WEAKNESS_TABLE.keys():
+		var weaknesses = WEAKNESS_TABLE.get(tool_property, [])
+		if weaknesses.has(hazard_property):
+			return tool_property as ToolProperty
+	return ToolProperty.OTHER
+
+
 static func compute_damage(tool_property: ToolProperty, hazard_property: HazardProperty) -> int:
 	if is_effective(tool_property, hazard_property):
 		return BONUS_DAMAGE

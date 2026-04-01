@@ -15,6 +15,7 @@ extends Node3D
 @export var hp_hud_scene: PackedScene
 @export var belt_hud_scene: PackedScene
 @export var clean_hud_scene: PackedScene
+@export var analysis_hud_scene: PackedScene
 
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
@@ -249,6 +250,12 @@ func get_pickups() -> Array:
 	return get_tree().get_nodes_in_group(&"world_pickups")
 
 
+func get_grid_occupancy() -> GridOccupancyMap:
+	if _grid_module == null:
+		return null
+	return _grid_module.occupancy()
+
+
 func _is_player_cell_passable(cell: Vector2i) -> bool:
 	return _grid_module.is_player_cell_passable(cell, get_enemies(), get_pickups())
 
@@ -272,6 +279,8 @@ func _add_huds() -> void:
 		var clean_hud := clean_hud_scene.instantiate()
 		layer.add_child(clean_hud)
 		clean_hud.configure(_turn_manager)
+
+	_ui_module.setup_analysis_panel(layer, analysis_hud_scene, _turn_manager)
 
 
 func _author_floor_1() -> void:
@@ -309,9 +318,11 @@ func _author_floor_1() -> void:
 func _index_hostile_definitions() -> void:
 	_hostile_definitions_by_id.clear()
 
-	var source_definitions := hostile_definitions
-	if source_definitions.is_empty():
-		source_definitions = DEFAULT_HOSTILE_DEFINITIONS
+	var source_definitions: Array = []
+	if hostile_definitions.is_empty():
+		source_definitions.assign(DEFAULT_HOSTILE_DEFINITIONS)
+	else:
+		source_definitions.assign(hostile_definitions)
 
 	for entry in source_definitions:
 		var def := entry as HostileActorDefinition
@@ -434,6 +445,12 @@ func _on_player_turn_action(cmd: GridCommand.Type) -> void:
 		return
 
 	match cmd:
+		GridCommand.Type.CYCLE_TARGET_PREV:
+			_turn_manager.process_cycle_target(-1)
+		GridCommand.Type.CYCLE_TARGET_NEXT:
+			_turn_manager.process_cycle_target(1)
+		GridCommand.Type.ANALYZE_TARGET:
+			_turn_manager.process_analyze_target()
 		GridCommand.Type.USE_SLOT_1:
 			_turn_manager.process_slot_use(0)
 		GridCommand.Type.USE_SLOT_2:
@@ -489,3 +506,33 @@ func _check_exit_condition() -> void:
 			if node.can_trigger(false):
 				finish_with_success()
 				return
+
+
+func _input(event: InputEvent) -> void:
+	if not is_gameplay_state_active():
+		return
+	if _turn_manager == null or _player == null:
+		return
+	if not _player.input_actions_enabled:
+		return
+	if has_active_overlay():
+		return
+
+	var camera := _player.get_node_or_null("Camera3D") as Camera3D
+	if camera == null:
+		return
+
+	if event is InputEventMouseMotion:
+		_turn_manager.process_hover_target(event.position, camera)
+		return
+
+	if event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if not mouse_event.pressed:
+			return
+
+		# Ensure the click location becomes the active target before analysis.
+		_turn_manager.process_hover_target(mouse_event.position, camera)
+		_turn_manager.process_analyze_target()

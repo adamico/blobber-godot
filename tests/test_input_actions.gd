@@ -11,6 +11,10 @@ func test_required_actions_exist() -> void:
         &"use_slot_1",
         &"use_slot_2",
         &"use_slot_3",
+        &"pickup",
+        &"analyze_target",
+        &"cycle_target_prev",
+        &"cycle_target_next",
     ]
 
     for action in required_actions:
@@ -27,6 +31,10 @@ func test_required_actions_have_at_least_one_binding() -> void:
         &"use_slot_1",
         &"use_slot_2",
         &"use_slot_3",
+        &"pickup",
+        &"analyze_target",
+        &"cycle_target_prev",
+        &"cycle_target_next",
     ]
 
     for action in required_actions:

@@ -7,6 +7,7 @@
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
 [ext_resource type="PackedScene" uid="uid://k4eo6chcrluc" path="res://ui/hp_hud.tscn" id="4_ggkmy"]
+[ext_resource type="PackedScene" path="res://ui/analysis_hud.tscn" id="4_y1l4v"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
 [ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
@@ -74,6 +75,7 @@ preset_smooth_config = ExtResource("3_r3w6i")
 hp_hud_scene = ExtResource("4_ggkmy")
 belt_hud_scene = ExtResource("5_28gua")
 clean_hud_scene = ExtResource("6_e3mvx")
+analysis_hud_scene = ExtResource("4_y1l4v")
 mop_item = ExtResource("8_5ebq0")
 candle_item = ExtResource("9_tsn8l")
 flask_item = ExtResource("10_1notw")

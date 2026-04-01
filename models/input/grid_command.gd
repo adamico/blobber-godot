@@ -15,5 +15,8 @@ enum Type {
     DROP_SLOT_1,
     DROP_SLOT_2,
     DROP_SLOT_3,
+    CYCLE_TARGET_PREV,
+    CYCLE_TARGET_NEXT,
+    ANALYZE_TARGET,
     PASS_TURN,
 }

@@ -7,6 +7,7 @@ var _grid_coords_label: Label
 var _minimap_overlay: Control
 var _hp_bar: ProgressBar
 var _show_minimap := false
+var _analysis_hud: Control
 
 
 func configure(
@@ -52,6 +53,26 @@ func setup_hp_bar(overlay_layer: CanvasLayer) -> void:
 	overlay_layer.add_child(panel)
 	_player.stats.damaged.connect(_on_player_damaged)
 	_player.stats.healed.connect(_on_player_healed)
+
+
+func setup_analysis_panel(
+		overlay_layer: CanvasLayer,
+		analysis_hud_scene: PackedScene,
+		turn_manager: WorldTurnManager,
+) -> void:
+	if overlay_layer == null or analysis_hud_scene == null or turn_manager == null:
+		return
+
+	if _analysis_hud != null and is_instance_valid(_analysis_hud):
+		return
+
+	_analysis_hud = analysis_hud_scene.instantiate() as Control
+	if _analysis_hud == null:
+		return
+
+	overlay_layer.add_child(_analysis_hud)
+	if _analysis_hud.has_method("configure"):
+		_analysis_hud.call("configure", turn_manager)
 
 
 func apply_debug_panel_visibility(show: bool) -> void:
