@@ -18,6 +18,6 @@ enum ItemType {
 @export var stat_effect: Dictionary = { } ## e.g. {"heal": 2} for consumables
 
 # Runtime tracking for DEBRIS items
-var origin_hazard_property: int = -1
+var origin_hostile_definition_id: StringName = StringName()
 var revert_turns_base: int = 5
 var cleanup_value: int = 1

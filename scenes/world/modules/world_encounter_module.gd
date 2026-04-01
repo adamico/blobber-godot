@@ -7,6 +7,7 @@ signal enemy_acted
 const ENEMY_GROUP := &"grid_enemies"
 
 var _enemies: Array = []
+var _registered_hostiles: Array = []
 var _grid_module: WorldGridModule
 var _world_root: Node
 var _player
@@ -22,53 +23,45 @@ func get_enemies() -> Array:
 	return _enemies
 
 
+func register_hostile(enemy) -> void:
+	if enemy == null or not is_instance_valid(enemy):
+		return
+	if not enemy.has_method("tick_ai"):
+		return
+	if _registered_hostiles.has(enemy):
+		return
+	_registered_hostiles.append(enemy)
+	_wire_enemy(enemy)
+
+
+func unregister_hostile(enemy) -> void:
+	if enemy == null:
+		return
+	_registered_hostiles.erase(enemy)
+	_enemies.erase(enemy)
+
+
 func wire_enemies() -> void:
+	_bootstrap_registered_hostiles_from_group()
 	collect()
-
 	for enemy in _enemies:
-		if enemy.movement_controller == null:
-			continue
-		var captured_enemy = enemy
-		enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
-			return _enemy_cell_passable(captured_enemy, cell)
-
-		if enemy.has_method("set_grid_module"):
-			enemy.set_grid_module(_grid_module, _world_root)
-		elif enemy.get_node_or_null("EnemyAI") != null:
-			var ai = enemy.get_node("EnemyAI")
-			if ai.has_method("set_grid_module"):
-				ai.set_grid_module(_grid_module, _world_root)
-
-		var action_sig: Signal = enemy.movement_controller.action_completed
-		var bind_cb := _on_enemy_action_completed.bind(enemy)
-		if not action_sig.is_connected(bind_cb):
-			action_sig.connect(bind_cb)
+		_wire_enemy(enemy)
 
 
 func collect() -> void:
-	if _world_root == null:
+	if _world_root == null or _world_root.get_tree() == null:
 		return
 
 	_enemies.clear()
-
-	for node in _world_root.get_tree().get_nodes_in_group(ENEMY_GROUP):
-		if node == null:
+	var alive_registered: Array = []
+	for node in _registered_hostiles:
+		if node == null or not is_instance_valid(node):
 			continue
 		if node.get_tree() != _world_root.get_tree():
 			continue
-		if not node.has_method("tick_ai"):
-			continue
+		alive_registered.append(node)
 		_enemies.append(node)
-
-	# Fallback discovery for enemies present in the tree but not yet in group.
-	for node in _world_root.find_children("*", "Node", true, false):
-		if node == null or node == _world_root or node == _player:
-			continue
-		if not node.has_method("tick_ai"):
-			continue
-		if _enemies.has(node):
-			continue
-		_enemies.append(node)
+	_registered_hostiles = alive_registered
 
 
 func tick_step_echo() -> void:
@@ -122,6 +115,44 @@ func _enemy_cell_passable(enemy, cell: Vector2i) -> bool:
 
 func _on_enemy_action_completed(_cmd, _new_state, _enemy) -> void:
 	enemy_acted.emit()
+
+
+func _bootstrap_registered_hostiles_from_group() -> void:
+	if _world_root == null or _world_root.get_tree() == null:
+		return
+	for node in _world_root.get_tree().get_nodes_in_group(ENEMY_GROUP):
+		if node == null or not is_instance_valid(node):
+			continue
+		if node.get_tree() != _world_root.get_tree():
+			continue
+		if not node.has_method("tick_ai"):
+			continue
+		if _registered_hostiles.has(node):
+			continue
+		_registered_hostiles.append(node)
+
+
+func _wire_enemy(enemy) -> void:
+	if enemy == null or not is_instance_valid(enemy):
+		return
+	if enemy.movement_controller == null:
+		return
+
+	var captured_enemy = enemy
+	enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
+		return _enemy_cell_passable(captured_enemy, cell)
+
+	if enemy.has_method("set_grid_module"):
+		enemy.set_grid_module(_grid_module, _world_root)
+	elif enemy.get_node_or_null("EnemyAI") != null:
+		var ai = enemy.get_node("EnemyAI")
+		if ai.has_method("set_grid_module"):
+			ai.set_grid_module(_grid_module, _world_root)
+
+	var action_sig: Signal = enemy.movement_controller.action_completed
+	var bind_cb := _on_enemy_action_completed.bind(enemy)
+	if not action_sig.is_connected(bind_cb):
+		action_sig.connect(bind_cb)
 
 
 func _is_enemy_alive(enemy) -> bool:

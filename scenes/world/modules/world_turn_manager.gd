@@ -9,7 +9,7 @@ signal player_died
 signal debris_consumed_as_weapon(cell: Vector2i)
 signal action_feedback(text: String, is_positive: bool)
 
-const HAZARD_GROUP := &"hazards"
+const HOSTILE_GROUP := &"grid_enemies"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 
 var _player: Player
@@ -38,7 +38,7 @@ func configure(
 func initialize_floor() -> void:
 	_disposed_cleanup_value = 0
 	_total_cleanup_value = _count_cleanup_value()
-	_connect_hazard_signals()
+	_connect_hostile_signals()
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 
 
@@ -75,14 +75,14 @@ func process_slot_use(slot_index: int) -> void:
 
 
 func process_wall_bump() -> void:
-	## Pass turn when player bumps a wall or stationary hazard.
+	## Pass turn when player bumps a wall or stationary hostile.
 	if _player != null and _player.stats != null:
 		var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
 		var target_cell := _player.grid_state.cell + facing_vec
-		var hazards = _get_hazards_at(target_cell)
+		var hostiles = _get_hostiles_at(target_cell)
 
-		if hazards.size() > 0:
-			for h in hazards:
+		if hostiles.size() > 0:
+			for h in hostiles:
 				h.deal_contact_damage(_player.stats)
 
 	_tick_enemies()
@@ -163,8 +163,8 @@ func process_player_drop(slot_index: int) -> void:
 
 	if _player.inventory.remove_at(slot_index):
 		var p = spawn_pickup(target_cell, item)
-		if p != null and item.origin_hazard_property != -1:
-			p.setup_revert(item.revert_turns_base, item.origin_hazard_property)
+		if p != null and item.origin_hostile_definition_id != StringName():
+			p.setup_revert(item.revert_turns_base, item.origin_hostile_definition_id)
 		# Free action: no turn tick, but emit completion for UI sync
 		turn_completed.emit()
 
@@ -240,27 +240,28 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 	var debris_consumed := false
 
 	for cell in cells_to_check:
-		for hazard in _get_hazards_at(cell):
-			if hazard.is_cleared():
+		for hostile in _get_hostiles_at(cell):
+			if hostile.is_cleared():
 				continue
 
 			# Special logic for Debris as a weapon
 			if item.item_type == ItemData.ItemType.DEBRIS:
-				if hazard.hazard_property == RpsSystem.HazardProperty.CORROSIVE:
-					# Instantly clear corrosive hazard
-					hazard.receive_tool_hit(RpsSystem.ToolProperty.INERT, _player.stats)
+				var definition = _get_hostile_definition(hostile)
+				if definition != null and definition.instant_clear_on_debris:
+					# Instantly clear hostile via definition capability
+					hostile.receive_tool_hit(RpsSystem.ToolProperty.INERT, _player.stats)
 					debris_consumed_as_weapon.emit(cell)
 					action_feedback.emit("DEBRIS WEAPON!", true)
 					debris_consumed = true
 					hit_any = true
 					break
 				else:
-					# Debris does nothing to other hazards
+					# Debris does nothing to other hostiles
 					continue
 
 			# Normal tool logic
-			var is_effective := RpsSystem.is_effective(item.tool_property, hazard.hazard_property)
-			var cleared = hazard.receive_tool_hit(item.tool_property, _player.stats) as bool
+			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hazard_property)
+			var cleared = hostile.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
 
 			if is_effective:
@@ -275,16 +276,17 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 		_player.inventory.remove_at(slot_index)
 
 
-func _get_hazards_at(cell: Vector2i) -> Array:
+func _get_hostiles_at(cell: Vector2i) -> Array:
 	var result: Array = []
 	if _world_root == null:
 		return result
-	for node in _world_root.get_tree().get_nodes_in_group(HAZARD_GROUP):
+	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
 		if node == null or not is_instance_valid(node):
 			continue
-		if node is Hazard and node.grid_state != null and node.grid_state.cell == cell:
-			if not node.is_cleared():
-				result.append(node)
+		if not _is_hostile_node(node):
+			continue
+		if node.grid_state != null and node.grid_state.cell == cell and not node.is_cleared():
+			result.append(node)
 	return result
 
 
@@ -296,31 +298,31 @@ func _tick_enemies() -> void:
 
 
 func _check_contact_damage_from_tile(player_cell: Vector2i) -> void:
-	## Check if player walked onto a stationary hazard.
-	for hazard in _get_hazards_at(player_cell):
-		hazard.deal_contact_damage(_player.stats)
+	## Check if player walked onto a stationary hostile.
+	for hostile in _get_hostiles_at(player_cell):
+		hostile.deal_contact_damage(_player.stats)
 
 
 func _check_contact_damage_from_enemies() -> void:
 	## Check if any enemy is now adjacent and deals contact damage.
 	if _player == null or _player.grid_state == null:
 		return
-	for hazard in _get_all_active_hazards():
-		if hazard.grid_state == null:
+	for hostile in _get_all_active_hostiles():
+		if hostile.grid_state == null:
 			continue
 
-		var ai = hazard.get_node_or_null("EnemyAI")
+		var ai = hostile.get_node_or_null("EnemyAI")
 		var is_mobile := false
 		if ai != null and "behavior" in ai and ai.behavior != 0: # 0 = STATIONARY
 			is_mobile = true
 
-		var delta: Vector2i = hazard.grid_state.cell - _player.grid_state.cell
-		var prev_delta: Vector2i = hazard.grid_state.previous_cell - _player.grid_state.cell
+		var delta: Vector2i = hostile.grid_state.cell - _player.grid_state.cell
+		var prev_delta: Vector2i = hostile.grid_state.previous_cell - _player.grid_state.cell
 		var manhattan := absi(delta.x) + absi(delta.y)
 		var prev_manhattan := absi(prev_delta.x) + absi(prev_delta.y)
 
 		if is_mobile and (manhattan <= 1 or prev_manhattan <= 1):
-			hazard.deal_contact_damage(_player.stats)
+			hostile.deal_contact_damage(_player.stats)
 
 
 func _post_turn_checks() -> void:
@@ -344,41 +346,47 @@ func _count_cleanup_value() -> int:
 	if _world_root == null:
 		return 0
 	var total := 0
-	for node in _world_root.get_tree().get_nodes_in_group(HAZARD_GROUP):
-		if node is Hazard and not node.is_cleared():
-			total += maxi(node.cleanup_value, 1)
+	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
+		if not _is_hostile_node(node):
+			continue
+		if not node.is_cleared():
+			total += maxi(int(node.cleanup_value), 1)
 	return total
 
 
-func _get_all_active_hazards() -> Array:
+func _get_all_active_hostiles() -> Array:
 	var result: Array = []
 	if _world_root == null:
 		return result
-	for node in _world_root.get_tree().get_nodes_in_group(HAZARD_GROUP):
-		if node is Hazard and not node.is_cleared():
+	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
+		if _is_hostile_node(node) and not node.is_cleared():
 			result.append(node)
 	return result
 
 
-func _connect_hazard_signals() -> void:
+func _connect_hostile_signals() -> void:
 	if _world_root == null:
 		return
-	for node in _world_root.get_tree().get_nodes_in_group(HAZARD_GROUP):
-		if node is Hazard and not node.hazard_cleared.is_connected(_on_hazard_cleared):
-			node.hazard_cleared.connect(_on_hazard_cleared)
+	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
+		if not _is_hostile_node(node):
+			continue
+		if not node.has_signal("hostile_cleared"):
+			continue
+		if not node.hostile_cleared.is_connected(_on_hostile_cleared):
+			node.hostile_cleared.connect(_on_hostile_cleared)
 
 
-func _on_hazard_cleared(hazard: Hazard) -> void:
-	# No clean% credit on hazard defeat — credit comes only from chute disposal.
-	# Spawn debris on cleared hazard cell.
-	if hazard != null and hazard.grid_state != null:
+func _on_hostile_cleared(hostile) -> void:
+	# No clean% credit on hostile defeat — credit comes only from chute disposal.
+	# Spawn debris on cleared hostile cell.
+	if hostile != null and hostile.grid_state != null:
 		var dupe := DEBRIS_ITEM.duplicate() as ItemData
-		dupe.origin_hazard_property = hazard.hazard_property
-		dupe.revert_turns_base = hazard.revert_turns_base
-		dupe.cleanup_value = maxi(hazard.cleanup_value, 1)
-		var p = spawn_pickup(hazard.grid_state.cell, dupe)
+		dupe.origin_hostile_definition_id = hostile.hostile_definition_id
+		dupe.revert_turns_base = int(hostile.revert_turns_base)
+		dupe.cleanup_value = maxi(int(hostile.cleanup_value), 1)
+		var p = spawn_pickup(hostile.grid_state.cell, dupe)
 		if p != null:
-			p.setup_revert(hazard.revert_turns_base, hazard.hazard_property)
+			p.setup_revert(int(hostile.revert_turns_base), hostile.hostile_definition_id)
 
 
 func _tick_debris_revert() -> void:
@@ -390,18 +398,34 @@ func _tick_debris_revert() -> void:
 			continue
 		if node is WorldPickup and node.revert_turns_remaining > 0:
 			if node.tick_revert():
-				_respawn_hazard_from_revert(node)
+				_respawn_hostile_from_revert(node)
 				node.queue_free()
 
 
-func _respawn_hazard_from_revert(pickup: WorldPickup) -> void:
-	if _world_root == null or pickup.origin_hazard_property == -1:
+func _respawn_hostile_from_revert(pickup: WorldPickup) -> void:
+	if _world_root == null:
 		return
 
-	# Spawn hazard
-	if _world_root.has_method("_spawn_hazard"):
-		_world_root.call("_spawn_hazard", pickup.grid_cell, pickup.origin_hazard_property)
-	_connect_hazard_signals()
+	if pickup.origin_hostile_definition_id == StringName():
+		push_warning("Revert pickup has no origin hostile definition ID")
+		return
+
+	if _world_root.has_method("_spawn_hostile_by_id"):
+		_world_root.call(
+			"_spawn_hostile_by_id",
+			pickup.grid_cell,
+			pickup.origin_hostile_definition_id,
+		)
+		_connect_hostile_signals()
+
+
+func _get_hostile_definition(hostile: Enemy):
+	if _world_root == null or hostile == null:
+		return null
+	if "hostile_definition_id" in hostile and hostile.hostile_definition_id != StringName():
+		if _world_root.has_method("_get_hostile_definition_by_id"):
+			return _world_root.call("_get_hostile_definition_by_id", hostile.hostile_definition_id)
+	return null
 
 
 func _get_disposal_chute_at(cell: Vector2i):
@@ -418,5 +442,20 @@ func _get_disposal_chute_at(cell: Vector2i):
 func _register_disposal(item: ItemData) -> void:
 	if item == null or item.item_type != ItemData.ItemType.DEBRIS:
 		return
-	_disposed_cleanup_value += maxi(item.cleanup_value, 1)
+	_disposed_cleanup_value = mini(
+		_disposed_cleanup_value + maxi(item.cleanup_value, 1),
+		_total_cleanup_value,
+	)
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
+
+
+func _is_hostile_node(node) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	if not node.has_method("is_cleared"):
+		return false
+	if not node.has_method("deal_contact_damage"):
+		return false
+	if node.get("hazard_property") == null:
+		return false
+	return true

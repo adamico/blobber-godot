@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HostileActorDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/hostile_actor_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://scenes/hostiles/burning_hazard.tscn" id="2_actor"]
+
+[resource]
+script = ExtResource("1_def")
+definition_id = &"burning_hazard"
+display_name = "Burning"
+actor_scene = ExtResource("2_actor")
+hazard_property = 0
+speed = 2
+ai_behavior = 1
+patrol_length = 3
+contact_damage = 1
+hazard_hp = 3
+revert_turns_base = 5
+cleanup_value = 1
+instant_clear_on_debris = false

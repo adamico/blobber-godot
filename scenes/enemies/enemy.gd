@@ -1,6 +1,7 @@
 class_name Enemy
 extends GridEntity
 
+@export var hostile_definition_id: StringName
 @export var ai_enabled: bool = true
 ## How many player turns pass between each AI tick.
 ## 1 = acts every turn, 2 = acts every other turn, etc.

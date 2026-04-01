@@ -1,7 +1,7 @@
 class_name Hazard
 extends Enemy
 
-signal hazard_cleared(hazard: Hazard)
+signal hostile_cleared(hostile: Hazard)
 
 @export var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.BURNING
 @export var contact_damage: int = 1
@@ -17,7 +17,6 @@ var _current_hp: int = 1
 func _ready() -> void:
 	super()
 	_current_hp = hazard_hp
-	add_to_group("hazards")
 	label.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
 
 
@@ -51,7 +50,7 @@ func is_cleared() -> bool:
 
 
 func _clear() -> void:
-	hazard_cleared.emit(self)
+	hostile_cleared.emit(self)
 	# Mark stats as dead so encounter module filters it out
 	if stats != null:
 		stats.take_damage(stats.max_health + 1)

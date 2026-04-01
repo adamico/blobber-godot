@@ -3,10 +3,23 @@ extends Node
 
 const NO_COMMAND := -1
 
+enum Behavior {
+	STATIONARY,
+	PATROL,
+	CHASE,
+	PROXIMITY_TRIGGER,
+}
+
+@export var behavior: Behavior = Behavior.CHASE
+@export_range(1, 8, 1) var patrol_length: int = 3
+
 
 var _grid_module: WorldGridModule
 var _world_root: Node
 var _last_seen_player_pos: Vector2i = Vector2i(-1, -1)
+var _patrol_steps_taken: int = 0
+var _patrol_direction: int = 1
+var _triggered: bool = false
 
 
 func set_grid_module(gm, world_root: Node = null) -> void:
@@ -15,6 +28,20 @@ func set_grid_module(gm, world_root: Node = null) -> void:
 
 
 func choose_command(enemy, player) -> int:
+	match behavior:
+		Behavior.STATIONARY:
+			return NO_COMMAND
+		Behavior.PATROL:
+			return _patrol_command(enemy)
+		Behavior.CHASE:
+			return _choose_chase_command(enemy, player)
+		Behavior.PROXIMITY_TRIGGER:
+			return _proximity_check(enemy, player)
+		_:
+			return NO_COMMAND
+
+
+func _choose_chase_command(enemy, player) -> int:
 	if enemy == null or player == null:
 		return NO_COMMAND
 	if enemy.grid_state == null or player.grid_state == null:
@@ -32,7 +59,7 @@ func choose_command(enemy, player) -> int:
 	# If we have no target, or have reached our last seen breadcrumb, give up.
 	if _last_seen_player_pos == Vector2i(-1, -1):
 		return NO_COMMAND
-	
+
 	if enemy_cell == _last_seen_player_pos:
 		# We reached the corner but still can't see the player
 		_last_seen_player_pos = Vector2i(-1, -1)
@@ -41,11 +68,73 @@ func choose_command(enemy, player) -> int:
 	# Target the breadcrumb
 	var target := _last_seen_player_pos
 	var step := _choose_best_step(enemy, target)
-	
+
 	if step == Vector2i.ZERO:
 		return NO_COMMAND
 
 	return _step_vector_to_command(enemy.grid_state.facing, step)
+
+
+func _patrol_command(enemy) -> int:
+	if enemy == null or enemy.grid_state == null:
+		return NO_COMMAND
+
+	var forward_vec := GridDefinitions.facing_to_vec2i(enemy.grid_state.facing)
+	var step_dir := forward_vec * _patrol_direction
+	var next_cell: Vector2i = enemy.grid_state.cell + step_dir
+
+	if not _is_cell_passable(enemy, next_cell):
+		_patrol_direction *= -1
+		_patrol_steps_taken = 0
+		step_dir = forward_vec * _patrol_direction
+		next_cell = enemy.grid_state.cell + step_dir
+
+		if not _is_cell_passable(enemy, next_cell):
+			_patrol_direction = 1
+
+			var right_facing := GridDefinitions.rotate_right(enemy.grid_state.facing)
+			var right_cell: Vector2i = enemy.grid_state.cell
+			right_cell += GridDefinitions.facing_to_vec2i(right_facing)
+			if _is_cell_passable(enemy, right_cell):
+				return GridCommand.Type.TURN_RIGHT
+
+			var left_facing := GridDefinitions.rotate_left(enemy.grid_state.facing)
+			var left_cell: Vector2i = enemy.grid_state.cell
+			left_cell += GridDefinitions.facing_to_vec2i(left_facing)
+			if _is_cell_passable(enemy, left_cell):
+				return GridCommand.Type.TURN_LEFT
+
+			return NO_COMMAND
+
+	_patrol_steps_taken += 1
+	if _patrol_steps_taken >= patrol_length:
+		_patrol_steps_taken = 0
+		_patrol_direction *= -1
+
+	if _patrol_direction > 0:
+		return GridCommand.Type.STEP_FORWARD
+
+	return GridCommand.Type.STEP_BACK
+
+
+func _proximity_check(enemy, player) -> int:
+	if _triggered:
+		return NO_COMMAND
+	if enemy == null or player == null:
+		return NO_COMMAND
+	if enemy.grid_state == null or player.grid_state == null:
+		return NO_COMMAND
+
+	var delta: Vector2i = player.grid_state.cell - enemy.grid_state.cell
+	var manhattan := absi(delta.x) + absi(delta.y)
+	if manhattan <= 1:
+		_triggered = true
+		return GridCommand.Type.PASS_TURN
+	return NO_COMMAND
+
+
+func is_triggered() -> bool:
+	return _triggered
 
 
 func _choose_best_step(_enemy, target: Vector2i) -> Vector2i:

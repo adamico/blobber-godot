@@ -17,7 +17,7 @@ extends Node3D
 @export var clean_hud_scene: PackedScene
 
 @export_group("Entities & Items")
-@export var hazard_scene: PackedScene
+@export var hostile_definitions: Array[HostileActorDefinition] = []
 @export var mop_item: ItemData
 @export var candle_item: ItemData
 @export var flask_item: ItemData
@@ -40,6 +40,14 @@ const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_COMPOSITION_ORCHESTRATOR := "CompositionOrchestrator"
 const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
+const HOSTILE_ID_BURNING := &"burning_hazard"
+const HOSTILE_ID_CURSED := &"cursed_hazard"
+const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
+const DEFAULT_HOSTILE_DEFINITIONS := [
+	preload("res://resources/hostiles/burning_hazard.tres"),
+	preload("res://resources/hostiles/cursed_hazard.tres"),
+	preload("res://resources/hostiles/corrosive_hazard.tres"),
+]
 
 var _player: Player
 var _scene_initializer_module: WorldSceneInitializerModule
@@ -52,6 +60,7 @@ var _composition_orchestrator: WorldCompositionOrchestrator
 var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
 var _turn_manager: WorldTurnManager
+var _hostile_definitions_by_id: Dictionary = { }
 
 
 func _ready() -> void:
@@ -82,6 +91,7 @@ func _ready() -> void:
 	_setup_game_state_machine()
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
+	_index_hostile_definitions()
 
 	_wire_occupancy.call_deferred()
 	_wire_turn_manager.call_deferred()
@@ -288,42 +298,79 @@ func _author_floor_1() -> void:
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), candle_item)
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
 
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.BURNING)
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CURSED)
-		_spawn_hazard(valid_cells.pop_back(), RpsSystem.HazardProperty.CORROSIVE)
+		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_BURNING)
+		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_CURSED)
+		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_CORROSIVE)
 
 		# Place a disposal chute near the centre of the floor.
 		_spawn_chute(Vector2i(6, 5))
 
 
-func _spawn_hazard(cell: Vector2i, htype: RpsSystem.HazardProperty) -> void:
-	if hazard_scene == null:
+func _index_hostile_definitions() -> void:
+	_hostile_definitions_by_id.clear()
+
+	var source_definitions := hostile_definitions
+	if source_definitions.is_empty():
+		source_definitions = DEFAULT_HOSTILE_DEFINITIONS
+
+	for entry in source_definitions:
+		var def := entry as HostileActorDefinition
+		if def == null:
+			continue
+		if def.definition_id == StringName():
+			continue
+		_hostile_definitions_by_id[def.definition_id] = def
+
+
+func _spawn_hostile_by_id(cell: Vector2i, definition_id: StringName) -> void:
+	var def := _hostile_definitions_by_id.get(definition_id) as HostileActorDefinition
+	if def == null:
+		push_warning("Missing hostile definition id: %s" % String(definition_id))
 		return
-	var h = hazard_scene.instantiate() as Hazard
-	h.hazard_property = htype
-	h.initial_cell = cell
+	_spawn_hostile(cell, def)
 
-	var ai = h.get_node_or_null("EnemyAI")
+
+func _get_hostile_definition_by_id(definition_id: StringName) -> HostileActorDefinition:
+	return _hostile_definitions_by_id.get(definition_id) as HostileActorDefinition
+
+
+func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy:
+	if definition == null or definition.actor_scene == null:
+		return null
+
+	var actor := definition.actor_scene.instantiate() as Enemy
+	if actor == null:
+		return null
+
+	actor.hostile_definition_id = definition.definition_id
+	actor.initial_cell = cell
+	actor.speed = maxi(definition.speed, 1)
+
+	if actor is Hazard:
+		var hazard := actor as Hazard
+		hazard.hazard_property = definition.hazard_property
+		hazard.contact_damage = definition.contact_damage
+		hazard.hazard_hp = definition.hazard_hp
+		hazard.revert_turns_base = definition.revert_turns_base
+		hazard.cleanup_value = definition.cleanup_value
+
+	var ai = actor.get_node_or_null("EnemyAI")
 	if ai != null:
-		if htype == RpsSystem.HazardProperty.CURSED:
-			ai.set("behavior", 2) # HazardAI.Behavior.CHASE
-		elif htype == RpsSystem.HazardProperty.BURNING:
-			ai.set("behavior", 1) # HazardAI.Behavior.PATROL
-
-	# Speed: how many player turns between each AI tick (1 = every turn).
-	match htype:
-		RpsSystem.HazardProperty.BURNING:
-			h.speed = 2 # Sluggish reanimated NPC — acts every other turn
-		RpsSystem.HazardProperty.CORROSIVE:
-			h.speed = 1 # Acid Crawler — fast, acts every turn
-		_:
-			h.speed = 1 # Cursed prop and others: every turn
+		if "behavior" in ai:
+			ai.set("behavior", definition.ai_behavior)
+		if "patrol_length" in ai:
+			ai.set("patrol_length", definition.patrol_length)
 
 	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
 	if mcfg != null:
-		h.movement_config = mcfg
+		actor.movement_config = mcfg
 
-	add_child(h)
+	add_child(actor)
+	if _encounter_module != null:
+		_encounter_module.register_hostile(actor)
+	return actor
+
+
 
 
 func _spawn_chute(cell: Vector2i) -> void:

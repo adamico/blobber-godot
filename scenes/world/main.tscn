@@ -11,7 +11,6 @@
 [ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
 [ext_resource type="PackedScene" uid="uid://1rq7cemd3thf" path="res://ui/clean_hud.tscn" id="6_e3mvx"]
-[ext_resource type="PackedScene" uid="uid://lxy8t5xod0cs" path="res://scenes/hazards/hazard.tscn" id="7_8ap0l"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
 [ext_resource type="Resource" uid="uid://7ujyorbpecsq" path="res://resources/items/mop.tres" id="8_5ebq0"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
@@ -75,7 +74,6 @@ preset_smooth_config = ExtResource("3_r3w6i")
 hp_hud_scene = ExtResource("4_ggkmy")
 belt_hud_scene = ExtResource("5_28gua")
 clean_hud_scene = ExtResource("6_e3mvx")
-hazard_scene = ExtResource("7_8ap0l")
 mop_item = ExtResource("8_5ebq0")
 candle_item = ExtResource("9_tsn8l")
 flask_item = ExtResource("10_1notw")

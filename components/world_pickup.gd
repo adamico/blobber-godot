@@ -9,7 +9,7 @@ signal collected(item: ItemData)
 
 var blocks_movement: bool = false
 var revert_turns_remaining: int = 0
-var origin_hazard_property: int = -1
+var origin_hostile_definition_id: StringName = StringName()
 
 var _timer_label: Label3D
 
@@ -31,9 +31,9 @@ func _ready() -> void:
 	_sync_world_position()
 
 
-func setup_revert(turns: int, origin_property: int) -> void:
+func setup_revert(turns: int, origin_definition_id: StringName) -> void:
 	revert_turns_remaining = turns
-	origin_hazard_property = origin_property
+	origin_hostile_definition_id = origin_definition_id
 	_update_label()
 
 

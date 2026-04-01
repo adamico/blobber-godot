@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://lxy8t5xod0cs"]
 
 [ext_resource type="Script" uid="uid://bs1aafm4hvs1x" path="res://scenes/hazards/hazard.gd" id="1_hazard"]
-[ext_resource type="Script" uid="uid://s6v85n88v444" path="res://scenes/hazards/hazard_ai.gd" id="2_ai"]
+[ext_resource type="Script" path="res://scenes/enemies/enemy_ai.gd" id="2_ai"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
 radius = 0.2
