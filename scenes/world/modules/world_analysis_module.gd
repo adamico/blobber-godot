@@ -67,14 +67,19 @@ func analyze_target() -> Dictionary:
 
 	var selected := _analysis_candidates[_analysis_selected_index]
 	_analysis_selected_key = StringName(selected.get("key", ""))
-	_unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
+	var new_information := _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
 
 	var payload := _strip_analysis_payload(selected)
 	var result := _build_analysis_result(payload)
 
 	analysis_target_changed.emit(payload)
 	analysis_result_ready.emit(result)
-	return { "ok": true, "payload": payload, "result": result }
+	return {
+		"ok": true,
+		"payload": payload,
+		"result": result,
+		"new_information": new_information,
+	}
 
 
 func hover_target(mouse_position: Vector2, camera: Camera3D) -> bool:
@@ -439,19 +444,20 @@ func _ensure_knowledge_entry(key: StringName) -> Dictionary:
 	return entry
 
 
-func _unlock_knowledge(key: StringName, unlock_flag: StringName) -> void:
+func _unlock_knowledge(key: StringName, unlock_flag: StringName) -> bool:
 	if key == StringName() or unlock_flag == StringName():
-		return
+		return false
 	var entry := _ensure_knowledge_entry(key)
 	if entry.is_empty():
-		return
+		return false
 
 	if bool(entry.get(unlock_flag, false)):
-		return
+		return false
 
 	entry[unlock_flag] = true
 	_analysis_knowledge_by_key[key] = entry
 	analysis_knowledge_updated.emit(key, entry.duplicate(true), unlock_flag)
+	return true
 
 
 func _get_knowledge_snapshot(key: StringName) -> Dictionary:

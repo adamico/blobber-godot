@@ -202,9 +202,15 @@ func process_analyze_target() -> void:
 	var analysis_result := _analysis_module.analyze_target()
 	if not bool(analysis_result.get("ok", false)):
 		action_feedback.emit("NOTHING TO ANALYZE", false)
-	else:
-		var result: Dictionary = analysis_result.get("result", { })
+		return
+
+	var result: Dictionary = analysis_result.get("result", { })
+	var new_information := bool(analysis_result.get("new_information", false))
+	if new_information:
 		action_feedback.emit(String(result.get("summary", "ANALYZED")), true)
+	else:
+		action_feedback.emit("NO NEW INFORMATION", false)
+		return
 
 	_tick_enemies()
 	_tick_debris_revert()

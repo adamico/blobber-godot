@@ -56,6 +56,35 @@ class FakeWorldRoot:
 		spawn_hazard_calls.append([cell, hazard_property])
 
 
+class FakeHostileTarget:
+	extends Node3D
+
+	signal hostile_cleared(_hostile)
+
+	var grid_state: GridState
+	var hazard_property: int = RpsSystem.HazardProperty.BURNING
+	var hostile_definition_id: StringName = &"burning_hazard"
+	var cleanup_value: int = 1
+	var revert_turns_base: int = 5
+	var _cleared := false
+
+
+	func _init(cell: Vector2i = Vector2i.ZERO) -> void:
+		grid_state = GridState.new(cell, GridDefinitions.Facing.NORTH)
+
+
+	func is_cleared() -> bool:
+		return _cleared
+
+
+	func deal_contact_damage(_stats: CharacterStats) -> void:
+		pass
+
+
+	func receive_tool_hit(_tool_property: int, _stats: CharacterStats = null) -> bool:
+		return false
+
+
 class TestWorldTurnManager:
 	extends WorldTurnManager
 
@@ -377,6 +406,37 @@ func test_disposal_signal_emits_specific_unlock_flags() -> void:
 			manager.KNOWLEDGE_DISPOSAL,
 		],
 	)
+
+
+func test_analyze_consumes_turn_when_new_information_unlocked() -> void:
+	var manager := _make_turn_manager()
+	var player := _make_player(Vector2i.ZERO)
+	var root := _make_world_root()
+	var hostile := FakeHostileTarget.new(Vector2i(0, -1))
+	root.add_child(hostile)
+	hostile.add_to_group(&"grid_enemies")
+	manager.configure(player, null, null, root)
+
+	watch_signals(manager)
+	manager.process_analyze_target()
+
+	assert_signal_emit_count(manager, "turn_completed", 1)
+
+
+func test_analyze_without_new_information_is_free_action() -> void:
+	var manager := _make_turn_manager()
+	var player := _make_player(Vector2i.ZERO)
+	var root := _make_world_root()
+	var hostile := FakeHostileTarget.new(Vector2i(0, -1))
+	root.add_child(hostile)
+	hostile.add_to_group(&"grid_enemies")
+	manager.configure(player, null, null, root)
+
+	watch_signals(manager)
+	manager.process_analyze_target()
+	manager.process_analyze_target()
+
+	assert_signal_emit_count(manager, "turn_completed", 1)
 
 # ---------------------------------------------------------------------------
 # JobRating — grade thresholds (boundary values)
