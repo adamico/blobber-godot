@@ -117,7 +117,16 @@ func analyze_target() -> Dictionary:
 
 	var selected := _analysis_candidates[_analysis_selected_index]
 	_analysis_selected_key = StringName(selected.get("key", ""))
-	var new_information := _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
+
+	var new_information := false
+	if selected.get("kind", "") == "pickup":
+		var snapshot := _get_knowledge_snapshot(_analysis_selected_key)
+		if not bool(snapshot.get(KNOWLEDGE_BASIC, false)):
+			new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
+		else:
+			new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_PARTIAL)
+	else:
+		new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
 
 	var payload := _strip_analysis_payload(selected)
 	var result := _build_analysis_result(payload)
@@ -319,14 +328,26 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 
 func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
 	var item := pickup.item_data
-	var summary := _first_non_empty_line(item.description)
-	if summary.is_empty():
-		summary = "Recoverable field object."
+	var basic_summary := _first_non_empty_line(item.description)
+	if basic_summary.is_empty():
+		basic_summary = "Recoverable field object."
+
+	var partial_summary := ""
+	var full_desc := item.description.strip_edges()
+	if item.tool_property != RpsSystem.ToolProperty.OTHER:
+		var prop := _humanize_tool_property(item.tool_property)
+		partial_summary = "Property: %s" % prop
+		if not full_desc.is_empty():
+			partial_summary += "\n" + full_desc
+	else:
+		partial_summary = full_desc
+
 	return {
 		"key": "pickup:%s" % [_pickup_type_key(item)],
 		"kind": "pickup",
 		"display_name": item.item_name,
-		"summary_basic": summary,
+		"summary_basic": basic_summary,
+		"summary_partial": partial_summary,
 		"summary_disposal": "Some recovered debris can be routed into a disposal chute.",
 		"cell": pickup.grid_cell,
 		"distance": _manhattan_to_player(pickup.grid_cell),

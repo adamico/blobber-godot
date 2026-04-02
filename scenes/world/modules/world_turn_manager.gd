@@ -286,6 +286,10 @@ func get_analysis_result_for_target(payload: Dictionary) -> Dictionary:
 		return { }
 	return _build_analysis_result(payload)
 
+
+func get_knowledge_snapshot(key: StringName) -> Dictionary:
+	return _get_knowledge_snapshot(key)
+
 # --- Private ---
 
 

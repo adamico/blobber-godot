@@ -273,7 +273,7 @@ func _add_huds() -> void:
 	if belt_hud_scene != null:
 		var belt_hud := belt_hud_scene.instantiate()
 		layer.add_child(belt_hud)
-		belt_hud.configure(_player)
+		belt_hud.configure(_player, _turn_manager)
 
 	if clean_hud_scene != null:
 		var clean_hud := clean_hud_scene.instantiate()

@@ -1,5 +1,6 @@
 extends Control
 
+@onready var _analysis_panel: PanelContainer = %AnalysisPanel
 @onready var _analysis_name_label: Label = %AnalysisNameLabel
 @onready var _analysis_meta_label: Label = %AnalysisMetaLabel
 @onready var _analysis_body_label: Label = %AnalysisBodyLabel
@@ -7,9 +8,12 @@ extends Control
 @onready var _analysis_toast_label: Label = %AnalysisToastLabel
 @onready var _analysis_toast_timer: Timer = %AnalysisToastTimer
 
+const ANALYSIS_PANEL_IDLE_TIMEOUT := 3.0
+
 var _turn_manager: WorldTurnManager
 var _analysis_target: Dictionary = { }
 var _analysis_known_names_by_key: Dictionary = { }
+var _analysis_idle_timer: Timer
 
 
 func _ready() -> void:
@@ -20,6 +24,14 @@ func _ready() -> void:
 	_show_analysis_placeholder()
 	if _analysis_toast_panel != null:
 		_analysis_toast_panel.visible = false
+
+	_analysis_idle_timer = Timer.new()
+	_analysis_idle_timer.one_shot = true
+	_analysis_idle_timer.wait_time = ANALYSIS_PANEL_IDLE_TIMEOUT
+	_analysis_idle_timer.timeout.connect(_on_analysis_idle_timeout)
+	add_child(_analysis_idle_timer)
+
+	_hide_analysis_panel()
 
 
 func configure(turn_manager: WorldTurnManager) -> void:
@@ -43,6 +55,21 @@ func _show_analysis_placeholder() -> void:
 	_analysis_name_label.text = "No target selected"
 	_analysis_meta_label.text = "Hover or cycle targets, then analyze to deepen field notes."
 	_analysis_body_label.text = "Known details for the current target will appear here."
+
+
+func _show_analysis_panel() -> void:
+	if _analysis_panel != null:
+		_analysis_panel.visible = true
+		if _analysis_idle_timer != null:
+			_analysis_idle_timer.stop()
+			_analysis_idle_timer.start()
+
+
+func _hide_analysis_panel() -> void:
+	if _analysis_panel != null:
+		_analysis_panel.visible = false
+	if _analysis_idle_timer != null:
+		_analysis_idle_timer.stop()
 
 
 func _render_analysis_result(result: Dictionary) -> void:
@@ -81,11 +108,17 @@ func _refresh_analysis_view() -> void:
 func _on_analysis_target_changed(target: Dictionary) -> void:
 	_analysis_target = target.duplicate(true)
 	_remember_analysis_target(target)
+	if _analysis_target.is_empty():
+		_hide_analysis_panel()
+		return
+	_show_analysis_panel()
 	_refresh_analysis_view()
 
 
 func _on_analysis_result_ready(result: Dictionary) -> void:
 	_analysis_target = result.duplicate(true)
+	if not result.is_empty():
+		_show_analysis_panel()
 	_render_analysis_result(result)
 
 
@@ -154,6 +187,10 @@ func _show_analysis_toast(text: String) -> void:
 	_analysis_toast_panel.visible = true
 	if _analysis_toast_timer != null:
 		_analysis_toast_timer.start()
+
+
+func _on_analysis_idle_timeout() -> void:
+	_hide_analysis_panel()
 
 
 func _on_analysis_toast_timeout() -> void:

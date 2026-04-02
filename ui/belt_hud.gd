@@ -17,6 +17,7 @@ extends Control
 @onready var _slot_popup_body_label: Label = %SlotPopupBodyLabel
 
 var _player: Player
+var _turn_manager: WorldTurnManager
 var _tool_property = RpsSystem.ToolProperty
 var _hovered_slot_index := -1
 
@@ -28,8 +29,9 @@ func _ready() -> void:
 	_hide_slot_popup()
 
 
-func configure(player: Player) -> void:
+func configure(player: Player, turn_manager: WorldTurnManager = null) -> void:
 	_player = player
+	_turn_manager = turn_manager
 	_refresh()
 
 
@@ -161,22 +163,32 @@ func _update_slot_popup() -> void:
 		_hide_slot_popup()
 		return
 
+	var knowledge := _get_item_knowledge(item)
+	var basic_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_BASIC, false))
+	var partial_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_PARTIAL, false))
+
 	if _slot_popup_name_label != null:
 		_slot_popup_name_label.text = item.item_name
 
 	if _slot_popup_meta_label != null:
-		if item.tool_property != _tool_property.OTHER:
-			var property_text: String = _tool_property.keys()[item.tool_property].capitalize()
-			_slot_popup_meta_label.text = property_text
+		if partial_known and item.tool_property != _tool_property.OTHER:
+			_slot_popup_meta_label.text = (
+				_tool_property.keys()[item.tool_property].capitalize()
+			)
 		else:
 			_slot_popup_meta_label.text = ""
 
 	if _slot_popup_body_label != null:
-		_slot_popup_body_label.text = (
-			item.description
-			if not item.description.is_empty()
-			else "No discovered knowledge recorded yet."
-		)
+		if partial_known:
+			_slot_popup_body_label.text = (
+				item.description
+				if not item.description.is_empty()
+				else "No further details recorded."
+			)
+		elif basic_known:
+			_slot_popup_body_label.text = _first_line(item.description)
+		else:
+			_slot_popup_body_label.text = "No field notes yet. Analyze this item to learn more."
 
 	_slot_popup.reset_size()
 	_position_slot_popup(_hovered_slot_index)
@@ -200,6 +212,21 @@ func _position_slot_popup(slot_index: int) -> void:
 	var x := slot_pos.x + (panel.size.x - popup_size.x) * 0.5
 	x = clamp(x, 0.0, max(0.0, size.x - popup_size.x))
 	_slot_popup.position.x = x
+
+
+func _get_item_knowledge(item: ItemData) -> Dictionary:
+	if _turn_manager == null or item == null:
+		return {}
+	var type_key := item.resource_path if item.resource_path != "" else item.item_name
+	return _turn_manager.get_knowledge_snapshot(StringName("pickup:%s" % type_key))
+
+
+func _first_line(text: String) -> String:
+	for line in text.split("\n"):
+		var trimmed := line.strip_edges()
+		if not trimmed.is_empty():
+			return trimmed
+	return ""
 
 
 func _get_item_for_slot(slot_index: int) -> ItemData:
