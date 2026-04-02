@@ -20,7 +20,7 @@ extends Node3D
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
 @export var mop_item: ItemData
-@export var candle_item: ItemData
+@export var holy_symbol_item: ItemData
 @export var flask_item: ItemData
 @export var ward_item: ItemData
 @export var potion_item: ItemData
@@ -304,7 +304,7 @@ func _author_floor_1() -> void:
 
 	if valid_cells.size() >= 6:
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), mop_item)
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), candle_item)
+		_turn_manager.spawn_pickup(valid_cells.pop_back(), holy_symbol_item)
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
 
 		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_BURNING)
@@ -380,8 +380,6 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy
 	if _encounter_module != null:
 		_encounter_module.register_hostile(actor)
 	return actor
-
-
 
 
 func _spawn_chute(cell: Vector2i) -> void:

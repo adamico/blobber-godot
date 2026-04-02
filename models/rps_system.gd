@@ -1,17 +1,20 @@
 class_name RpsSystem
 extends RefCounted
 
+## Integer values are explicit and stable — .tres files persist these as raw ints.
+## Never renumber or reorder without a migration pass on all .tres resources.
 enum HazardProperty {
-	BURNING,
-	CORROSIVE,
-	CURSED,
+	BURNING   = 0,
+	CORROSIVE = 1,
+	CURSED    = 2,
 }
 
+## Same stability contract as HazardProperty.
 enum ToolProperty {
-	SOAKED,
-	INERT,
-	CLEANSED,
-	OTHER,
+	SOAKED   = 0,
+	INERT    = 1,
+	CLEANSED = 2,
+	OTHER    = 3,
 }
 
 const WEAKNESS_TABLE: Dictionary = {

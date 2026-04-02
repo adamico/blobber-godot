@@ -1,11 +1,13 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cxyhqs44n3ose"]
 
 [ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Texture2D" uid="uid://b432dcscvukji" path="res://assets/brilliant_blue_new.png" id="1_uiovd"]
 
 [resource]
 script = ExtResource("1_mxxb9")
 item_name = "Splash Flask"
 description = "A flask of industrial solvent. Douses the front tile and adjacent tiles, bonus vs burning enemies."
 tool_property = 0
+pickup_texture = ExtResource("1_uiovd")
 is_reusable = false
 is_aoe = true

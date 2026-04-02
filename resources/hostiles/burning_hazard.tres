@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="HostileActorDefinition" format=3]
 
-[ext_resource type="Script" path="res://models/hostile_actor_definition.gd" id="1_def"]
+[ext_resource type="Script" uid="uid://dx087llvdwy6g" path="res://models/hostile_actor_definition.gd" id="1_def"]
 [ext_resource type="PackedScene" path="res://scenes/hostiles/burning_hazard.tscn" id="2_actor"]
 
 [resource]

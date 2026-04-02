@@ -14,6 +14,7 @@ signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_
 
 const HOSTILE_GROUP := &"grid_enemies"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
+const WORLD_PICKUP_SCENE := preload("res://scenes/world/world_pickup.tscn")
 
 var _player: Player
 var _encounter_module: WorldEncounterModule
@@ -229,33 +230,34 @@ func process_hover_target(mouse_position: Vector2, camera: Camera3D) -> void:
 func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
 	if _world_root == null:
 		return null
+	if WORLD_PICKUP_SCENE == null:
+		push_error("Missing world pickup scene: res://scenes/world/world_pickup.tscn")
+		return null
 
-	var p := WorldPickup.new()
+	var p := WORLD_PICKUP_SCENE.instantiate() as WorldPickup
+	if p == null:
+		push_error("Failed to instantiate world pickup scene")
+		return null
 	p.grid_cell = cell
 	p.item_data = item
 	p.name = "Pickup_%s_%d_%d" % [item.item_name.replace(" ", "_"), cell.x, cell.y]
+	var label := p.get_node_or_null("ItemLabel") as Label3D
+	if label != null:
+		label.text = item.item_name
 
-	# Add visual representation (placeholder until art pass)
-	var mesh := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.3, 0.3, 0.3)
-	mesh.mesh = box
-	mesh.position.y = 0.15
-
-	var mat := StandardMaterial3D.new()
-	if item.item_type == ItemData.ItemType.DEBRIS:
-		mat.albedo_color = Color.GRAY
-	else:
-		mat.albedo_color = Color.YELLOW
-	mesh.set_surface_override_material(0, mat)
-
-	var lbl := Label3D.new()
-	lbl.text = item.item_name
-	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	lbl.pixel_size = 0.0025
-	lbl.position = Vector3(0, 0.4, 0)
-	p.add_child(lbl)
-	p.add_child(mesh)
+	var sprite := p.get_node_or_null("Sprite3D") as Sprite3D
+	if sprite != null:
+		if item.pickup_texture != null:
+			sprite.texture = item.pickup_texture
+		if item.item_type == ItemData.ItemType.DEBRIS:
+			sprite.modulate = Color(0.8, 0.8, 0.8, 1.0)
+		else:
+			sprite.modulate = Color(1.0, 0.9, 0.3, 1.0)
+		var sprite_mat := sprite.material_override as ShaderMaterial
+		if sprite_mat != null:
+			sprite_mat = sprite_mat.duplicate() as ShaderMaterial
+			sprite.material_override = sprite_mat
+			sprite_mat.set_shader_parameter("sprite_texture", sprite.texture)
 
 	_world_root.add_child(p)
 	return p

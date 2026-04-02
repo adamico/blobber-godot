@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://gpif3rpuvf2y"]
 
+[ext_resource type="Texture2D" uid="uid://c0wqwen01ve82" path="res://assets/dungeon/boulder.png" id="1_hjnxw"]
 [ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
@@ -8,4 +9,5 @@ item_name = "Debris"
 description = "Inert waste. Blocks movement. Dispose at chute."
 item_type = 2
 tool_property = 1
+pickup_texture = ExtResource("1_hjnxw")
 is_reusable = false

@@ -1,11 +1,17 @@
 [gd_scene format=3 uid="uid://lxy8t5xod0cs"]
 
 [ext_resource type="Script" uid="uid://bs1aafm4hvs1x" path="res://scenes/hazards/hazard.gd" id="1_hazard"]
-[ext_resource type="Script" path="res://scenes/enemies/enemy_ai.gd" id="2_ai"]
+[ext_resource type="Script" uid="uid://yn4bi7ef4jwu" path="res://scenes/enemies/enemy_ai.gd" id="2_ai"]
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
-radius = 0.2
-height = 0.6
+[sub_resource type="QuadMesh" id="BillboardQuad"]
+size = Vector2(0.5, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="BillboardMaterial"]
+transparency = 1
+blend_mode = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.2, 0.6, 1.0, 0.8)
 
 [node name="Hazard" type="Node3D" unique_id=1779973639]
 script = ExtResource("1_hazard")
@@ -17,12 +23,13 @@ script = ExtResource("2_ai")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=989224241]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
-mesh = SubResource("CapsuleMesh_enemy")
+mesh = SubResource("BillboardQuad")
+material_override = SubResource("BillboardMaterial")
 
 [node name="Label3D" type="Label3D" parent="." unique_id=391576828]
 unique_name_in_owner = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.70000005, 0)
 pixel_size = 0.0025
 billboard = 1
-text = "Hazard
-"
+text = ""
+visible = false

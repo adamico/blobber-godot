@@ -7,7 +7,7 @@
 [ext_resource type="Resource" uid="uid://bpsbwt82uliw4" path="res://resources/movement_config.tres" id="3_tt8nk"]
 [ext_resource type="MeshLibrary" uid="uid://bxgdx6gy414a7" path="res://resources/mesh_library/simple_mesh_library.tres" id="4_6r0uj"]
 [ext_resource type="PackedScene" uid="uid://k4eo6chcrluc" path="res://ui/hp_hud.tscn" id="4_ggkmy"]
-[ext_resource type="PackedScene" path="res://ui/analysis_hud.tscn" id="4_y1l4v"]
+[ext_resource type="PackedScene" uid="uid://fhdav1vof61b" path="res://ui/analysis_hud.tscn" id="4_y1l4v"]
 [ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="5_1h5vq"]
 [ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_28gua"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
@@ -16,13 +16,14 @@
 [ext_resource type="Resource" uid="uid://7ujyorbpecsq" path="res://resources/items/mop.tres" id="8_5ebq0"]
 [ext_resource type="Script" uid="uid://b8gr54moprd5" path="res://scenes/world/modules/world_grid_module.gd" id="8_aln2x"]
 [ext_resource type="Script" uid="uid://03i62ypeorjw" path="res://scenes/world/modules/world_encounter_module.gd" id="9_obv6f"]
-[ext_resource type="Resource" uid="uid://dp2w75kvwchxk" path="res://resources/items/ritual_candle.tres" id="9_tsn8l"]
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="9_r3w6i"]
+[ext_resource type="Resource" uid="uid://cy4qolkuj2rho" path="res://resources/items/holy_symbol.tres" id="10_holy"]
 [ext_resource type="Resource" uid="uid://cxyhqs44n3ose" path="res://resources/items/splash_flask.tres" id="10_1notw"]
 [ext_resource type="Resource" uid="uid://c5q5v1oeaihvk" path="res://resources/items/iron_ward.tres" id="11_ironward"]
 [ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
 [ext_resource type="Resource" uid="uid://cbshjds4a3ref" path="res://resources/items/potion.tres" id="12_potion"]
-[ext_resource type="PackedScene" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
+[ext_resource type="PackedScene" uid="uid://iw6dqags3f3v" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
 [ext_resource type="PackedScene" uid="uid://fyuw05stj1rb" path="res://ui/hud_separator.tscn" id="15_28gua"]
@@ -31,41 +32,18 @@
 [ext_resource type="Script" uid="uid://b3wuosfy8gqph" path="res://scenes/world/modules/world_context_orchestrator.gd" id="18_9d4lw"]
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
 [ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
-[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="21_2g9jf"]
-[ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="22_5md0q"]
 [ext_resource type="Material" uid="uid://wk1fk8ywws1j" path="res://assets/textures/Tiles085_1K-PNG.tres" id="22_8ap0l"]
-[ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="23_lh832"]
+[ext_resource type="PackedScene" uid="uid://xn65te06dv" path="res://scenes/world/floor_exit.tscn" id="32_r3w6i"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_8ap0l"]
 shader = ExtResource("14_5ebq0")
 shader_parameter/resolution = Vector2(320, 180)
-shader_parameter/scan_line_amount = 0.246000011685
+shader_parameter/scan_line_amount = 0.16800000798
 shader_parameter/warp_amount = 0.05
 shader_parameter/vignette_amount = 0.814000038665
 shader_parameter/vignette_intensity = 0.5010000237975
 shader_parameter/grille_amount = 0.05
 shader_parameter/brightness_boost = 1.2
-
-[sub_resource type="Resource" id="27_potion_item"]
-
-[sub_resource type="SphereMesh" id="SphereMesh_pickup_marker"]
-radius = 0.18
-height = 0.36
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pickup_marker"]
-albedo_color = Color(0.901961, 0.705882, 0.156863, 1)
-emission_enabled = true
-emission = Color(0.901961, 0.705882, 0.156863, 1)
-emission_energy_multiplier = 1.2
-
-[sub_resource type="BoxMesh" id="BoxMesh_exit_marker"]
-size = Vector3(0.6, 0.2, 0.6)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_exit_marker"]
-albedo_color = Color(0.196078, 0.705882, 0.333333, 1)
-emission_enabled = true
-emission = Color(0.196078, 0.705882, 0.333333, 1)
-emission_energy_multiplier = 1.5
 
 [node name="Main" type="Node3D" unique_id=1276884268]
 script = ExtResource("1_wbupf")
@@ -77,7 +55,7 @@ belt_hud_scene = ExtResource("5_28gua")
 clean_hud_scene = ExtResource("6_e3mvx")
 analysis_hud_scene = ExtResource("4_y1l4v")
 mop_item = ExtResource("8_5ebq0")
-candle_item = ExtResource("9_tsn8l")
+holy_symbol_item = ExtResource("10_holy")
 flask_item = ExtResource("10_1notw")
 ward_item = ExtResource("11_ironward")
 potion_item = ExtResource("12_potion")
@@ -186,31 +164,8 @@ debug_log_input_actions = false
 movement_config = ExtResource("3_tt8nk")
 initial_cell = Vector2i(2, 1)
 
-[node name="FloorEnemy" parent="." unique_id=29647059 instance=ExtResource("21_2g9jf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -3)
-ai_enabled = false
-initial_cell = Vector2i(10, 4)
-
-[node name="PotionPickup" type="Node3D" parent="." unique_id=11595592]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -3)
-script = ExtResource("22_5md0q")
-grid_cell = Vector2i(12, 6)
-item_data = SubResource("27_potion_item")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="PotionPickup" unique_id=911111264]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
-mesh = SubResource("SphereMesh_pickup_marker")
-surface_material_override/0 = SubResource("StandardMaterial3D_pickup_marker")
-
-[node name="FloorExit" type="Node3D" parent="." unique_id=577675068]
+[node name="FloorExit" parent="." unique_id=1883957072 instance=ExtResource("32_r3w6i")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, -3)
-script = ExtResource("23_lh832")
-grid_cell = Vector2i(9, 5)
-world_y = 0.05
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="FloorExit" unique_id=1813182867]
-mesh = SubResource("BoxMesh_exit_marker")
-surface_material_override/0 = SubResource("StandardMaterial3D_exit_marker")
 
 [node name="GridMap" type="GridMap" parent="." unique_id=1476284130]
 mesh_library = ExtResource("4_6r0uj")

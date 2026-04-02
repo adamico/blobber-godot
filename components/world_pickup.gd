@@ -18,13 +18,7 @@ func _ready() -> void:
 	if item_data != null and item_data.item_type == ItemData.ItemType.DEBRIS:
 		blocks_movement = true
 	add_to_group(&"world_pickups")
-
-	_timer_label = Label3D.new()
-	_timer_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	_timer_label.pixel_size = 0.005
-	_timer_label.position = Vector3(0, 0.6, 0)
-	_timer_label.modulate = Color(1, 0.4, 0) # Orange-red color for timer
-	add_child(_timer_label)
+	_timer_label = get_node_or_null("TimerLabel") as Label3D
 
 	_update_label()
 

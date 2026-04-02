@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://7ujyorbpecsq"]
 
+[ext_resource type="Texture2D" uid="uid://3wwnl64efl3r" path="res://assets/rod_3_old.png" id="1_kntu3"]
 [ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
@@ -7,3 +8,4 @@ script = ExtResource("1_mxxb9")
 item_name = "Mop"
 description = "Veridian Tactical Mop. Standard damage, bonus vs burning enemies."
 tool_property = 0
+pickup_texture = ExtResource("1_kntu3")

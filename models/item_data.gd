@@ -11,6 +11,7 @@ enum ItemType {
 @export_multiline var description: String = ""
 @export var item_type: ItemType = ItemType.TOOL
 @export var tool_property: RpsSystem.ToolProperty = RpsSystem.ToolProperty.OTHER
+@export var pickup_texture: Texture2D
 @export_range(0, 2) var use_range: int = 1 ## 0 = self, 1 = adjacent, 2 = one tile ahead
 @export var is_reusable: bool = true
 @export var is_aoe: bool = false

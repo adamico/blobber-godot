@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://xn65te06dv"]
+
+[ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://components/world_exit.gd" id="1_yna6y"]
+[ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_p3742"]
+[ext_resource type="Texture2D" uid="uid://cqwsj4ulx7q7n" path="res://assets/dungeon/gateways/exit.png" id="3_cmc7v"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_exit_marker"]
+size = Vector3(0.6, 0.2, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_exit_marker"]
+albedo_color = Color(0.196078, 0.705882, 0.333333, 1)
+emission_enabled = true
+emission = Color(0.196078, 0.705882, 0.333333, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_e3l2f"]
+render_priority = 0
+shader = ExtResource("2_p3742")
+shader_parameter/sprite_texture = ExtResource("3_cmc7v")
+shader_parameter/line_color = Color(0.6509804, 1, 0.5882353, 1)
+shader_parameter/glowSize = 0.0
+shader_parameter/glowDensity = 1
+shader_parameter/glowRadialCoverage = 5
+shader_parameter/glowAngle = 1.57
+shader_parameter/glowSharpness = 1.0000000475
+shader_parameter/alphaThreshold = 0.218000010355
+
+[node name="FloorExit" type="Node3D" unique_id=1883957072]
+script = ExtResource("1_yna6y")
+grid_cell = Vector2i(9, 5)
+world_y = 0.05
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1632079985]
+visible = false
+mesh = SubResource("BoxMesh_exit_marker")
+surface_material_override/0 = SubResource("StandardMaterial3D_exit_marker")
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1473014799]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.03383056)
+material_override = SubResource("ShaderMaterial_e3l2f")
+pixel_size = 0.02
+billboard = 2
+texture_filter = 0
+texture = ExtResource("3_cmc7v")

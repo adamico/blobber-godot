@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cy4qolkuj2rho"]
+
+[ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_8crmi"]
+[ext_resource type="Texture2D" uid="uid://b7qw3wb14ksl4" path="res://assets/urand_cekugob_new.png" id="1_nyp5i"]
+
+[resource]
+script = ExtResource("1_8crmi")
+item_name = "Holy Symbol"
+description = "A blessed icon with sanctifying properties. Standard damage, bonus vs cursed enemies."
+tool_property = 2
+pickup_texture = ExtResource("1_nyp5i")

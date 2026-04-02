@@ -1,10 +1,37 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d02i04q7umj5d"]
 
-[ext_resource type="PackedScene" path="res://scenes/hazards/hazard.tscn" id="1_base"]
+[ext_resource type="PackedScene" uid="uid://lxy8t5xod0cs" path="res://scenes/hazards/hazard.tscn" id="1_base"]
+[ext_resource type="Material" uid="uid://bfh1ln5vkjhfd" path="res://resources/hostiles/billboard_cursed.tres" id="2_cursed_mat"]
+[ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="3_3q6n2"]
+[ext_resource type="Texture2D" uid="uid://b0m8bxqs3a1cs" path="res://assets/monster/statues/spooky_statue.png" id="4_vaqc0"]
 
-[node name="CursedHazard" instance=ExtResource("1_base")]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ppjre"]
+render_priority = 0
+shader = ExtResource("3_3q6n2")
+shader_parameter/sprite_texture = ExtResource("4_vaqc0")
+shader_parameter/line_color = Color(0.6509804, 1, 0.5882353, 1)
+shader_parameter/glowSize = 0.0
+shader_parameter/glowDensity = 1
+shader_parameter/glowRadialCoverage = 5
+shader_parameter/glowAngle = 1.57
+shader_parameter/glowSharpness = 1.0000000475
+shader_parameter/alphaThreshold = 0.218000010355
 
-[node name="MeshInstance3D" parent="." index="1"]
+[node name="CursedHazard" unique_id=1559960145 instance=ExtResource("1_base")]
+hazard_property = 2
 
-[node name="Label3D" parent="." index="2"]
-text = "Cursed\n"
+[node name="MeshInstance3D" parent="." index="1" unique_id=989224241]
+visible = false
+material_override = ExtResource("2_cursed_mat")
+
+[node name="Label3D" parent="." index="2" unique_id=391576828]
+text = "Cursed
+"
+
+[node name="Sprite3D" type="Sprite3D" parent="." index="3" unique_id=22503827]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -0.06616944)
+material_override = SubResource("ShaderMaterial_ppjre")
+pixel_size = 0.02
+billboard = 2
+texture_filter = 0
+texture = ExtResource("4_vaqc0")

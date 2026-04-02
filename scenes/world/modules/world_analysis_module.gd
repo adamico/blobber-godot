@@ -14,7 +14,47 @@ const KNOWLEDGE_BASIC := &"basic_known"
 const KNOWLEDGE_PARTIAL := &"partial_clue_known"
 const KNOWLEDGE_WEAKNESS := &"weakness_known"
 const KNOWLEDGE_DISPOSAL := &"disposal_known"
-const HOVER_SELECTION_RADIUS_PX := 72.0
+const HOVER_SELECTION_RADIUS_PX := 100.0
+const HOVER_RAY_HIT_RADIUS := 0.45
+const DEBUG_HOVER_SELECTION := true
+
+const DEFAULT_HOVER_HEIGHT_SAMPLES: Array[float] = [0.1, 0.3, 0.5]
+const DEFAULT_INDICATOR_HEIGHT := 0.5
+const DEFAULT_INDICATOR_SIZE := Vector2(0.35, 0.35)
+const DEFAULT_INDICATOR_ALPHA := 0.24
+const DEFAULT_INDICATOR_DEPTH_RATIO := 1.5
+const TARGETING_PROFILE_BY_KIND := {
+	"pickup": {
+		"hover_heights": [0.3, 0.3, 0.3],
+		"indicator_height": 0.3,
+		"indicator_size": Vector2(0.24, 0.24),
+		"indicator_alpha": 0.20,
+		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
+	},
+	"hostile": {
+		"hover_heights": [0.1, 0.3, 0.5, 0.75],
+		"indicator_height": 0.5,
+		"indicator_size": Vector2(0.38, 0.38),
+		"indicator_alpha": 0.22,
+		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
+	},
+	"chute": {
+		"hover_heights": [0.2, 0.5, 0.3],
+		"indicator_height": 0.15,
+		"indicator_size": Vector2(0.5, 0.6),
+		"indicator_alpha": 0.18,
+		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
+	},
+	"exit": {
+		"hover_heights": [0.02, 0.1, 0.2],
+		"indicator_height": 0.1,
+		"indicator_size": Vector2(0.6, 0.6),
+		"indicator_alpha": 0.16,
+		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
+	},
+}
+
+const INDICATOR_HEIGHT := 0.9
 
 var _player: Player
 var _world_root: Node
@@ -22,11 +62,20 @@ var _analysis_candidates: Array[Dictionary] = []
 var _analysis_selected_index: int = -1
 var _analysis_selected_key: StringName = StringName()
 var _analysis_knowledge_by_key: Dictionary = { }
+var _target_indicator: MeshInstance3D
+var _target_indicator_mesh: QuadMesh
+var _target_indicator_material: StandardMaterial3D
+var _current_outlined_node: Variant = null
+var _outlined_sprite_material: ShaderMaterial = null
+var _outlined_mesh_instance: MeshInstance3D = null
+var _outlined_mesh_previous_overlay: Material = null
+var _mesh_outline_material: StandardMaterial3D = null
 
 
 func configure(player: Player, world_root: Node) -> void:
 	_player = player
 	_world_root = world_root
+	_create_target_indicator()
 
 
 func cycle_target(direction: int) -> Dictionary:
@@ -37,6 +86,7 @@ func cycle_target(direction: int) -> Dictionary:
 	if _analysis_candidates.is_empty():
 		_analysis_selected_index = -1
 		_analysis_selected_key = StringName()
+		_hide_target_indicator()
 		analysis_target_changed.emit({ })
 		return { "ok": false, "reason": "NO_TARGETS" }
 
@@ -88,32 +138,48 @@ func hover_target(mouse_position: Vector2, camera: Camera3D) -> bool:
 
 	_refresh_analysis_candidates()
 	if _analysis_candidates.is_empty():
+		_debug_hover("no candidates; clearing hover selection")
+		_deselect_hover_target()
 		return false
 
-	var best_index := -1
-	var best_distance := INF
-
-	for i in range(_analysis_candidates.size()):
-		var cell: Vector2i = _analysis_candidates[i].get("cell", Vector2i.ZERO)
-		var world_pos := GridMapper.cell_to_world(cell, 1.0, 0.1)
-		if camera.is_position_behind(world_pos):
-			continue
-
-		var screen_pos := camera.unproject_position(world_pos)
-		var distance := mouse_position.distance_to(screen_pos)
-		if distance < best_distance:
-			best_distance = distance
-			best_index = i
-
-	if best_index < 0 or best_distance > HOVER_SELECTION_RADIUS_PX:
+	var ray_pick := _pick_hover_candidate_by_ray(mouse_position, camera)
+	if ray_pick.is_empty():
+		_debug_hover("no hover target near ray")
+		_deselect_hover_target()
 		return false
 
-	if _analysis_selected_index == best_index:
+	var best_index := int(ray_pick.get("index", -1))
+	var best_distance := float(ray_pick.get("distance", INF))
+
+	if best_index < 0:
+		_deselect_hover_target()
+		return false
+
+	var best_key := StringName(_analysis_candidates[best_index].get("key", ""))
+	if best_key == _analysis_selected_key and best_key != StringName():
 		return false
 
 	_analysis_selected_index = best_index
+	_debug_hover(
+		"hover selected key=%s ray_distance=%.3f index=%d" % [
+			String(best_key),
+			best_distance,
+			best_index,
+		],
+	)
 	_emit_selected_analysis_target("hover")
 	return true
+
+
+func _deselect_hover_target() -> void:
+	if _analysis_selected_index < 0 and _analysis_selected_key == StringName():
+		return
+	_debug_hover("hover deselected")
+	_analysis_selected_index = -1
+	_analysis_selected_key = StringName()
+	_hide_target_indicator()
+	_remove_analysis_outline()
+	analysis_target_changed.emit({ })
 
 
 func register_hazard_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
@@ -168,11 +234,15 @@ func _refresh_analysis_candidates() -> void:
 				_analysis_selected_key = previous_key
 				return
 
-	if _analysis_selected_index < 0 or _analysis_selected_index >= _analysis_candidates.size():
-		_analysis_selected_index = 0
-	_analysis_selected_key = StringName(
-		_analysis_candidates[_analysis_selected_index].get("key", ""),
-	)
+	# Keep hover/cycle/analyze behavior explicit: do not auto-select index 0 during refresh.
+	_analysis_selected_index = -1
+	_analysis_selected_key = StringName()
+
+
+func _debug_hover(message: String) -> void:
+	if not DEBUG_HOVER_SELECTION:
+		return
+	print("[AnalysisHover] %s" % [message])
 
 
 func _collect_analysis_candidates() -> Array[Dictionary]:
@@ -243,6 +313,7 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 		"cell": cell,
 		"distance": _manhattan_to_player(cell),
 		"facing_score": _facing_score(cell),
+		"node": hostile,
 	}
 
 
@@ -260,6 +331,7 @@ func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
 		"cell": pickup.grid_cell,
 		"distance": _manhattan_to_player(pickup.grid_cell),
 		"facing_score": _facing_score(pickup.grid_cell),
+		"node": pickup,
 	}
 
 
@@ -274,6 +346,7 @@ func _build_chute_candidate(chute) -> Dictionary:
 		"cell": cell,
 		"distance": _manhattan_to_player(cell),
 		"facing_score": _facing_score(cell),
+		"node": chute,
 	}
 
 
@@ -289,6 +362,7 @@ func _build_exit_candidate(exit_node: WorldExit) -> Dictionary:
 		"cell": exit_node.grid_cell,
 		"distance": _manhattan_to_player(exit_node.grid_cell),
 		"facing_score": _facing_score(exit_node.grid_cell),
+		"node": exit_node,
 	}
 
 
@@ -306,16 +380,190 @@ func _analysis_candidate_less(a: Dictionary, b: Dictionary) -> bool:
 	return String(a.get("key", "")) < String(b.get("key", ""))
 
 
-func _emit_selected_analysis_target(source: String) -> Dictionary:
+func _emit_selected_analysis_target(
+		source: String,
+		indicator_height: float = INDICATOR_HEIGHT,
+) -> Dictionary:
 	if _analysis_selected_index < 0 or _analysis_selected_index >= _analysis_candidates.size():
+		_hide_target_indicator()
 		analysis_target_changed.emit({ })
 		return { }
 
-	var payload := _strip_analysis_payload(_analysis_candidates[_analysis_selected_index])
+	var candidate := _analysis_candidates[_analysis_selected_index]
+	var payload := _strip_analysis_payload(candidate)
 	payload["source"] = source
 	_analysis_selected_key = StringName(payload.get("key", ""))
+	_hide_target_indicator()
+	_apply_analysis_outline(candidate.get("node"))
+	if _current_outlined_node == null:
+		_apply_indicator_visual_for_candidate(candidate)
+		var anchor_height := _indicator_height_for_candidate(candidate)
+		var depth_ratio := _indicator_depth_ratio_for_candidate(candidate)
+		if source != "hover":
+			anchor_height = indicator_height
+		_show_target_indicator(
+			payload.get("cell", Vector2i.ZERO),
+			anchor_height,
+			depth_ratio,
+		)
 	analysis_target_changed.emit(payload)
 	return payload
+
+
+func _pick_hover_candidate_by_ray(mouse_position: Vector2, camera: Camera3D) -> Dictionary:
+	var ray_origin := camera.project_ray_origin(mouse_position)
+	var ray_dir := camera.project_ray_normal(mouse_position)
+	if ray_dir.length_squared() <= 0.000001:
+		return { }
+
+	var best_index := -1
+	var best_lateral_distance := INF
+	var best_ray_depth := INF
+
+	for i in range(_analysis_candidates.size()):
+		var candidate := _analysis_candidates[i]
+		var cell: Vector2i = candidate.get("cell", Vector2i.ZERO)
+		for sample_height in _candidate_hover_heights(candidate):
+			var world_pos := GridMapper.cell_to_world(cell, 1.0, sample_height)
+			if camera.is_position_behind(world_pos):
+				continue
+			var ray_sample := _ray_sample_to_point(world_pos, ray_origin, ray_dir)
+			if ray_sample.is_empty():
+				continue
+
+			var depth := float(ray_sample.get("depth", INF))
+			var lateral_distance := float(ray_sample.get("distance", INF))
+			if lateral_distance > HOVER_RAY_HIT_RADIUS:
+				continue
+
+			var is_better_depth := depth < best_ray_depth - 0.001
+			var is_equal_depth := absf(depth - best_ray_depth) <= 0.001
+			var is_better_lateral := lateral_distance < best_lateral_distance
+			if is_better_depth or (is_equal_depth and is_better_lateral):
+				best_ray_depth = depth
+				best_lateral_distance = lateral_distance
+				best_index = i
+
+	if best_index < 0:
+		return { }
+
+	return {
+		"index": best_index,
+		"distance": best_lateral_distance,
+		"depth": best_ray_depth,
+	}
+
+
+func _candidate_hover_heights(candidate: Dictionary) -> Array[float]:
+	if candidate.has("hover_heights"):
+		var override_heights := _to_float_array(candidate.get("hover_heights"))
+		if not override_heights.is_empty():
+			return override_heights
+
+	var kind := String(candidate.get("kind", ""))
+	var profile := _targeting_profile_for_kind(kind)
+	var heights := _to_float_array(profile.get("hover_heights", DEFAULT_HOVER_HEIGHT_SAMPLES))
+	if not heights.is_empty():
+		return heights
+	return DEFAULT_HOVER_HEIGHT_SAMPLES.duplicate()
+
+
+func _indicator_height_for_candidate(candidate: Dictionary) -> float:
+	if candidate.has("indicator_height"):
+		return float(candidate.get("indicator_height", DEFAULT_INDICATOR_HEIGHT))
+
+	var kind := String(candidate.get("kind", ""))
+	var profile := _targeting_profile_for_kind(kind)
+	return float(profile.get("indicator_height", DEFAULT_INDICATOR_HEIGHT))
+
+
+func _targeting_profile_for_kind(kind: String) -> Dictionary:
+	if TARGETING_PROFILE_BY_KIND.has(kind):
+		return TARGETING_PROFILE_BY_KIND[kind]
+	return {
+		"hover_heights": DEFAULT_HOVER_HEIGHT_SAMPLES,
+		"indicator_height": DEFAULT_INDICATOR_HEIGHT,
+		"indicator_size": DEFAULT_INDICATOR_SIZE,
+		"indicator_alpha": DEFAULT_INDICATOR_ALPHA,
+		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
+	}
+
+
+func _indicator_size_for_candidate(candidate: Dictionary) -> Vector2:
+	if candidate.has("indicator_size"):
+		return _to_vector2(candidate.get("indicator_size"), DEFAULT_INDICATOR_SIZE)
+	var kind := String(candidate.get("kind", ""))
+	var profile := _targeting_profile_for_kind(kind)
+	return _to_vector2(
+		profile.get("indicator_size", DEFAULT_INDICATOR_SIZE),
+		DEFAULT_INDICATOR_SIZE,
+	)
+
+
+func _indicator_alpha_for_candidate(candidate: Dictionary) -> float:
+	if candidate.has("indicator_alpha"):
+		return clampf(float(candidate.get("indicator_alpha", DEFAULT_INDICATOR_ALPHA)), 0.05, 1.0)
+	var kind := String(candidate.get("kind", ""))
+	var profile := _targeting_profile_for_kind(kind)
+	return clampf(float(profile.get("indicator_alpha", DEFAULT_INDICATOR_ALPHA)), 0.05, 1.0)
+
+
+func _indicator_depth_ratio_for_candidate(candidate: Dictionary) -> float:
+	if candidate.has("indicator_depth_ratio"):
+		return clampf(
+			float(candidate.get("indicator_depth_ratio", DEFAULT_INDICATOR_DEPTH_RATIO)),
+			0.01,
+			1.0,
+		)
+	var kind := String(candidate.get("kind", ""))
+	var profile := _targeting_profile_for_kind(kind)
+	return clampf(
+		float(profile.get("indicator_depth_ratio", DEFAULT_INDICATOR_DEPTH_RATIO)),
+		0.01,
+		1.0,
+	)
+
+
+func _apply_indicator_visual_for_candidate(candidate: Dictionary) -> void:
+	if _target_indicator_mesh == null or _target_indicator_material == null:
+		return
+	_target_indicator_mesh.size = _indicator_size_for_candidate(candidate)
+	var color := _target_indicator_material.albedo_color
+	color.a = _indicator_alpha_for_candidate(candidate)
+	_target_indicator_material.albedo_color = color
+
+
+func _to_float_array(value: Variant) -> Array[float]:
+	var out: Array[float] = []
+	if not (value is Array):
+		return out
+	for item in value:
+		out.append(float(item))
+	return out
+
+
+func _to_vector2(value: Variant, fallback: Vector2) -> Vector2:
+	if value is Vector2:
+		return value
+	if value is Array and (value as Array).size() >= 2:
+		var raw := value as Array
+		return Vector2(float(raw[0]), float(raw[1]))
+	if value is float or value is int:
+		var size := float(value)
+		return Vector2(size, size)
+	return fallback
+
+
+func _ray_sample_to_point(point: Vector3, ray_origin: Vector3, ray_dir: Vector3) -> Dictionary:
+	var to_point := point - ray_origin
+	var t := to_point.dot(ray_dir)
+	if t < 0.0:
+		return { }
+	var closest := ray_origin + (ray_dir * t)
+	return {
+		"depth": t,
+		"distance": point.distance_to(closest),
+	}
 
 
 func _strip_analysis_payload(candidate: Dictionary) -> Dictionary:
@@ -539,4 +787,139 @@ func _resolve_grid_occupancy() -> GridOccupancyMap:
 	if grid_module != null and grid_module.has_method("occupancy"):
 		return grid_module.call("occupancy") as GridOccupancyMap
 
+	return null
+
+
+func _create_target_indicator() -> void:
+	if _target_indicator != null:
+		return
+	_target_indicator_mesh = QuadMesh.new()
+	_target_indicator_mesh.size = DEFAULT_INDICATOR_SIZE
+	_target_indicator_material = StandardMaterial3D.new()
+	_target_indicator_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_target_indicator_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_target_indicator_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	_target_indicator_material.albedo_color = Color(0.65, 1.0, 0.59, DEFAULT_INDICATOR_ALPHA)
+	_target_indicator_mesh.material = _target_indicator_material
+	_target_indicator = MeshInstance3D.new()
+	_target_indicator.mesh = _target_indicator_mesh
+	_target_indicator.visible = false
+	if _world_root != null:
+		_world_root.add_child(_target_indicator)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE:
+		_remove_analysis_outline()
+		if _target_indicator != null and is_instance_valid(_target_indicator):
+			_target_indicator.queue_free()
+
+
+func _show_target_indicator(
+		cell: Vector2i,
+		y: float = INDICATOR_HEIGHT,
+		depth_ratio: float = DEFAULT_INDICATOR_DEPTH_RATIO,
+) -> void:
+	if _target_indicator == null:
+		return
+	var entity_pos := GridMapper.cell_to_world(cell, 1.0, y)
+	var camera := _player.get_node_or_null("Camera3D") as Camera3D
+	if camera == null:
+		_target_indicator.global_position = entity_pos
+		_target_indicator.visible = true
+		return
+	# depth_ratio maps within the cell along the camera axis:
+	#   0.0 = back edge (far from camera)
+	#   0.5 = cell centre (entity position)
+	#   1.0 = front edge (toward camera)
+	var toward_cam := (camera.global_position - entity_pos)
+	toward_cam.y = 0.0
+	var cam_len := toward_cam.length()
+	if cam_len < 0.001:
+		_target_indicator.global_position = entity_pos
+		_target_indicator.visible = true
+		return
+	var cam_dir := toward_cam / cam_len
+	var offset := (depth_ratio - 0.5) * 1.0 # ±0.5 cell units
+	_target_indicator.global_position = entity_pos + cam_dir * offset
+	_target_indicator.visible = true
+
+
+func _hide_target_indicator() -> void:
+	if _target_indicator == null:
+		return
+	_target_indicator.visible = false
+
+
+func _ensure_mesh_outline_material() -> void:
+	if _mesh_outline_material != null:
+		return
+	_mesh_outline_material = StandardMaterial3D.new()
+	_mesh_outline_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_mesh_outline_material.cull_mode = BaseMaterial3D.CULL_FRONT
+	_mesh_outline_material.grow = 0.06
+	_mesh_outline_material.albedo_color = Color(0.65, 1.0, 0.59, 1.0)
+
+
+func _apply_analysis_outline(target: Variant) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+	_remove_analysis_outline()
+	var sprite := _find_outline_sprite(target)
+	if sprite == null:
+		var mesh := _find_outline_mesh(target)
+		if mesh == null:
+			return
+		_ensure_mesh_outline_material()
+		_outlined_mesh_previous_overlay = mesh.material_overlay
+		mesh.material_overlay = _mesh_outline_material
+		_outlined_mesh_instance = mesh
+		_current_outlined_node = target
+		return
+	var mat := sprite.material_override as ShaderMaterial
+	if mat == null:
+		return
+	mat.set_shader_parameter("glowSize", 1.0)
+	_outlined_sprite_material = mat
+	_current_outlined_node = target
+
+
+func _remove_analysis_outline() -> void:
+	if _current_outlined_node == null:
+		return
+	if not is_instance_valid(_current_outlined_node):
+		_current_outlined_node = null
+		_outlined_sprite_material = null
+		_outlined_mesh_instance = null
+		_outlined_mesh_previous_overlay = null
+		return
+	if _outlined_sprite_material != null:
+		_outlined_sprite_material.set_shader_parameter("glowSize", 0.0)
+	if _outlined_mesh_instance != null and is_instance_valid(_outlined_mesh_instance):
+		_outlined_mesh_instance.material_overlay = _outlined_mesh_previous_overlay
+	_outlined_sprite_material = null
+	_outlined_mesh_instance = null
+	_outlined_mesh_previous_overlay = null
+	_current_outlined_node = null
+
+
+func _find_outline_sprite(target: Variant) -> Sprite3D:
+	if target is Sprite3D:
+		return target as Sprite3D
+	if not (target is Node):
+		return null
+	for child in (target as Node).get_children():
+		if child is Sprite3D:
+			return child as Sprite3D
+	return null
+
+
+func _find_outline_mesh(target: Variant) -> MeshInstance3D:
+	if target is MeshInstance3D:
+		return target as MeshInstance3D
+	if not (target is Node):
+		return null
+	for child in (target as Node).get_children():
+		if child is MeshInstance3D and (child as MeshInstance3D).visible:
+			return child as MeshInstance3D
 	return null
