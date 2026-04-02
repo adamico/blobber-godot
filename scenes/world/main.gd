@@ -16,6 +16,7 @@ extends Node3D
 @export var belt_hud_scene: PackedScene
 @export var clean_hud_scene: PackedScene
 @export var analysis_hud_scene: PackedScene
+@export var toast_hud_scene: PackedScene
 
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
@@ -281,6 +282,11 @@ func _add_huds() -> void:
 		clean_hud.configure(_turn_manager)
 
 	_ui_module.setup_analysis_panel(layer, analysis_hud_scene, _turn_manager)
+
+	if toast_hud_scene != null:
+		var toast_hud := toast_hud_scene.instantiate()
+		layer.add_child(toast_hud)
+		toast_hud.configure(_turn_manager)
 
 
 func _author_floor_1() -> void:

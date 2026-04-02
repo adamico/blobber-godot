@@ -205,10 +205,9 @@ func process_analyze_target() -> void:
 		action_feedback.emit("NOTHING TO ANALYZE", false)
 		return
 
-	var result: Dictionary = analysis_result.get("result", { })
 	var new_information := bool(analysis_result.get("new_information", false))
 	if new_information:
-		action_feedback.emit(String(result.get("summary", "ANALYZED")), true)
+		action_feedback.emit("ANALYZED", true)
 	else:
 		action_feedback.emit("NO NEW INFORMATION", false)
 		return

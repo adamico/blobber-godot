@@ -60,23 +60,3 @@ size_flags_vertical = 1
 text = "Known details for the current target will appear here."
 autowrap_mode = 3
 
-[node name="AnalysisToastPanel" type="PanelContainer" parent="." unique_id=915668674]
-unique_name_in_owner = true
-layout_mode = 0
-offset_top = 310.0
-offset_right = 360.0
-offset_bottom = 350.0
-
-[node name="MarginContainer" type="MarginContainer" parent="AnalysisToastPanel" unique_id=1491157515]
-layout_mode = 2
-
-[node name="AnalysisToastLabel" type="Label" parent="AnalysisToastPanel/MarginContainer" unique_id=817603657]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(344, 0)
-layout_mode = 2
-autowrap_mode = 3
-
-[node name="AnalysisToastTimer" type="Timer" parent="." unique_id=464026304]
-unique_name_in_owner = true
-wait_time = 2.0
-one_shot = true
