@@ -44,19 +44,14 @@ layout_mode = 2
 text = "[1]"
 horizontal_alignment = 1
 
-[node name="Label1" type="Label" parent="HBox/Slot1/VBox" unique_id=234088475]
+[node name="Icon1" type="TextureRect" parent="HBox/Slot1/VBox" unique_id=113088177]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "- Empty -"
-horizontal_alignment = 1
-
-[node name="Property1" type="Label" parent="HBox/Slot1/VBox" unique_id=1436171149]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "(property)"
-horizontal_alignment = 1
+size_flags_horizontal = 4
+size_flags_vertical = 3
+expand_mode = 2
+stretch_mode = 5
 
 [node name="Slot2" type="PanelContainer" parent="HBox" unique_id=1632814879]
 unique_name_in_owner = true
@@ -74,19 +69,14 @@ layout_mode = 2
 text = "[2]"
 horizontal_alignment = 1
 
-[node name="Label2" type="Label" parent="HBox/Slot2/VBox" unique_id=1201843453]
+[node name="Icon2" type="TextureRect" parent="HBox/Slot2/VBox" unique_id=1308524658]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "- Empty -"
-horizontal_alignment = 1
-
-[node name="Property2" type="Label" parent="HBox/Slot2/VBox" unique_id=999681889]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "(property)"
-horizontal_alignment = 1
+size_flags_horizontal = 4
+size_flags_vertical = 3
+expand_mode = 2
+stretch_mode = 5
 
 [node name="Slot3" type="PanelContainer" parent="HBox" unique_id=272504618]
 unique_name_in_owner = true
@@ -104,16 +94,57 @@ layout_mode = 2
 text = "[3]"
 horizontal_alignment = 1
 
-[node name="Label3" type="Label" parent="HBox/Slot3/VBox" unique_id=1362062310]
+[node name="Icon3" type="TextureRect" parent="HBox/Slot3/VBox" unique_id=1329533226]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(28, 28)
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "- Empty -"
-horizontal_alignment = 1
+size_flags_horizontal = 4
+size_flags_vertical = 3
+expand_mode = 2
+stretch_mode = 5
 
-[node name="Property3" type="Label" parent="HBox/Slot3/VBox" unique_id=1722648295]
+[node name="SlotPopup" type="PanelContainer" parent="." unique_id=1425069164]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 0
+offset_left = 346.0
+offset_top = -274.0
+offset_right = 546.0
+offset_bottom = -26.0
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("2_ax6ya")
+
+[node name="MarginContainer" type="MarginContainer" parent="SlotPopup" unique_id=172328433]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="SlotPopup/MarginContainer" unique_id=1431028572]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SlotPopupNameLabel" type="Label" parent="SlotPopup/MarginContainer/VBox" unique_id=236300295]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "(property)"
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 16
+text = "Empty slot"
+
+[node name="HSeparator" type="HSeparator" parent="SlotPopup/MarginContainer/VBox" unique_id=517906074]
+layout_mode = 2
+
+[node name="SlotPopupMetaLabel" type="Label" parent="SlotPopup/MarginContainer/VBox" unique_id=111343921]
+unique_name_in_owner = true
+modulate = Color(0.8, 0.84, 0.78, 0.9)
+custom_minimum_size = Vector2(70, 0)
+layout_mode = 2
+text = "Hover a belt slot to inspect known details."
+autowrap_mode = 3
+
+[node name="SlotPopupBodyLabel" type="Label" parent="SlotPopup/MarginContainer/VBox" unique_id=1686262596]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(190, 0)
+layout_mode = 2
+text = "Discovered knowledge for the selected slot item will appear here."
+autowrap_mode = 3

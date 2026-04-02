@@ -1,22 +1,31 @@
 extends Control
 ## Always-visible 3-slot utility belt at the bottom of the screen.
-## Shows item name and slot key (1/2/3).
+## Shows slot key and icon (1/2/3).
 
-@onready var _slot_1_label: Label = %Label1
-@onready var _slot_2_label: Label = %Label2
-@onready var _slot_3_label: Label = %Label3
 @onready var _slot_1_key: Label = %Key1
 @onready var _slot_2_key: Label = %Key2
 @onready var _slot_3_key: Label = %Key3
 @onready var _slot_1_panel: PanelContainer = %Slot1
 @onready var _slot_2_panel: PanelContainer = %Slot2
 @onready var _slot_3_panel: PanelContainer = %Slot3
-@onready var _slot_1_property: Label = %Property1
-@onready var _slot_2_property: Label = %Property2
-@onready var _slot_3_property: Label = %Property3
+@onready var _slot_1_icon: TextureRect = %Icon1
+@onready var _slot_2_icon: TextureRect = %Icon2
+@onready var _slot_3_icon: TextureRect = %Icon3
+@onready var _slot_popup: PanelContainer = %SlotPopup
+@onready var _slot_popup_name_label: Label = %SlotPopupNameLabel
+@onready var _slot_popup_meta_label: Label = %SlotPopupMetaLabel
+@onready var _slot_popup_body_label: Label = %SlotPopupBodyLabel
 
 var _player: Player
 var _tool_property = RpsSystem.ToolProperty
+var _hovered_slot_index := -1
+
+
+func _ready() -> void:
+	_bind_slot_hover(_slot_1_panel, 0)
+	_bind_slot_hover(_slot_2_panel, 1)
+	_bind_slot_hover(_slot_3_panel, 2)
+	_hide_slot_popup()
 
 
 func configure(player: Player) -> void:
@@ -30,62 +39,74 @@ func _process(_delta: float) -> void:
 
 func _refresh() -> void:
 	if _player == null or _player.inventory == null:
-		_set_slot(_slot_1_label, _slot_1_key, _slot_1_panel, _slot_1_property, null, "1")
-		_set_slot(_slot_2_label, _slot_2_key, _slot_2_panel, _slot_2_property, null, "2")
-		_set_slot(_slot_3_label, _slot_3_key, _slot_3_panel, _slot_3_property, null, "3")
+		_set_slot(
+			_slot_1_key,
+			_slot_1_panel,
+			_slot_1_icon,
+			null,
+			"1",
+		)
+		_set_slot(
+			_slot_2_key,
+			_slot_2_panel,
+			_slot_2_icon,
+			null,
+			"2",
+		)
+		_set_slot(
+			_slot_3_key,
+			_slot_3_panel,
+			_slot_3_icon,
+			null,
+			"3",
+		)
 		return
 
 	var items = _player.inventory.get_items() as Array[ItemData]
 
 	_set_slot(
-		_slot_1_label,
 		_slot_1_key,
 		_slot_1_panel,
-		_slot_1_property,
+		_slot_1_icon,
 		items[0] if items.size() > 0 else null,
 		"1",
 	)
 	_set_slot(
-		_slot_2_label,
 		_slot_2_key,
 		_slot_2_panel,
-		_slot_2_property,
+		_slot_2_icon,
 		items[1] if items.size() > 1 else null,
 		"2",
 	)
 	_set_slot(
-		_slot_3_label,
 		_slot_3_key,
 		_slot_3_panel,
-		_slot_3_property,
+		_slot_3_icon,
 		items[2] if items.size() > 2 else null,
 		"3",
 	)
 
+	_update_slot_popup()
+
 
 func _set_slot(
-		label: Label,
 		key_label: Label,
 		panel: PanelContainer,
-		property_label: Label,
+		icon: TextureRect,
 		item: ItemData,
 		key: String,
 ) -> void:
 	if key_label != null:
 		key_label.text = "[%s]" % key
 
-	if label != null:
-		if item != null:
-			label.text = item.item_name
+	if icon != null:
+		if item != null and item.pickup_texture != null:
+			icon.texture = item.pickup_texture
+			icon.self_modulate.a = 1.0
 		else:
-			label.text = ""
-
-	if property_label != null:
-		if item != null:
-			var property_text: String = _tool_property.keys()[item.tool_property].capitalize()
-			property_label.text = "(%s)" % property_text
-		else:
-			property_label.text = ""
+			icon.texture = null
+			# Keep the control visible so VBox layout does not collapse in empty slots.
+			icon.self_modulate.a = 0.0
 
 	if panel != null:
 		panel.modulate.a = 0.4 if item == null else 1.0
@@ -101,3 +122,102 @@ func _set_slot(
 					panel.self_modulate = Color.WHITE
 		else:
 			panel.self_modulate = Color.WHITE
+
+
+func _bind_slot_hover(panel: Control, slot_index: int) -> void:
+	if panel == null:
+		return
+	panel.mouse_entered.connect(
+		func() -> void:
+			_on_slot_mouse_entered(slot_index)
+	)
+	panel.mouse_exited.connect(
+		func() -> void:
+			_on_slot_mouse_exited(slot_index)
+	)
+
+
+func _on_slot_mouse_entered(slot_index: int) -> void:
+	_hovered_slot_index = slot_index
+	_update_slot_popup()
+
+
+func _on_slot_mouse_exited(slot_index: int) -> void:
+	if _hovered_slot_index != slot_index:
+		return
+	_hovered_slot_index = -1
+	_hide_slot_popup()
+
+
+func _update_slot_popup() -> void:
+	if _slot_popup == null:
+		return
+	if _hovered_slot_index < 0:
+		_hide_slot_popup()
+		return
+
+	var item := _get_item_for_slot(_hovered_slot_index)
+	if item == null:
+		_hide_slot_popup()
+		return
+
+	if _slot_popup_name_label != null:
+		_slot_popup_name_label.text = item.item_name
+
+	if _slot_popup_meta_label != null:
+		if item.tool_property != _tool_property.OTHER:
+			var property_text: String = _tool_property.keys()[item.tool_property].capitalize()
+			_slot_popup_meta_label.text = property_text
+		else:
+			_slot_popup_meta_label.text = ""
+
+	if _slot_popup_body_label != null:
+		_slot_popup_body_label.text = (
+			item.description
+			if not item.description.is_empty()
+			else "No discovered knowledge recorded yet."
+		)
+
+	_slot_popup.reset_size()
+	_position_slot_popup(_hovered_slot_index)
+	_slot_popup.visible = true
+
+
+func _hide_slot_popup() -> void:
+	if _slot_popup != null:
+		_slot_popup.visible = false
+
+
+func _position_slot_popup(slot_index: int) -> void:
+	if _slot_popup == null:
+		return
+	var panel := _get_panel_for_slot(slot_index)
+	if panel == null:
+		return
+
+	var popup_size := _slot_popup.size
+	var slot_pos := panel.global_position - global_position
+	var x := slot_pos.x + (panel.size.x - popup_size.x) * 0.5
+	x = clamp(x, 0.0, max(0.0, size.x - popup_size.x))
+	_slot_popup.position.x = x
+
+
+func _get_item_for_slot(slot_index: int) -> ItemData:
+	if _player == null or _player.inventory == null:
+		return null
+	var items = _player.inventory.get_items() as Array[ItemData]
+	if slot_index < 0 or slot_index >= items.size():
+		return null
+	return items[slot_index]
+
+
+func _get_panel_for_slot(slot_index: int) -> PanelContainer:
+	match slot_index:
+		0:
+			return _slot_1_panel
+		1:
+			return _slot_2_panel
+		2:
+			return _slot_3_panel
+		_:
+			return null
