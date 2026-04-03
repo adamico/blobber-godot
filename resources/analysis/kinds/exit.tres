@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="AnalysisCandidateKindDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_candidate_kind_definition.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+kind = "exit"
+group_name = &"world_exit_cells"
+required_class_name = "WorldExit"
+required_non_null_paths = PackedStringArray("grid_cell")
+cell_path = "grid_cell"
+key_mode = "literal"
+key_literal = "exit:world"
+display_name_mode = "constant"
+display_name_default = "World Exit"
+fallback_profile_path = "res://resources/analysis/features/world_exit_analysis.tres"
+attached_profile_path = "analysis_profile"
+targeting_profile_path = "res://resources/analysis/targeting/exit.tres"
+summary_resolver_path = "res://resources/analysis/summary_resolvers/profile_only.tres"
+summary_basic_override_bool_path = "requires_cleared_floor"
+summary_basic_override_when_true = "Extraction point gated by floor conditions."

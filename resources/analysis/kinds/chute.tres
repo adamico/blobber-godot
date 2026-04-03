@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AnalysisCandidateKindDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_candidate_kind_definition.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+kind = "chute"
+group_name = &"disposal_chutes"
+required_methods = PackedStringArray("matches_cell")
+required_non_null_paths = PackedStringArray("grid_cell")
+cell_path = "grid_cell"
+key_mode = "literal"
+key_literal = "chute:disposal"
+display_name_mode = "constant"
+display_name_default = "Disposal Chute"
+fallback_profile_path = "res://resources/analysis/features/disposal_chute_analysis.tres"
+attached_profile_path = "analysis_profile"
+targeting_profile_path = "res://resources/analysis/targeting/chute.tres"
+summary_resolver_path = "res://resources/analysis/summary_resolvers/profile_only.tres"

@@ -3,10 +3,12 @@ extends RefCounted
 
 const ANALYSIS_TARGET_DATA_SCRIPT := "res://models/analysis_target_data.gd"
 
-const HOSTILE_GROUP := &"grid_hostiles"
-const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
-const ANALYSIS_CHUTE_KEY := &"chute:disposal"
-const ANALYSIS_EXIT_KEY := &"exit:world"
+const ANALYSIS_KIND_DEFINITION_PATHS := [
+	"res://resources/analysis/kinds/hostile.tres",
+	"res://resources/analysis/kinds/pickup.tres",
+	"res://resources/analysis/kinds/chute.tres",
+	"res://resources/analysis/kinds/exit.tres",
+]
 
 const HOVER_RAY_HIT_RADIUS := 0.45
 const DEFAULT_HOVER_HEIGHT_SAMPLES: Array[float] = [0.1, 0.3, 0.5]
@@ -15,27 +17,17 @@ const DEFAULT_INDICATOR_SIZE := Vector2(0.35, 0.35)
 const DEFAULT_INDICATOR_ALPHA := 0.24
 const DEFAULT_INDICATOR_DEPTH_RATIO := 1.5
 
-const _FALLBACK_PROFILE_PATHS := {
-	"hostile": "res://resources/analysis/defaults/hostile_fallback.tres",
-	"pickup": "res://resources/analysis/defaults/pickup_fallback.tres",
-	"chute": "res://resources/analysis/features/disposal_chute_analysis.tres",
-	"exit": "res://resources/analysis/features/world_exit_analysis.tres",
-}
-
-const _TARGETING_PROFILE_PATHS := {
-	"hostile": "res://resources/analysis/targeting/hostile.tres",
-	"pickup": "res://resources/analysis/targeting/pickup.tres",
-	"chute": "res://resources/analysis/targeting/chute.tres",
-	"exit": "res://resources/analysis/targeting/exit.tres",
-}
-
 var _player: Player
 var _world_root: Node
+var _kind_definitions: Array[AnalysisCandidateKindDefinition] = []
+var _kind_definitions_by_kind: Dictionary = {}
+var _resource_cache: Dictionary = {}
 
 
 func configure(player: Player, world_root: Node) -> void:
 	_player = player
 	_world_root = world_root
+	_ensure_kind_definitions_loaded()
 
 
 func collect_candidates() -> Array[Dictionary]:
@@ -43,42 +35,18 @@ func collect_candidates() -> Array[Dictionary]:
 	if _world_root == null or _player == null or _player.grid_state == null:
 		return candidates
 
-	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
-		if not _is_hostile_node(node):
-			continue
-		if node.is_cleared() or node.grid_state == null:
-			continue
-		if not _is_node_visible_for_analysis(node, node.grid_state.cell):
-			continue
-		candidates.append(_build_hostile_candidate(node))
-
-	for node in _world_root.get_tree().get_nodes_in_group(&"world_pickups"):
-		if node == null or not is_instance_valid(node):
-			continue
-		if not (node is WorldPickup):
-			continue
-		if not _is_node_visible_for_analysis(node, node.grid_cell):
-			continue
-		if node.item_data != null:
-			candidates.append(_build_pickup_candidate(node))
-
-	for node in _world_root.get_tree().get_nodes_in_group(DISPOSAL_CHUTE_GROUP):
-		if node == null or not is_instance_valid(node):
-			continue
-		if not (node.has_method("matches_cell") and "grid_cell" in node):
-			continue
-		if not _is_node_visible_for_analysis(node, node.grid_cell):
-			continue
-		candidates.append(_build_chute_candidate(node))
-
-	for node in _world_root.get_tree().get_nodes_in_group(&"world_exit_cells"):
-		if node == null or not is_instance_valid(node):
-			continue
-		if not (node is WorldExit):
-			continue
-		if not _is_node_visible_for_analysis(node, node.grid_cell):
-			continue
-		candidates.append(_build_exit_candidate(node))
+	_ensure_kind_definitions_loaded()
+	for def in _kind_definitions:
+		for node in _world_root.get_tree().get_nodes_in_group(def.group_name):
+			if not _passes_kind_requirements(node, def):
+				continue
+			var cell_value: Variant = resolve_path(node, def.cell_path)
+			if not (cell_value is Vector2i):
+				continue
+			var cell := cell_value as Vector2i
+			if not _is_node_visible_for_analysis(node, cell):
+				continue
+			candidates.append(_build_candidate_from_kind(def, node, cell))
 
 	candidates.sort_custom(_analysis_candidate_less)
 	return candidates
@@ -149,17 +117,33 @@ func pickup_key(item: ItemData) -> StringName:
 
 
 func build_pickup_target_data_from_item(item: ItemData):
+	_ensure_kind_definitions_loaded()
+	var def := _kind_definitions_by_kind.get("pickup", null) as AnalysisCandidateKindDefinition
+	if def == null:
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
 	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(
-		_build_pickup_payload(item, Vector2i.ZERO, null),
+		_build_candidate_from_kind(def, null, Vector2i.ZERO, item),
 	)
 
 
 func build_chute_target_data(chute = null):
-	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_chute_candidate(chute))
+	_ensure_kind_definitions_loaded()
+	var def := _kind_definitions_by_kind.get("chute", null) as AnalysisCandidateKindDefinition
+	if def == null:
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
+	var cell: Vector2i = Vector2i.ZERO if chute == null else chute.grid_cell
+	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_candidate_from_kind(def, chute, cell))
 
 
 func build_exit_target_data(exit_node: WorldExit = null):
-	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_exit_candidate(exit_node))
+	_ensure_kind_definitions_loaded()
+	var def := _kind_definitions_by_kind.get("exit", null) as AnalysisCandidateKindDefinition
+	if def == null:
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
+	var cell := Vector2i.ZERO if exit_node == null else exit_node.grid_cell
+	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(
+		_build_candidate_from_kind(def, exit_node, cell)
+	)
 
 
 func candidate_hover_heights(candidate: Dictionary) -> Array[float]:
@@ -168,8 +152,7 @@ func candidate_hover_heights(candidate: Dictionary) -> Array[float]:
 		if not override_heights.is_empty():
 			return override_heights
 
-	var kind := String(candidate.get("kind", ""))
-	var profile := _load_targeting_profile(kind)
+	var profile := _targeting_profile_for_candidate(candidate)
 	if profile != null and not profile.hover_heights.is_empty():
 		return _to_float_array(profile.hover_heights)
 	return DEFAULT_HOVER_HEIGHT_SAMPLES.duplicate()
@@ -178,7 +161,7 @@ func candidate_hover_heights(candidate: Dictionary) -> Array[float]:
 func indicator_height_for_candidate(candidate: Dictionary) -> float:
 	if candidate.has("indicator_height"):
 		return float(candidate.get("indicator_height", DEFAULT_INDICATOR_HEIGHT))
-	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	var profile := _targeting_profile_for_candidate(candidate)
 	if profile != null:
 		return profile.indicator_height
 	return DEFAULT_INDICATOR_HEIGHT
@@ -187,7 +170,7 @@ func indicator_height_for_candidate(candidate: Dictionary) -> float:
 func indicator_size_for_candidate(candidate: Dictionary) -> Vector2:
 	if candidate.has("indicator_size"):
 		return _to_vector2(candidate.get("indicator_size"), DEFAULT_INDICATOR_SIZE)
-	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	var profile := _targeting_profile_for_candidate(candidate)
 	if profile != null:
 		return profile.indicator_size
 	return DEFAULT_INDICATOR_SIZE
@@ -196,7 +179,7 @@ func indicator_size_for_candidate(candidate: Dictionary) -> Vector2:
 func indicator_alpha_for_candidate(candidate: Dictionary) -> float:
 	if candidate.has("indicator_alpha"):
 		return clampf(float(candidate.get("indicator_alpha", DEFAULT_INDICATOR_ALPHA)), 0.05, 1.0)
-	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	var profile := _targeting_profile_for_candidate(candidate)
 	if profile != null:
 		return clampf(profile.indicator_alpha, 0.05, 1.0)
 	return DEFAULT_INDICATOR_ALPHA
@@ -209,81 +192,32 @@ func indicator_depth_ratio_for_candidate(candidate: Dictionary) -> float:
 			0.01,
 			1.0,
 		)
-	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	var profile := _targeting_profile_for_candidate(candidate)
 	if profile != null:
 		return clampf(profile.indicator_depth_ratio, 0.01, 1.0)
 	return DEFAULT_INDICATOR_DEPTH_RATIO
 
 
-func _build_hostile_candidate(hostile) -> Dictionary:
-	var cell: Vector2i = hostile.grid_state.cell
-	var definition = _get_hostile_definition(hostile)
-	var hostile_property := hostile.hostile_property as RpsSystem.HostileProperty
-	if definition != null:
-		hostile_property = definition.hostile_property
-	var weakness_tool := RpsSystem.effective_tool_for_hostile(hostile_property)
-	var weakness_text := RpsSystem.humanize_tool_property(weakness_tool)
+func _build_candidate_from_kind(
+		def: AnalysisCandidateKindDefinition,
+		node,
+		cell: Vector2i,
+		item_override: ItemData = null,
+) -> Dictionary:
+	var item := item_override
+	if item == null and def.item_path != "":
+		var resolved_item: Variant = resolve_path(node, def.item_path)
+		if resolved_item is ItemData:
+			item = resolved_item
 
-	var attached: Resource = definition.analysis_profile if definition != null else null
-	var fallback := _load_fallback_profile("hostile")
-	var summary_basic := _profile_field(attached, fallback, &"summary_basic")
-	var summary_partial := _profile_field(attached, fallback, &"summary_partial")
-	var summary_weakness := _profile_field(attached, fallback, &"summary_weakness")
-	summary_weakness = summary_weakness.replace("{weakness_tool}", weakness_text)
-
+	var summary := _resolve_summary(def, node, item)
 	return {
-		"key": _hostile_type_key(hostile),
-		"kind": "hostile",
-		"display_name": _hostile_display_name(hostile),
-		"summary_basic": summary_basic,
-		"summary_partial": summary_partial,
-		"summary_weakness": summary_weakness,
-		"cell": cell,
-		"distance": _manhattan_to_player(cell),
-		"facing_score": _facing_score(cell),
-		"node": hostile,
-	}
-
-
-func _non_empty_or(value: String, fallback: String) -> String:
-	var trimmed := value.strip_edges()
-	return trimmed if trimmed != "" else fallback
-
-
-func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
-	return _build_pickup_payload(pickup.item_data, pickup.grid_cell, pickup)
-
-
-func _build_pickup_payload(item: ItemData, cell: Vector2i, node) -> Dictionary:
-	var fallback := _load_fallback_profile("pickup")
-	var basic_summary := _first_non_empty_line(item.description)
-	if basic_summary.is_empty():
-		basic_summary = fallback.summary_basic
-
-	var partial_summary := ""
-	var full_desc := item.description.strip_edges()
-	if item.tool_property != RpsSystem.ToolProperty.OTHER:
-		var prop := RpsSystem.humanize_tool_property(item.tool_property)
-		partial_summary = "Property: %s" % prop
-		if not full_desc.is_empty():
-			partial_summary += "\n" + full_desc
-	else:
-		partial_summary = full_desc
-
-	var weakness_summary := ""
-	if item.analysis_profile is AnalysisEntityProfile:
-		var profile := item.analysis_profile as AnalysisEntityProfile
-		basic_summary = _non_empty_or(profile.summary_basic, basic_summary)
-		partial_summary = _non_empty_or(profile.summary_partial, partial_summary)
-		weakness_summary = _non_empty_or(profile.summary_weakness, weakness_summary)
-
-	return {
-		"key": "pickup:%s" % [_pickup_type_key(item)],
-		"kind": "pickup",
-		"display_name": item.item_name,
-		"summary_basic": basic_summary,
-		"summary_partial": partial_summary,
-		"summary_weakness": weakness_summary,
+		"key": _resolve_key(def, node, item),
+		"kind": def.kind,
+		"display_name": _resolve_display_name(def, node, item),
+		"summary_basic": summary.get("basic", ""),
+		"summary_partial": summary.get("partial", ""),
+		"summary_weakness": summary.get("weakness", ""),
 		"cell": cell,
 		"distance": _manhattan_to_player(cell),
 		"facing_score": _facing_score(cell),
@@ -291,43 +225,72 @@ func _build_pickup_payload(item: ItemData, cell: Vector2i, node) -> Dictionary:
 	}
 
 
-func _build_chute_candidate(chute) -> Dictionary:
-	var cell: Vector2i = Vector2i.ZERO if chute == null else chute.grid_cell
-	var attached: Resource = chute.analysis_profile if chute != null else null
-	var fallback := _load_fallback_profile("chute")
+func _resolve_summary(
+		def: AnalysisCandidateKindDefinition,
+		node,
+		item: ItemData,
+) -> Dictionary:
+	var resolver := _load_summary_resolver(def)
+	if resolver != null:
+		var resolved := resolver.resolve(self, def, node, item)
+		if resolved is Dictionary:
+			return resolved
 	return {
-		"key": String(ANALYSIS_CHUTE_KEY),
-		"kind": "chute",
-		"display_name": "Disposal Chute",
-		"summary_basic": _profile_field(attached, fallback, &"summary_basic"),
-		"summary_partial": _profile_field(attached, fallback, &"summary_partial"),
-		"summary_weakness": _profile_field(attached, fallback, &"summary_weakness"),
-		"cell": cell,
-		"distance": _manhattan_to_player(cell),
-		"facing_score": _facing_score(cell),
-		"node": chute,
+		"basic": "",
+		"partial": "",
+		"weakness": "",
 	}
 
 
-func _build_exit_candidate(exit_node: WorldExit) -> Dictionary:
-	var cell := Vector2i.ZERO if exit_node == null else exit_node.grid_cell
-	var attached: Resource = exit_node.analysis_profile if exit_node != null else null
-	var fallback := _load_fallback_profile("exit")
-	var summary_basic := _profile_field(attached, fallback, &"summary_basic")
-	if exit_node != null and exit_node.requires_cleared_floor and attached == null:
-		summary_basic = "Extraction point gated by floor conditions."
-	return {
-		"key": String(ANALYSIS_EXIT_KEY),
-		"kind": "exit",
-		"display_name": "World Exit",
-		"summary_basic": summary_basic,
-		"summary_partial": _profile_field(attached, fallback, &"summary_partial"),
-		"summary_weakness": _profile_field(attached, fallback, &"summary_weakness"),
-		"cell": cell,
-		"distance": _manhattan_to_player(cell),
-		"facing_score": _facing_score(cell),
-		"node": exit_node,
-	}
+func _resolve_key(def: AnalysisCandidateKindDefinition, node, item: ItemData) -> String:
+	match def.key_mode:
+		"literal":
+			return def.key_literal
+		"definition_id_or_instance":
+			var definition_id := StringName(resolve_path(node, def.definition_id_path))
+			if definition_id != StringName():
+				return "%s%s" % [def.key_prefix, String(definition_id)]
+			return str(node.get_instance_id()) if node != null else "unknown"
+		"pickup_item":
+			return "%s%s" % [def.key_prefix, _pickup_type_key(item)]
+		"path_prefixed":
+			var raw := String(resolve_path(node, def.key_path)).strip_edges()
+			return "%s%s" % [def.key_prefix, raw]
+		"instance_id":
+			return str(node.get_instance_id()) if node != null else "unknown"
+		_:
+			return str(node.get_instance_id()) if node != null else "unknown"
+
+
+func _resolve_display_name(def: AnalysisCandidateKindDefinition, node, item: ItemData) -> String:
+	match def.display_name_mode:
+		"constant":
+			return def.display_name_default
+		"hostile_definition_or_default":
+			if node != null:
+				return _hostile_display_name(node)
+			return def.display_name_default
+		"item_name_or_default":
+			if item != null and String(item.item_name) != "":
+				return item.item_name
+			return def.display_name_default
+		"path_or_default":
+			var raw := String(resolve_path(node, def.display_name_path)).strip_edges()
+			return raw if raw != "" else def.display_name_default
+		_:
+			return def.display_name_default
+
+
+func _targeting_profile_for_candidate(candidate: Dictionary) -> AnalysisTargetingProfile:
+	_ensure_kind_definitions_loaded()
+	var kind := String(candidate.get("kind", ""))
+	var def := _kind_definitions_by_kind.get(kind, null) as AnalysisCandidateKindDefinition
+	if def == null or def.targeting_profile_path == "":
+		return null
+	var profile := _load_resource(def.targeting_profile_path)
+	if profile is AnalysisTargetingProfile:
+		return profile
+	return null
 
 
 func _analysis_candidate_less(a: Dictionary, b: Dictionary) -> bool:
@@ -342,6 +305,149 @@ func _analysis_candidate_less(a: Dictionary, b: Dictionary) -> bool:
 		return af < bf
 
 	return String(a.get("key", "")) < String(b.get("key", ""))
+
+
+func _passes_kind_requirements(node, def: AnalysisCandidateKindDefinition) -> bool:
+	if node == null or not is_instance_valid(node):
+		return false
+	if not _matches_required_class(node, def.required_class_name):
+		return false
+
+	for method_name in def.required_methods:
+		if not node.has_method(method_name):
+			return false
+
+	for path in def.required_non_null_paths:
+		if resolve_path(node, String(path)) == null:
+			return false
+
+	if def.skip_if_method_true != StringName() and node.has_method(def.skip_if_method_true):
+		if bool(node.call(def.skip_if_method_true)):
+			return false
+
+	return true
+
+
+func _matches_required_class(node, required_class: String) -> bool:
+	if required_class == "":
+		return true
+	if node.is_class(required_class):
+		return true
+	var script: Variant = node.get_script()
+	if script != null and script.has_method("get_global_name"):
+		return String(script.call("get_global_name")) == required_class
+	return false
+
+
+func resolve_path(root: Variant, path: String) -> Variant:
+	if root == null:
+		return null
+	if path == "":
+		return root
+
+	var current: Variant = root
+	for segment in path.split("."):
+		if current == null:
+			return null
+		if current is Dictionary:
+			current = (current as Dictionary).get(segment)
+			continue
+		if current is Object:
+			var obj := current as Object
+			if obj.has_method(segment):
+				current = obj.call(segment)
+				continue
+			if _object_has_property(obj, segment):
+				current = obj.get(segment)
+				continue
+			return null
+		return null
+
+	return current
+
+
+func _object_has_property(obj: Object, property_name: String) -> bool:
+	for item in obj.get_property_list():
+		if String(item.get("name", "")) == property_name:
+			return true
+	return false
+
+
+func _ensure_kind_definitions_loaded() -> void:
+	if not _kind_definitions.is_empty():
+		return
+
+	for path in ANALYSIS_KIND_DEFINITION_PATHS:
+		var resource := _load_resource(path)
+		if resource is AnalysisCandidateKindDefinition:
+			var def := resource as AnalysisCandidateKindDefinition
+			_kind_definitions.append(def)
+			_kind_definitions_by_kind[def.kind] = def
+
+
+func _load_resource(path: String) -> Resource:
+	if path == "":
+		return null
+	if _resource_cache.has(path):
+		var cached: Variant = _resource_cache.get(path)
+		if cached is Resource:
+			return cached
+		return null
+	if not ResourceLoader.exists(path):
+		return null
+	var resource := load(path)
+	_resource_cache[path] = resource
+	if resource is Resource:
+		return resource
+	return null
+
+
+func load_entity_profile(path: String) -> AnalysisEntityProfile:
+	var profile := _load_resource(path)
+	if profile is AnalysisEntityProfile:
+		return profile
+	return AnalysisEntityProfile.new()
+
+
+func _load_summary_resolver(def: AnalysisCandidateKindDefinition) -> AnalysisSummaryResolver:
+	if def == null or def.summary_resolver_path == "":
+		return null
+	var resolver := _load_resource(def.summary_resolver_path)
+	if resolver is AnalysisSummaryResolver:
+		return resolver
+	return null
+
+
+func weakness_tool_for_hostile_node(node) -> RpsSystem.ToolProperty:
+	if node == null:
+		return RpsSystem.ToolProperty.OTHER
+	var hostile_property := node.hostile_property as RpsSystem.HostileProperty
+	var definition = _get_hostile_definition(node)
+	if definition != null:
+		hostile_property = definition.hostile_property
+	return RpsSystem.effective_tool_for_hostile(hostile_property)
+
+
+func profile_field(
+		primary: Resource,
+		fallback: AnalysisEntityProfile,
+		field: StringName,
+		default_value: String,
+) -> String:
+	if primary is AnalysisEntityProfile:
+		var value := String(primary.get(field)).strip_edges()
+		if value != "":
+			return value
+	if fallback != null:
+		var fallback_value := String(fallback.get(field)).strip_edges()
+		if fallback_value != "":
+			return fallback_value
+	return default_value.strip_edges()
+
+
+func non_empty_or(value: String, fallback: String) -> String:
+	var trimmed := value.strip_edges()
+	return trimmed if trimmed != "" else fallback
 
 
 func _hostile_display_name(hostile) -> String:
@@ -389,7 +495,7 @@ func _facing_score(cell: Vector2i) -> int:
 	return 0 if facing_dot > 0 else 1
 
 
-func _first_non_empty_line(text: String) -> String:
+func first_non_empty_line(text: String) -> String:
 	if text.strip_edges().is_empty():
 		return ""
 	for line in text.split("\n"):
@@ -397,18 +503,6 @@ func _first_non_empty_line(text: String) -> String:
 		if not trimmed.is_empty():
 			return trimmed
 	return ""
-
-
-func _is_hostile_node(node) -> bool:
-	if node == null or not is_instance_valid(node):
-		return false
-	if not node.has_method("is_cleared"):
-		return false
-	if not node.has_method("deal_contact_damage"):
-		return false
-	if node.get("hostile_property") == null:
-		return false
-	return true
 
 
 func _is_node_visible_for_analysis(node: Node, cell: Vector2i) -> bool:
@@ -462,38 +556,6 @@ func _get_hostile_definition(hostile):
 		if _world_root.has_method("_get_hostile_definition_by_id"):
 			return _world_root.call("_get_hostile_definition_by_id", hostile.hostile_definition_id)
 	return null
-
-
-func _load_fallback_profile(kind: String) -> AnalysisEntityProfile:
-	var path: String = _FALLBACK_PROFILE_PATHS.get(kind, "")
-	if path != "" and ResourceLoader.exists(path):
-		var res := load(path)
-		if res is AnalysisEntityProfile:
-			return res
-	return AnalysisEntityProfile.new()
-
-
-func _load_targeting_profile(kind: String) -> AnalysisTargetingProfile:
-	var path: String = _TARGETING_PROFILE_PATHS.get(kind, "")
-	if path != "" and ResourceLoader.exists(path):
-		var res := load(path)
-		if res is AnalysisTargetingProfile:
-			return res
-	return null
-
-
-func _profile_field(
-		primary: Resource,
-		fallback: AnalysisEntityProfile,
-		field: StringName,
-) -> String:
-	if primary is AnalysisEntityProfile:
-		var value := String(primary.get(field)).strip_edges()
-		if value != "":
-			return value
-	if fallback != null:
-		return String(fallback.get(field)).strip_edges()
-	return ""
 
 
 func _to_float_array(value: Variant) -> Array[float]:

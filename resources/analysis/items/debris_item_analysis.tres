@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3 uid="uid://bo1772r6xjrtp"]
 
-[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://dn3m3evjdq3vo" path="res://models/analysis_entity_profile.gd" id="1_profile"]
 
 [resource]
 script = ExtResource("1_profile")

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AnalysisCandidateKindDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_candidate_kind_definition.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+kind = "pickup"
+group_name = &"world_pickups"
+required_class_name = "WorldPickup"
+required_non_null_paths = PackedStringArray("item_data")
+cell_path = "grid_cell"
+key_mode = "pickup_item"
+key_prefix = "pickup:"
+display_name_mode = "item_name_or_default"
+display_name_default = "Pickup"
+fallback_profile_path = "res://resources/analysis/defaults/pickup_fallback.tres"
+targeting_profile_path = "res://resources/analysis/targeting/pickup.tres"
+summary_resolver_path = "res://resources/analysis/summary_resolvers/pickup_item.tres"
+summary_basic_default = "Recoverable field object."
+item_path = "item_data"

@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="AnalysisSummaryResolverHostileWeakness" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_summary_resolver_hostile_weakness.gd" id="1_resolver"]
+
+[resource]
+script = ExtResource("1_resolver")

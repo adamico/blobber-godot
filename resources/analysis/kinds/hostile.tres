@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AnalysisCandidateKindDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_candidate_kind_definition.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+kind = "hostile"
+group_name = &"grid_hostiles"
+required_methods = PackedStringArray("is_cleared", "deal_contact_damage")
+required_non_null_paths = PackedStringArray("grid_state", "hostile_property")
+skip_if_method_true = &"is_cleared"
+cell_path = "grid_state.cell"
+key_mode = "definition_id_or_instance"
+key_prefix = "hostile:"
+definition_id_path = "hostile_definition_id"
+display_name_mode = "hostile_definition_or_default"
+display_name_default = "Hostile"
+fallback_profile_path = "res://resources/analysis/defaults/hostile_fallback.tres"
+targeting_profile_path = "res://resources/analysis/targeting/hostile.tres"
+summary_resolver_path = "res://resources/analysis/summary_resolvers/hostile_weakness.tres"
