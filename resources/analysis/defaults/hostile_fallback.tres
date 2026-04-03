@@ -4,7 +4,6 @@
 
 [resource]
 script = ExtResource("1_profile")
-summary_basic = "Highly flammable residue ignites nearby surfaces."
-summary_partial = "Pressure and blunt force can disperse it, but some tools barely slow it."
+summary_basic = "Unknown threat profile."
+summary_partial = "It can be cleared with pressure, but some tools underperform."
 summary_weakness = "Most effective counter: {weakness_tool}."
-summary_disposal = "Once neutralized, route remaining debris into a disposal chute."

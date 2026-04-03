@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://xn65te06dv"]
 
 [ext_resource type="Script" uid="uid://clxxm0ljl5rnq" path="res://scenes/world/world_exit.gd" id="1_yna6y"]
+[ext_resource type="Resource" path="res://resources/analysis/features/world_exit_analysis.tres" id="2_analysis"]
 [ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_p3742"]
 [ext_resource type="Texture2D" uid="uid://bmgfd1rjhhv8w" path="res://assets/exit.png" id="3_cmc7v"]
 
@@ -29,6 +30,7 @@ shader_parameter/alphaThreshold = 0.218000010355
 script = ExtResource("1_yna6y")
 grid_cell = Vector2i(9, 5)
 world_y = 0.05
+analysis_profile = ExtResource("2_analysis")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1632079985]
 visible = false

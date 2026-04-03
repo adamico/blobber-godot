@@ -34,13 +34,13 @@ func test_summary_reveals_basic_knowledge_when_unlocked() -> void:
 			"summary_basic": "Unstable fire hazard.",
 		},
 	)
-	state.unlock(key, state.KNOWLEDGE_BASIC)
+	state.unlock(key, state.KNOWLEDGE_TIER_1)
 
 	var result: Dictionary = builder.build(target, state.snapshot(key)).to_dict()
 	assert_true(String(result.summary).contains("Unstable fire hazard"))
 
 
-func test_summary_appends_partial_weakness_and_disposal_details() -> void:
+func test_summary_appends_partial_and_weakness_details() -> void:
 	var builder = AnalysisResultBuilderScript.new()
 	var state = AnalysisKnowledgeStateScript.new()
 	var key := &"hostile:burning_hazard"
@@ -51,15 +51,12 @@ func test_summary_appends_partial_weakness_and_disposal_details() -> void:
 			"summary_basic": "Unstable fire hazard.",
 			"summary_partial": "Some tools underperform.",
 			"summary_weakness": "Most effective counter: Soaked.",
-			"summary_disposal": "Debris should be routed into the chute.",
 		},
 	)
-	state.unlock(key, state.KNOWLEDGE_BASIC)
-	state.unlock(key, state.KNOWLEDGE_PARTIAL)
-	state.unlock(key, state.KNOWLEDGE_WEAKNESS)
-	state.unlock(key, state.KNOWLEDGE_DISPOSAL)
+	state.unlock(key, state.KNOWLEDGE_TIER_1)
+	state.unlock(key, state.KNOWLEDGE_TIER_2)
+	state.unlock(key, state.KNOWLEDGE_TIER_3)
 
 	var result: Dictionary = builder.build(target, state.snapshot(key)).to_dict()
 	assert_true(String(result.summary).contains("Some tools underperform"))
 	assert_true(String(result.summary).contains("Most effective counter: Soaked"))
-	assert_true(String(result.summary).contains("Debris should be routed into the chute"))

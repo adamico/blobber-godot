@@ -15,12 +15,12 @@ const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 const WORLD_PICKUP_SCENE := preload("res://scenes/world/world_pickup.tscn")
 const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
+const AnalysisKnowledgeStateModel = preload("res://models/analysis_knowledge_state.gd")
 const ANALYSIS_CHUTE_KEY := &"chute:disposal"
 const ANALYSIS_EXIT_KEY := &"exit:world"
-const KNOWLEDGE_BASIC := &"basic_known"
-const KNOWLEDGE_PARTIAL := &"partial_clue_known"
-const KNOWLEDGE_WEAKNESS := &"weakness_known"
-const KNOWLEDGE_DISPOSAL := &"disposal_known"
+const KNOWLEDGE_TIER_1 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_1
+const KNOWLEDGE_TIER_2 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_2
+const KNOWLEDGE_TIER_3 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_3
 const HOVER_SELECTION_RADIUS_PX := 72.0
 
 var _player: Player
@@ -532,10 +532,9 @@ func _get_knowledge_snapshot(key: StringName) -> Dictionary:
 	_ensure_analysis_module()
 	if _analysis_module == null:
 		return {
-			KNOWLEDGE_BASIC: false,
-			KNOWLEDGE_PARTIAL: false,
-			KNOWLEDGE_WEAKNESS: false,
-			KNOWLEDGE_DISPOSAL: false,
+			KNOWLEDGE_TIER_1: false,
+			KNOWLEDGE_TIER_2: false,
+			KNOWLEDGE_TIER_3: false,
 		}
 	return _analysis_module.get_knowledge_snapshot(key)
 

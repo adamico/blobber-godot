@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+summary_basic = "Extraction point."
+summary_partial = "Some exits stay locked until current floor conditions are satisfied."

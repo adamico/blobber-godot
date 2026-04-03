@@ -1,9 +1,6 @@
 class_name WorldAnalysisModule
 extends Node
 
-#TODO: Refactor to separate concerns:
-# candidate collection, knowledge tracking, indicator management, etc.
-
 signal analysis_target_changed(target: Dictionary)
 signal analysis_result_ready(result: Dictionary)
 signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
@@ -16,13 +13,11 @@ const ANALYSIS_TARGET_DATA_SCRIPT := "res://models/analysis_target_data.gd"
 
 const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
-
 const ANALYSIS_CHUTE_KEY := &"chute:disposal"
 const ANALYSIS_EXIT_KEY := &"exit:world"
-const KNOWLEDGE_BASIC := AnalysisKnowledgeStateModel.KNOWLEDGE_BASIC
-const KNOWLEDGE_PARTIAL := AnalysisKnowledgeStateModel.KNOWLEDGE_PARTIAL
-const KNOWLEDGE_WEAKNESS := AnalysisKnowledgeStateModel.KNOWLEDGE_WEAKNESS
-const KNOWLEDGE_DISPOSAL := AnalysisKnowledgeStateModel.KNOWLEDGE_DISPOSAL
+const KNOWLEDGE_TIER_1 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_1
+const KNOWLEDGE_TIER_2 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_2
+const KNOWLEDGE_TIER_3 := AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_3
 const HOVER_SELECTION_RADIUS_PX := 100.0
 const DEBUG_HOVER_SELECTION := true
 const INDICATOR_HEIGHT := AnalysisSelectionPresenterModel.INDICATOR_HEIGHT
@@ -85,18 +80,9 @@ func analyze_target() -> Dictionary:
 
 	var selected := _analysis_candidates[_analysis_selected_index]
 	_analysis_selected_key = StringName(selected.get("key", ""))
-
-	var new_information := false
-	if selected.get("kind", "") == "pickup":
-		var snapshot := _get_knowledge_snapshot(_analysis_selected_key)
-		if not bool(snapshot.get(KNOWLEDGE_BASIC, false)):
-			new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
-		else:
-			new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_PARTIAL)
-	else:
-		new_information = _unlock_knowledge(_analysis_selected_key, KNOWLEDGE_BASIC)
-
 	var target_data = _candidate_collector.build_target_data(selected)
+
+	var new_information := _unlock_analysis_tier_for_target(selected, target_data)
 	var payload: Dictionary = target_data.to_dict()
 	var result: Dictionary = _build_analysis_result_from_target(target_data).to_dict()
 
@@ -156,24 +142,20 @@ func register_hostile_tool_interaction(hostile, is_effective: bool, cleared: boo
 	if hostile == null:
 		return
 	var key := StringName(_candidate_collector.hostile_type_key(hostile))
-	_unlock_knowledge(key, KNOWLEDGE_BASIC)
+	_unlock_knowledge(key, KNOWLEDGE_TIER_1)
 	if not cleared:
 		return
 	if is_effective:
-		_unlock_knowledge(key, KNOWLEDGE_WEAKNESS)
+		_unlock_knowledge(key, KNOWLEDGE_TIER_3)
 	else:
-		_unlock_knowledge(key, KNOWLEDGE_PARTIAL)
+		_unlock_knowledge(key, KNOWLEDGE_TIER_2)
 
 
 func register_disposal(item: ItemData) -> void:
 	if item == null or item.item_type != ItemData.ItemType.DEBRIS:
 		return
-	_unlock_knowledge(ANALYSIS_CHUTE_KEY, KNOWLEDGE_DISPOSAL)
-	if item.origin_hostile_definition_id != StringName():
-		_unlock_knowledge(
-			StringName("hostile:%s" % [String(item.origin_hostile_definition_id)]),
-			KNOWLEDGE_DISPOSAL,
-		)
+	_unlock_next_available_tier(_candidate_collector.build_pickup_target_data_from_item(item))
+	_unlock_next_available_tier(_candidate_collector.build_chute_target_data())
 
 
 func get_knowledge_snapshot(key: StringName) -> Dictionary:
@@ -262,12 +244,40 @@ func _get_knowledge_snapshot(key: StringName) -> Dictionary:
 	_ensure_knowledge_state()
 	if _knowledge_state == null:
 		return {
-			KNOWLEDGE_BASIC: false,
-			KNOWLEDGE_PARTIAL: false,
-			KNOWLEDGE_WEAKNESS: false,
-			KNOWLEDGE_DISPOSAL: false,
+			KNOWLEDGE_TIER_1: false,
+			KNOWLEDGE_TIER_2: false,
+			KNOWLEDGE_TIER_3: false,
 		}
 	return _knowledge_state.snapshot(key)
+
+
+func _unlock_analysis_tier_for_target(selected: Dictionary, target_data) -> bool:
+	if String(selected.get("kind", "")) == "hostile":
+		return _unlock_knowledge(StringName(target_data.key), KNOWLEDGE_TIER_1)
+	return _unlock_next_available_tier(target_data)
+
+
+func _unlock_next_available_tier(target_data) -> bool:
+	if target_data == null:
+		return false
+	var key := StringName(target_data.key)
+	if key == StringName():
+		return false
+
+	var knowledge := _get_knowledge_snapshot(key)
+	for tier in _available_tiers_for_target(target_data):
+		if not bool(knowledge.get(tier, false)):
+			return _unlock_knowledge(key, tier)
+	return false
+
+
+func _available_tiers_for_target(target_data) -> Array[StringName]:
+	var tiers: Array[StringName] = [KNOWLEDGE_TIER_1]
+	if String(target_data.summary_partial).strip_edges() != "":
+		tiers.append(KNOWLEDGE_TIER_2)
+	if String(target_data.summary_weakness).strip_edges() != "":
+		tiers.append(KNOWLEDGE_TIER_3)
+	return tiers
 
 
 func _on_knowledge_state_updated(
@@ -281,4 +291,3 @@ func _on_knowledge_state_updated(
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_PREDELETE:
 		_selection_presenter.cleanup()
-

@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://d1d4qdeslk5gw" path="res://assets/boulder.png" id="1_hjnxw"]
 [ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
+[ext_resource type="Resource" path="res://resources/analysis/items/debris_item_analysis.tres" id="2_analysis"]
 
 [resource]
 script = ExtResource("1_mxxb9")
@@ -11,3 +12,4 @@ item_type = 2
 tool_property = 1
 pickup_texture = ExtResource("1_hjnxw")
 is_reusable = false
+analysis_profile = ExtResource("2_analysis")

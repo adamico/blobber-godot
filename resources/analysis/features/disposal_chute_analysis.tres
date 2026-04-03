@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+summary_basic = "Accepts debris for cleanup credit."
+summary_partial = "Only debris can be processed here. Deposits are consumed and raise floor clean percentage."

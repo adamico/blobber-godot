@@ -7,7 +7,6 @@ var display_name: String = ""
 var summary_basic: String = ""
 var summary_partial: String = ""
 var summary_weakness: String = ""
-var summary_disposal: String = ""
 var cell: Vector2i = Vector2i.ZERO
 var distance: int = 0
 var source: String = ""
@@ -21,7 +20,6 @@ static func from_dict(payload: Dictionary) -> AnalysisTargetData:
 	data.summary_basic = String(payload.get("summary_basic", ""))
 	data.summary_partial = String(payload.get("summary_partial", ""))
 	data.summary_weakness = String(payload.get("summary_weakness", ""))
-	data.summary_disposal = String(payload.get("summary_disposal", ""))
 	data.cell = payload.get("cell", Vector2i.ZERO)
 	data.distance = int(payload.get("distance", 0))
 	data.source = String(payload.get("source", ""))
@@ -36,7 +34,6 @@ func to_dict() -> Dictionary:
 		"summary_basic": summary_basic,
 		"summary_partial": summary_partial,
 		"summary_weakness": summary_weakness,
-		"summary_disposal": summary_disposal,
 		"cell": cell,
 		"distance": distance,
 	}

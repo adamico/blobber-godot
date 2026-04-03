@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+summary_basic = "Inert waste that obstructs movement."
+summary_partial = "Dispose it at a chute to convert it into cleanup credit."

@@ -6,4 +6,3 @@ extends Resource
 @export_multiline var summary_basic: String = "No reliable field notes yet."
 @export_multiline var summary_partial: String = ""
 @export_multiline var summary_weakness: String = ""
-@export_multiline var summary_disposal: String = ""

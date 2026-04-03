@@ -76,14 +76,12 @@ func _on_timer_timeout() -> void:
 func _unlock_message(key: StringName, unlock_flag: StringName) -> String:
 	var target_name := String(_known_names_by_key.get(key, _fallback_name(key)))
 	match unlock_flag:
-		WorldTurnManager.KNOWLEDGE_BASIC:
+		WorldTurnManager.KNOWLEDGE_TIER_1:
 			return "FIELD NOTE ADDED: %s" % target_name
-		WorldTurnManager.KNOWLEDGE_PARTIAL:
+		WorldTurnManager.KNOWLEDGE_TIER_2:
 			return "PARTIAL CLUE LOGGED: %s" % target_name
-		WorldTurnManager.KNOWLEDGE_WEAKNESS:
+		WorldTurnManager.KNOWLEDGE_TIER_3:
 			return "WEAKNESS CONFIRMED: %s" % target_name
-		WorldTurnManager.KNOWLEDGE_DISPOSAL:
-			return "DISPOSAL NOTE LOGGED: %s" % target_name
 		_:
 			return "FIELD NOTES UPDATED: %s" % target_name
 

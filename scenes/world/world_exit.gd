@@ -6,6 +6,7 @@ const EXIT_GROUP := &"world_exit_cells"
 @export var grid_cell: Vector2i = Vector2i.ZERO
 @export var world_y: float = 0.0
 @export var requires_cleared_floor: bool = false
+@export var analysis_profile: Resource
 
 
 func _ready() -> void:

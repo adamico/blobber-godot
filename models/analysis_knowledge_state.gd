@@ -3,10 +3,9 @@ extends RefCounted
 
 signal knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
 
-const KNOWLEDGE_BASIC := &"basic_known"
-const KNOWLEDGE_PARTIAL := &"partial_clue_known"
-const KNOWLEDGE_WEAKNESS := &"weakness_known"
-const KNOWLEDGE_DISPOSAL := &"disposal_known"
+const KNOWLEDGE_TIER_1 := &"tier_1_known"
+const KNOWLEDGE_TIER_2 := &"tier_2_known"
+const KNOWLEDGE_TIER_3 := &"tier_3_known"
 
 var _knowledge_by_key: Dictionary = { }
 
@@ -50,8 +49,7 @@ func _ensure_entry(key: StringName) -> Dictionary:
 
 func _default_snapshot() -> Dictionary:
 	return {
-		KNOWLEDGE_BASIC: false,
-		KNOWLEDGE_PARTIAL: false,
-		KNOWLEDGE_WEAKNESS: false,
-		KNOWLEDGE_DISPOSAL: false,
+		KNOWLEDGE_TIER_1: false,
+		KNOWLEDGE_TIER_2: false,
+		KNOWLEDGE_TIER_3: false,
 	}

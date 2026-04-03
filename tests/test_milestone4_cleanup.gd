@@ -291,41 +291,35 @@ func test_debris_revert_respawns_from_definition_id() -> void:
 	assert_eq(root.spawn_by_id_calls[0], [Vector2i(4, 5), &"burning_hazard"])
 
 
-func test_disposal_unlocks_chute_and_origin_hostile_knowledge() -> void:
+func test_disposal_advances_chute_and_debris_item_knowledge() -> void:
 	var module: WorldAnalysisModule = _make_analysis_module()
 
 	var debris := _make_debris(1)
-	debris.origin_hostile_definition_id = &"burning_hazard"
+	debris.description = (
+		"Inert waste that obstructs movement.\n"
+		+ "Dispose it at a chute to convert it into cleanup credit."
+	)
 	module.register_disposal(debris)
 	var chute_snapshot: Dictionary = module.get_knowledge_snapshot(module.ANALYSIS_CHUTE_KEY)
-	var hostile_snapshot: Dictionary = module.get_knowledge_snapshot(&"hostile:burning_hazard")
+	var debris_snapshot: Dictionary = module.get_knowledge_snapshot(&"pickup:Test Debris")
 
-	assert_true(bool(chute_snapshot.get(module.KNOWLEDGE_DISPOSAL, false)))
-	assert_true(bool(hostile_snapshot.get(module.KNOWLEDGE_DISPOSAL, false)))
+	assert_true(bool(chute_snapshot.get(module.KNOWLEDGE_TIER_1, false)))
+	assert_true(bool(debris_snapshot.get(module.KNOWLEDGE_TIER_1, false)))
 
 
-func test_disposal_signal_emits_specific_unlock_flags() -> void:
+func test_repeated_disposal_advances_debris_knowledge_to_next_tier() -> void:
 	var module: WorldAnalysisModule = _make_analysis_module()
-	watch_signals(module)
 
 	var debris := _make_debris(1)
-	debris.origin_hostile_definition_id = &"burning_hazard"
-	module.register_disposal(debris)
-
-	assert_signal_emit_count(module, "analysis_knowledge_updated", 2)
-	assert_eq(
-		get_signal_parameters(module, "analysis_knowledge_updated"),
-		[
-			&"hostile:burning_hazard",
-			{
-				module.KNOWLEDGE_BASIC: false,
-				module.KNOWLEDGE_PARTIAL: false,
-				module.KNOWLEDGE_WEAKNESS: false,
-				module.KNOWLEDGE_DISPOSAL: true,
-			},
-			module.KNOWLEDGE_DISPOSAL,
-		],
+	debris.description = (
+		"Inert waste that obstructs movement.\n"
+		+ "Dispose it at a chute to convert it into cleanup credit."
 	)
+	module.register_disposal(debris)
+	module.register_disposal(debris)
+	var debris_snapshot: Dictionary = module.get_knowledge_snapshot(&"pickup:Test Debris")
+
+	assert_true(bool(debris_snapshot.get(module.KNOWLEDGE_TIER_2, false)))
 
 
 func test_analyze_consumes_turn_when_new_information_unlocked() -> void:

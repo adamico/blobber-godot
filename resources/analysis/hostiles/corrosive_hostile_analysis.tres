@@ -7,4 +7,3 @@ script = ExtResource("1_profile")
 summary_basic = "Corrosive buildup rapidly eats through nearby material."
 summary_partial = "It collapses quickly when pressured, but mismatched tools are inefficient."
 summary_weakness = "Most effective counter: {weakness_tool}."
-summary_disposal = "Neutralized corrosive matter should be dumped in a chute immediately."

@@ -164,14 +164,14 @@ func _update_slot_popup() -> void:
 		return
 
 	var knowledge := _get_item_knowledge(item)
-	var basic_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_BASIC, false))
-	var partial_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_PARTIAL, false))
+	var tier_1_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_TIER_1, false))
+	var tier_2_known := bool(knowledge.get(WorldTurnManager.KNOWLEDGE_TIER_2, false))
 
 	if _slot_popup_name_label != null:
 		_slot_popup_name_label.text = item.item_name
 
 	if _slot_popup_meta_label != null:
-		if partial_known and item.tool_property != _tool_property.OTHER:
+		if tier_2_known and item.tool_property != _tool_property.OTHER:
 			_slot_popup_meta_label.text = (
 				_tool_property.keys()[item.tool_property].capitalize()
 			)
@@ -179,13 +179,13 @@ func _update_slot_popup() -> void:
 			_slot_popup_meta_label.text = ""
 
 	if _slot_popup_body_label != null:
-		if partial_known:
+		if tier_2_known:
 			_slot_popup_body_label.text = (
 				item.description
 				if not item.description.is_empty()
 				else "No further details recorded."
 			)
-		elif basic_known:
+		elif tier_1_known:
 			_slot_popup_body_label.text = _first_line(item.description)
 		else:
 			_slot_popup_body_label.text = "No field notes yet. Analyze this item to learn more."
@@ -216,7 +216,7 @@ func _position_slot_popup(slot_index: int) -> void:
 
 func _get_item_knowledge(item: ItemData) -> Dictionary:
 	if _turn_manager == null or item == null:
-		return {}
+		return { }
 	var type_key := item.resource_path if item.resource_path != "" else item.item_name
 	return _turn_manager.get_knowledge_snapshot(StringName("pickup:%s" % type_key))
 

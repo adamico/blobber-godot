@@ -44,3 +44,15 @@ static func compute_damage(tool_property: ToolProperty, hostile_property: Hostil
 	if is_effective(tool_property, hostile_property):
 		return BONUS_DAMAGE
 	return BASE_DAMAGE
+
+
+static func humanize_tool_property(tool_property: ToolProperty) -> String:
+	match tool_property:
+		ToolProperty.SOAKED:
+			return "Soaked"
+		ToolProperty.INERT:
+			return "Inert"
+		ToolProperty.CLEANSED:
+			return "Cleansed"
+		_:
+			return "Other"

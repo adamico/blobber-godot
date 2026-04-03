@@ -10,10 +10,9 @@ func test_snapshot_defaults_all_flags_false() -> void:
 	assert_eq(
 		snapshot,
 		{
-			state.KNOWLEDGE_BASIC: false,
-			state.KNOWLEDGE_PARTIAL: false,
-			state.KNOWLEDGE_WEAKNESS: false,
-			state.KNOWLEDGE_DISPOSAL: false,
+			state.KNOWLEDGE_TIER_1: false,
+			state.KNOWLEDGE_TIER_2: false,
+			state.KNOWLEDGE_TIER_3: false,
 		},
 	)
 
@@ -21,8 +20,8 @@ func test_snapshot_defaults_all_flags_false() -> void:
 func test_unlock_sets_requested_flag() -> void:
 	var state = AnalysisKnowledgeStateScript.new()
 
-	assert_true(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_BASIC))
-	assert_true(bool(state.snapshot(&"hostile:burning_hazard").get(state.KNOWLEDGE_BASIC, false)))
+	assert_true(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_TIER_1))
+	assert_true(bool(state.snapshot(&"hostile:burning_hazard").get(state.KNOWLEDGE_TIER_1, false)))
 
 
 func test_unlock_emits_once_per_flag() -> void:
@@ -33,8 +32,8 @@ func test_unlock_emits_once_per_flag() -> void:
 			emitted.append([key, snapshot, unlock_flag])
 	)
 
-	assert_true(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_BASIC))
-	assert_false(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_BASIC))
+	assert_true(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_TIER_1))
+	assert_false(state.unlock(&"hostile:burning_hazard", state.KNOWLEDGE_TIER_1))
 
 	assert_eq(emitted.size(), 1)
 	assert_eq(
@@ -42,11 +41,10 @@ func test_unlock_emits_once_per_flag() -> void:
 		[
 			&"hostile:burning_hazard",
 			{
-				state.KNOWLEDGE_BASIC: true,
-				state.KNOWLEDGE_PARTIAL: false,
-				state.KNOWLEDGE_WEAKNESS: false,
-				state.KNOWLEDGE_DISPOSAL: false,
+				state.KNOWLEDGE_TIER_1: true,
+				state.KNOWLEDGE_TIER_2: false,
+				state.KNOWLEDGE_TIER_3: false,
 			},
-			state.KNOWLEDGE_BASIC,
+			state.KNOWLEDGE_TIER_1,
 		],
 	)

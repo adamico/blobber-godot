@@ -14,35 +14,19 @@ const DEFAULT_INDICATOR_HEIGHT := 0.5
 const DEFAULT_INDICATOR_SIZE := Vector2(0.35, 0.35)
 const DEFAULT_INDICATOR_ALPHA := 0.24
 const DEFAULT_INDICATOR_DEPTH_RATIO := 1.5
-const TARGETING_PROFILE_BY_KIND := {
-	"pickup": {
-		"hover_heights": [0.3, 0.3, 0.3],
-		"indicator_height": 0.3,
-		"indicator_size": Vector2(0.24, 0.24),
-		"indicator_alpha": 0.20,
-		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
-	},
-	"hostile": {
-		"hover_heights": [0.1, 0.3, 0.5, 0.75],
-		"indicator_height": 0.5,
-		"indicator_size": Vector2(0.38, 0.38),
-		"indicator_alpha": 0.22,
-		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
-	},
-	"chute": {
-		"hover_heights": [0.2, 0.5, 0.3],
-		"indicator_height": 0.15,
-		"indicator_size": Vector2(0.5, 0.6),
-		"indicator_alpha": 0.18,
-		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
-	},
-	"exit": {
-		"hover_heights": [0.02, 0.1, 0.2],
-		"indicator_height": 0.1,
-		"indicator_size": Vector2(0.6, 0.6),
-		"indicator_alpha": 0.16,
-		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
-	},
+
+const _FALLBACK_PROFILE_PATHS := {
+	"hostile": "res://resources/analysis/defaults/hostile_fallback.tres",
+	"pickup": "res://resources/analysis/defaults/pickup_fallback.tres",
+	"chute": "res://resources/analysis/features/disposal_chute_analysis.tres",
+	"exit": "res://resources/analysis/features/world_exit_analysis.tres",
+}
+
+const _TARGETING_PROFILE_PATHS := {
+	"hostile": "res://resources/analysis/targeting/hostile.tres",
+	"pickup": "res://resources/analysis/targeting/pickup.tres",
+	"chute": "res://resources/analysis/targeting/chute.tres",
+	"exit": "res://resources/analysis/targeting/exit.tres",
 }
 
 var _player: Player
@@ -160,6 +144,24 @@ func hostile_type_key(hostile) -> String:
 	return _hostile_type_key(hostile)
 
 
+func pickup_key(item: ItemData) -> StringName:
+	return StringName("pickup:%s" % [_pickup_type_key(item)])
+
+
+func build_pickup_target_data_from_item(item: ItemData):
+	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(
+		_build_pickup_payload(item, Vector2i.ZERO, null),
+	)
+
+
+func build_chute_target_data(chute = null):
+	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_chute_candidate(chute))
+
+
+func build_exit_target_data(exit_node: WorldExit = null):
+	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_exit_candidate(exit_node))
+
+
 func candidate_hover_heights(candidate: Dictionary) -> Array[float]:
 	if candidate.has("hover_heights"):
 		var override_heights := _to_float_array(candidate.get("hover_heights"))
@@ -167,39 +169,37 @@ func candidate_hover_heights(candidate: Dictionary) -> Array[float]:
 			return override_heights
 
 	var kind := String(candidate.get("kind", ""))
-	var profile := _targeting_profile_for_kind(kind)
-	var heights := _to_float_array(profile.get("hover_heights", DEFAULT_HOVER_HEIGHT_SAMPLES))
-	if not heights.is_empty():
-		return heights
+	var profile := _load_targeting_profile(kind)
+	if profile != null and not profile.hover_heights.is_empty():
+		return _to_float_array(profile.hover_heights)
 	return DEFAULT_HOVER_HEIGHT_SAMPLES.duplicate()
 
 
 func indicator_height_for_candidate(candidate: Dictionary) -> float:
 	if candidate.has("indicator_height"):
 		return float(candidate.get("indicator_height", DEFAULT_INDICATOR_HEIGHT))
-
-	var kind := String(candidate.get("kind", ""))
-	var profile := _targeting_profile_for_kind(kind)
-	return float(profile.get("indicator_height", DEFAULT_INDICATOR_HEIGHT))
+	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	if profile != null:
+		return profile.indicator_height
+	return DEFAULT_INDICATOR_HEIGHT
 
 
 func indicator_size_for_candidate(candidate: Dictionary) -> Vector2:
 	if candidate.has("indicator_size"):
 		return _to_vector2(candidate.get("indicator_size"), DEFAULT_INDICATOR_SIZE)
-	var kind := String(candidate.get("kind", ""))
-	var profile := _targeting_profile_for_kind(kind)
-	return _to_vector2(
-		profile.get("indicator_size", DEFAULT_INDICATOR_SIZE),
-		DEFAULT_INDICATOR_SIZE,
-	)
+	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	if profile != null:
+		return profile.indicator_size
+	return DEFAULT_INDICATOR_SIZE
 
 
 func indicator_alpha_for_candidate(candidate: Dictionary) -> float:
 	if candidate.has("indicator_alpha"):
 		return clampf(float(candidate.get("indicator_alpha", DEFAULT_INDICATOR_ALPHA)), 0.05, 1.0)
-	var kind := String(candidate.get("kind", ""))
-	var profile := _targeting_profile_for_kind(kind)
-	return clampf(float(profile.get("indicator_alpha", DEFAULT_INDICATOR_ALPHA)), 0.05, 1.0)
+	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	if profile != null:
+		return clampf(profile.indicator_alpha, 0.05, 1.0)
+	return DEFAULT_INDICATOR_ALPHA
 
 
 func indicator_depth_ratio_for_candidate(candidate: Dictionary) -> float:
@@ -209,13 +209,10 @@ func indicator_depth_ratio_for_candidate(candidate: Dictionary) -> float:
 			0.01,
 			1.0,
 		)
-	var kind := String(candidate.get("kind", ""))
-	var profile := _targeting_profile_for_kind(kind)
-	return clampf(
-		float(profile.get("indicator_depth_ratio", DEFAULT_INDICATOR_DEPTH_RATIO)),
-		0.01,
-		1.0,
-	)
+	var profile := _load_targeting_profile(String(candidate.get("kind", "")))
+	if profile != null:
+		return clampf(profile.indicator_depth_ratio, 0.01, 1.0)
+	return DEFAULT_INDICATOR_DEPTH_RATIO
 
 
 func _build_hostile_candidate(hostile) -> Dictionary:
@@ -224,32 +221,14 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 	var hostile_property := hostile.hostile_property as RpsSystem.HostileProperty
 	if definition != null:
 		hostile_property = definition.hostile_property
-	var weakness_tool := _effective_tool_for_hostile_property(hostile_property)
-	var weakness_text := "Unknown"
-	if weakness_tool != RpsSystem.ToolProperty.OTHER:
-		weakness_text = _humanize_tool_property(weakness_tool)
-	var summary_basic := "Unknown threat profile."
-	var summary_partial := "It can be cleared with pressure, but some tools underperform."
-	var summary_weakness := "Most effective counter: %s." % [weakness_text]
-	var summary_disposal := "Clearing this threat creates debris that can be disposed for cleanup."
-	if definition != null and definition.analysis_profile != null:
-		var profile = definition.analysis_profile
-		summary_basic = _definition_or_fallback(
-			String(profile.summary_basic),
-			summary_basic,
-		)
-		summary_partial = _definition_or_fallback(
-			String(profile.summary_partial),
-			summary_partial,
-		)
-		summary_weakness = _definition_or_fallback(
-			String(profile.summary_weakness),
-			summary_weakness,
-		)
-		summary_disposal = _definition_or_fallback(
-			String(profile.summary_disposal),
-			summary_disposal,
-		)
+	var weakness_tool := RpsSystem.effective_tool_for_hostile(hostile_property)
+	var weakness_text := RpsSystem.humanize_tool_property(weakness_tool)
+
+	var attached: Resource = definition.analysis_profile if definition != null else null
+	var fallback := _load_fallback_profile("hostile")
+	var summary_basic := _profile_field(attached, fallback, &"summary_basic")
+	var summary_partial := _profile_field(attached, fallback, &"summary_partial")
+	var summary_weakness := _profile_field(attached, fallback, &"summary_weakness")
 	summary_weakness = summary_weakness.replace("{weakness_tool}", weakness_text)
 
 	return {
@@ -259,7 +238,6 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 		"summary_basic": summary_basic,
 		"summary_partial": summary_partial,
 		"summary_weakness": summary_weakness,
-		"summary_disposal": summary_disposal,
 		"cell": cell,
 		"distance": _manhattan_to_player(cell),
 		"facing_score": _facing_score(cell),
@@ -267,28 +245,37 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 	}
 
 
-func _definition_or_fallback(value: String, fallback: String) -> String:
+func _non_empty_or(value: String, fallback: String) -> String:
 	var trimmed := value.strip_edges()
-	if trimmed == "":
-		return fallback
-	return trimmed
+	return trimmed if trimmed != "" else fallback
 
 
 func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
-	var item := pickup.item_data
+	return _build_pickup_payload(pickup.item_data, pickup.grid_cell, pickup)
+
+
+func _build_pickup_payload(item: ItemData, cell: Vector2i, node) -> Dictionary:
+	var fallback := _load_fallback_profile("pickup")
 	var basic_summary := _first_non_empty_line(item.description)
 	if basic_summary.is_empty():
-		basic_summary = "Recoverable field object."
+		basic_summary = fallback.summary_basic
 
 	var partial_summary := ""
 	var full_desc := item.description.strip_edges()
 	if item.tool_property != RpsSystem.ToolProperty.OTHER:
-		var prop := _humanize_tool_property(item.tool_property)
+		var prop := RpsSystem.humanize_tool_property(item.tool_property)
 		partial_summary = "Property: %s" % prop
 		if not full_desc.is_empty():
 			partial_summary += "\n" + full_desc
 	else:
 		partial_summary = full_desc
+
+	var weakness_summary := ""
+	if item.analysis_profile is AnalysisEntityProfile:
+		var profile := item.analysis_profile as AnalysisEntityProfile
+		basic_summary = _non_empty_or(profile.summary_basic, basic_summary)
+		partial_summary = _non_empty_or(profile.summary_partial, partial_summary)
+		weakness_summary = _non_empty_or(profile.summary_weakness, weakness_summary)
 
 	return {
 		"key": "pickup:%s" % [_pickup_type_key(item)],
@@ -296,22 +283,25 @@ func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
 		"display_name": item.item_name,
 		"summary_basic": basic_summary,
 		"summary_partial": partial_summary,
-		"summary_disposal": "Some recovered debris can be routed into a disposal chute.",
-		"cell": pickup.grid_cell,
-		"distance": _manhattan_to_player(pickup.grid_cell),
-		"facing_score": _facing_score(pickup.grid_cell),
-		"node": pickup,
+		"summary_weakness": weakness_summary,
+		"cell": cell,
+		"distance": _manhattan_to_player(cell),
+		"facing_score": _facing_score(cell),
+		"node": node,
 	}
 
 
 func _build_chute_candidate(chute) -> Dictionary:
-	var cell: Vector2i = chute.grid_cell
+	var cell: Vector2i = Vector2i.ZERO if chute == null else chute.grid_cell
+	var attached: Resource = chute.analysis_profile if chute != null else null
+	var fallback := _load_fallback_profile("chute")
 	return {
 		"key": String(ANALYSIS_CHUTE_KEY),
 		"kind": "chute",
 		"display_name": "Disposal Chute",
-		"summary_basic": "Accepts debris for cleanup credit.",
-		"summary_disposal": "Depositing debris here improves floor cleanup score.",
+		"summary_basic": _profile_field(attached, fallback, &"summary_basic"),
+		"summary_partial": _profile_field(attached, fallback, &"summary_partial"),
+		"summary_weakness": _profile_field(attached, fallback, &"summary_weakness"),
 		"cell": cell,
 		"distance": _manhattan_to_player(cell),
 		"facing_score": _facing_score(cell),
@@ -320,17 +310,22 @@ func _build_chute_candidate(chute) -> Dictionary:
 
 
 func _build_exit_candidate(exit_node: WorldExit) -> Dictionary:
-	var summary := "Extraction point."
-	if exit_node.requires_cleared_floor:
-		summary = "Extraction point gated by floor conditions."
+	var cell := Vector2i.ZERO if exit_node == null else exit_node.grid_cell
+	var attached: Resource = exit_node.analysis_profile if exit_node != null else null
+	var fallback := _load_fallback_profile("exit")
+	var summary_basic := _profile_field(attached, fallback, &"summary_basic")
+	if exit_node != null and exit_node.requires_cleared_floor and attached == null:
+		summary_basic = "Extraction point gated by floor conditions."
 	return {
 		"key": String(ANALYSIS_EXIT_KEY),
 		"kind": "exit",
 		"display_name": "World Exit",
-		"summary_basic": summary,
-		"cell": exit_node.grid_cell,
-		"distance": _manhattan_to_player(exit_node.grid_cell),
-		"facing_score": _facing_score(exit_node.grid_cell),
+		"summary_basic": summary_basic,
+		"summary_partial": _profile_field(attached, fallback, &"summary_partial"),
+		"summary_weakness": _profile_field(attached, fallback, &"summary_weakness"),
+		"cell": cell,
+		"distance": _manhattan_to_player(cell),
+		"facing_score": _facing_score(cell),
 		"node": exit_node,
 	}
 
@@ -347,16 +342,6 @@ func _analysis_candidate_less(a: Dictionary, b: Dictionary) -> bool:
 		return af < bf
 
 	return String(a.get("key", "")) < String(b.get("key", ""))
-
-
-func _effective_tool_for_hostile_property(
-		hostile_property: RpsSystem.HostileProperty,
-) -> RpsSystem.ToolProperty:
-	for tool_property in RpsSystem.WEAKNESS_TABLE.keys():
-		var weaknesses = RpsSystem.WEAKNESS_TABLE.get(tool_property, [])
-		if weaknesses.has(hostile_property):
-			return tool_property as RpsSystem.ToolProperty
-	return RpsSystem.ToolProperty.OTHER
 
 
 func _hostile_display_name(hostile) -> String:
@@ -412,18 +397,6 @@ func _first_non_empty_line(text: String) -> String:
 		if not trimmed.is_empty():
 			return trimmed
 	return ""
-
-
-func _humanize_tool_property(tool_property: int) -> String:
-	match tool_property:
-		RpsSystem.ToolProperty.SOAKED:
-			return "Soaked"
-		RpsSystem.ToolProperty.INERT:
-			return "Inert"
-		RpsSystem.ToolProperty.CLEANSED:
-			return "Cleansed"
-		_:
-			return "Other"
 
 
 func _is_hostile_node(node) -> bool:
@@ -491,20 +464,44 @@ func _get_hostile_definition(hostile):
 	return null
 
 
-func _targeting_profile_for_kind(kind: String) -> Dictionary:
-	if TARGETING_PROFILE_BY_KIND.has(kind):
-		return TARGETING_PROFILE_BY_KIND[kind]
-	return {
-		"hover_heights": DEFAULT_HOVER_HEIGHT_SAMPLES,
-		"indicator_height": DEFAULT_INDICATOR_HEIGHT,
-		"indicator_size": DEFAULT_INDICATOR_SIZE,
-		"indicator_alpha": DEFAULT_INDICATOR_ALPHA,
-		"indicator_depth_ratio": DEFAULT_INDICATOR_DEPTH_RATIO,
-	}
+func _load_fallback_profile(kind: String) -> AnalysisEntityProfile:
+	var path: String = _FALLBACK_PROFILE_PATHS.get(kind, "")
+	if path != "" and ResourceLoader.exists(path):
+		var res := load(path)
+		if res is AnalysisEntityProfile:
+			return res
+	return AnalysisEntityProfile.new()
+
+
+func _load_targeting_profile(kind: String) -> AnalysisTargetingProfile:
+	var path: String = _TARGETING_PROFILE_PATHS.get(kind, "")
+	if path != "" and ResourceLoader.exists(path):
+		var res := load(path)
+		if res is AnalysisTargetingProfile:
+			return res
+	return null
+
+
+func _profile_field(
+		primary: Resource,
+		fallback: AnalysisEntityProfile,
+		field: StringName,
+) -> String:
+	if primary is AnalysisEntityProfile:
+		var value := String(primary.get(field)).strip_edges()
+		if value != "":
+			return value
+	if fallback != null:
+		return String(fallback.get(field)).strip_edges()
+	return ""
 
 
 func _to_float_array(value: Variant) -> Array[float]:
 	var out: Array[float] = []
+	if value is PackedFloat32Array:
+		for item in value:
+			out.append(item)
+		return out
 	if not (value is Array):
 		return out
 	for item in value:

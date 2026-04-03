@@ -8,16 +8,14 @@ const ANALYSIS_RESULT_DATA_SCRIPT := "res://models/analysis_result_data.gd"
 func build(target, knowledge: Dictionary):
 	var summary := "No reliable field notes yet."
 
-	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_BASIC, false)):
+	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_1, false)):
 		summary = target.summary_basic if target.summary_basic != "" else "No details available."
 
 	var details: Array[String] = []
-	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_PARTIAL, false)):
+	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_2, false)):
 		details.append(target.summary_partial)
-	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_WEAKNESS, false)):
+	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_TIER_3, false)):
 		details.append(target.summary_weakness)
-	if bool(knowledge.get(AnalysisKnowledgeStateModel.KNOWLEDGE_DISPOSAL, false)):
-		details.append(target.summary_disposal)
 	details = details.filter(func(line: String) -> bool: return line.strip_edges() != "")
 
 	var full_summary := "%s: %s" % [

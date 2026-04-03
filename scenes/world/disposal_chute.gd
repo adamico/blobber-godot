@@ -5,6 +5,7 @@ const CHUTE_GROUP := &"disposal_chutes"
 
 @export var grid_cell: Vector2i = Vector2i.ZERO
 @export var world_y: float = 0.0
+@export var analysis_profile: Resource
 
 
 func _ready() -> void:
