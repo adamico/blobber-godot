@@ -14,6 +14,8 @@ signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_
 const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 const WORLD_PICKUPS_GROUP := &"world_pickups"
+const WORLD_INTERACTABLES_GROUP := &"world_interactables"
+const WORLD_CHESTS_GROUP := &"world_chests"
 const WORLD_EXIT_GROUP := &"world_exit_cells"
 const DISTANCE_TINT_MAX_CELLS := 2
 const DISTANCE_TINT_BASE_MATERIAL_KEY := "distance_tint_base_material"
@@ -101,39 +103,30 @@ func process_wall_bump() -> void:
 
 
 func process_player_pickup() -> void:
-	## Manual pickup action (costs one turn).
+	## Backward-compatible alias: pickup now routes through the generic interact flow.
+	process_player_interact()
+
+
+func process_player_interact() -> void:
 	if _player == null or _player.grid_state == null:
 		return
+
 	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
 	var current_tile := _player.grid_state.cell
 	var target_cell := current_tile + facing_vec
-	var picked_any := false
 
-	if _world_root != null:
-		var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+	var result := _try_interact_at_cell(current_tile)
+	if bool(result.get("found", false)):
+		_apply_interact_result(result)
+		return
 
-		# Priority 1: Current tile
-		for node in pickups:
-			if node is WorldPickup and node.grid_cell == current_tile:
-				if _player.add_item(node.item_data):
-					node.collected.emit(node.item_data)
-					node.queue_free()
-					picked_any = true
-					break
+	if target_cell != current_tile:
+		result = _try_interact_at_cell(target_cell)
+		if bool(result.get("found", false)):
+			_apply_interact_result(result)
+			return
 
-		# Priority 2: Facing tile
-		if not picked_any:
-			for node in pickups:
-				if node is WorldPickup and node.grid_cell == target_cell:
-					if _player.add_item(node.item_data):
-						node.collected.emit(node.item_data)
-						node.queue_free()
-						picked_any = true
-						break
-
-	if picked_any:
-		# TODO: unify with a single turn-advance method that can be called from all actions
-		_advance_turn()
+	action_feedback.emit("NOTHING TO INTERACT WITH", false)
 
 
 func process_player_drop(slot_index: int) -> void:
@@ -579,8 +572,57 @@ func _refresh_distance_tinted_sprites() -> void:
 
 	_refresh_group_distance_tint(HOSTILE_GROUP)
 	_refresh_group_distance_tint(WORLD_PICKUPS_GROUP)
+	_refresh_group_distance_tint(WORLD_CHESTS_GROUP)
 	_refresh_group_distance_tint(DISPOSAL_CHUTE_GROUP)
 	_refresh_group_distance_tint(WORLD_EXIT_GROUP)
+
+
+func _try_interact_at_cell(cell: Vector2i) -> Dictionary:
+	if _world_root == null or _world_root.get_tree() == null:
+		return { "found": false }
+
+	var interactables := _world_root.get_tree().get_nodes_in_group(WORLD_INTERACTABLES_GROUP)
+	for node in interactables:
+		if node == null or not is_instance_valid(node):
+			continue
+		if not _node_matches_cell(node, cell):
+			continue
+		if not node.has_method("interact"):
+			continue
+
+		var raw_result: Variant = node.call("interact", _player)
+		if raw_result is Dictionary:
+			var result := raw_result as Dictionary
+			result["found"] = true
+			return result
+		return {
+			"found": true,
+			"ok": bool(raw_result),
+			"feedback": "DONE",
+			"is_positive": bool(raw_result),
+			"costs_turn": bool(raw_result),
+		}
+
+	return { "found": false }
+
+
+func _apply_interact_result(result: Dictionary) -> void:
+	var ok := bool(result.get("ok", false))
+	var feedback := String(result.get("feedback", "DONE" if ok else "FAILED"))
+	var is_positive := bool(result.get("is_positive", ok))
+	var costs_turn := bool(result.get("costs_turn", ok))
+
+	action_feedback.emit(feedback, is_positive)
+	if costs_turn:
+		_advance_turn()
+
+
+func _node_matches_cell(node, cell: Vector2i) -> bool:
+	if node.has_method("matches_cell"):
+		return bool(node.call("matches_cell", cell))
+	if "grid_cell" in node:
+		return node.grid_cell == cell
+	return false
 
 
 func _refresh_group_distance_tint(group_name: StringName) -> void:

@@ -6,6 +6,7 @@ const ANALYSIS_TARGET_DATA_SCRIPT := "res://models/analysis_target_data.gd"
 const ANALYSIS_KIND_DEFINITION_PATHS := [
 	"res://resources/analysis/kinds/hostile.tres",
 	"res://resources/analysis/kinds/pickup.tres",
+	"res://resources/analysis/kinds/chest.tres",
 	"res://resources/analysis/kinds/chute.tres",
 	"res://resources/analysis/kinds/exit.tres",
 ]

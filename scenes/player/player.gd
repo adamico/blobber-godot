@@ -50,6 +50,13 @@ func _ensure_input_mappings() -> void:
 		ev.physical_keycode = KEY_SPACE
 		InputMap.action_add_event(&"pickup", ev)
 
+	if not InputMap.has_action(&"interact"):
+		InputMap.add_action(&"interact")
+	if InputMap.action_get_events(&"interact").is_empty():
+		var interact_ev := InputEventKey.new()
+		interact_ev.physical_keycode = KEY_E
+		InputMap.action_add_event(&"interact", interact_ev)
+
 	if not InputMap.has_action(&"analyze_target"):
 		InputMap.add_action(&"analyze_target")
 	if InputMap.action_get_events(&"analyze_target").is_empty():
@@ -114,6 +121,9 @@ func execute_action(action: StringName) -> bool:
 			turn_action_performed.emit(GridCommand.Type.USE_SLOT_3)
 			return true
 		&"pickup":
+			turn_action_performed.emit(GridCommand.Type.PICKUP)
+			return true
+		&"interact":
 			turn_action_performed.emit(GridCommand.Type.PICKUP)
 			return true
 		&"drop_slot_1":
@@ -271,6 +281,7 @@ func _find_pressed_action(event: InputEvent) -> StringName:
 		&"move_right",
 		&"turn_left",
 		&"turn_right",
+		&"interact",
 		&"pickup",
 	]
 

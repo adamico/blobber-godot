@@ -18,6 +18,7 @@ func _ready() -> void:
 	if item_data != null and item_data.item_type == ItemData.ItemType.DEBRIS:
 		blocks_movement = true
 	add_to_group(&"world_pickups")
+	add_to_group(&"world_interactables")
 	_timer_label = get_node_or_null("TimerLabel") as Label3D
 
 	_update_label()
@@ -62,6 +63,40 @@ func collect_if_player_on_cell(player, player_cell: Vector2i) -> bool:
 	collected.emit(item_data)
 	queue_free()
 	return true
+
+
+func interact(player) -> Dictionary:
+	if item_data == null:
+		return {
+			"ok": false,
+			"feedback": "NOTHING HERE",
+			"is_positive": false,
+			"costs_turn": false,
+		}
+	if player == null or not player.has_method("add_item"):
+		return {
+			"ok": false,
+			"feedback": "NO ACCESS",
+			"is_positive": false,
+			"costs_turn": false,
+		}
+
+	if not bool(player.call("add_item", item_data)):
+		return {
+			"ok": false,
+			"feedback": "INVENTORY FULL",
+			"is_positive": false,
+			"costs_turn": false,
+		}
+
+	collected.emit(item_data)
+	queue_free()
+	return {
+		"ok": true,
+		"feedback": "PICKED UP",
+		"is_positive": true,
+		"costs_turn": true,
+	}
 
 
 func _sync_world_position() -> void:

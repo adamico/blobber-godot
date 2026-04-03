@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AnalysisCandidateKindDefinition" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_candidate_kind_definition.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+kind = "chest"
+group_name = &"world_chests"
+required_class_name = "WorldChest"
+required_methods = PackedStringArray("interact")
+required_non_null_paths = PackedStringArray("grid_cell")
+cell_path = "grid_cell"
+key_mode = "instance_id"
+display_name_mode = "constant"
+display_name_default = "Supply Chest"
+fallback_profile_path = "res://resources/analysis/features/chest_analysis.tres"
+attached_profile_path = "analysis_profile"
+targeting_profile_path = "res://resources/analysis/targeting/chest.tres"
+summary_resolver_path = "res://resources/analysis/summary_resolvers/profile_only.tres"

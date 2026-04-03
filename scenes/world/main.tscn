@@ -25,6 +25,7 @@
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
 [ext_resource type="Resource" uid="uid://cbshjds4a3ref" path="res://resources/items/potion.tres" id="12_potion"]
 [ext_resource type="PackedScene" uid="uid://iw6dqags3f3v" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
+[ext_resource type="PackedScene" path="res://scenes/world/world_chest.tscn" id="13_chest"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
 [ext_resource type="PackedScene" uid="uid://fyuw05stj1rb" path="res://ui/hud_separator.tscn" id="15_28gua"]
@@ -62,6 +63,7 @@ flask_item = ExtResource("10_1notw")
 ward_item = ExtResource("11_ironward")
 potion_item = ExtResource("12_potion")
 disposal_chute_scene = ExtResource("13_28gua")
+chest_scene = ExtResource("13_chest")
 
 [node name="CRTLayer" type="CanvasLayer" parent="." unique_id=1964865318]
 

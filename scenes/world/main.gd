@@ -26,6 +26,7 @@ extends Node3D
 @export var ward_item: ItemData
 @export var potion_item: ItemData
 @export var disposal_chute_scene: PackedScene
+@export var chest_scene: PackedScene
 
 @export_group("Overlays")
 @export_file("*.tscn") \
@@ -252,6 +253,12 @@ func get_pickups() -> Array:
 	return get_tree().get_nodes_in_group(&"world_pickups")
 
 
+func get_blockable_entities() -> Array:
+	var entities: Array = get_pickups()
+	entities.append_array(get_tree().get_nodes_in_group(&"world_chests"))
+	return entities
+
+
 func get_grid_occupancy() -> GridOccupancyMap:
 	if _grid_module == null:
 		return null
@@ -259,7 +266,7 @@ func get_grid_occupancy() -> GridOccupancyMap:
 
 
 func _is_player_cell_passable(cell: Vector2i) -> bool:
-	return _grid_module.is_player_cell_passable(cell, get_hostiles(), get_pickups())
+	return _grid_module.is_player_cell_passable(cell, get_hostiles(), get_blockable_entities())
 
 
 func _add_huds() -> void:
@@ -302,7 +309,7 @@ func _author_floor_1() -> void:
 
 	valid_cells.shuffle()
 
-	if valid_cells.size() >= 6:
+	if valid_cells.size() >= 7:
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), mop_item)
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), holy_symbol_item)
 		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
@@ -313,6 +320,7 @@ func _author_floor_1() -> void:
 
 		# Place a disposal chute near the centre of the floor.
 		_spawn_chute(Vector2i(6, 5))
+		_spawn_chest(valid_cells.pop_back(), potion_item)
 
 
 func _index_hostile_definitions() -> void:
@@ -397,6 +405,19 @@ func _spawn_chute(cell: Vector2i) -> void:
 	add_child(chute)
 
 
+func _spawn_chest(cell: Vector2i, item: ItemData) -> void:
+	var chest
+	if chest_scene != null:
+		chest = chest_scene.instantiate()
+	if chest == null:
+		chest = preload("res://scenes/world/world_chest.gd").new()
+
+	chest.grid_cell = cell
+	chest.item_data = item
+	chest.name = "Chest_%d_%d" % [cell.x, cell.y]
+	add_child(chest)
+
+
 func _wire_occupancy() -> void:
 	var gm := get_node_or_null("GridMap") as GridMap
 	if gm == null:
@@ -458,8 +479,8 @@ func _on_player_turn_action(cmd: GridCommand.Type) -> void:
 			_turn_manager.process_slot_use(1)
 		GridCommand.Type.USE_SLOT_3:
 			_turn_manager.process_slot_use(2)
-		GridCommand.Type.PICKUP:
-			_turn_manager.process_player_pickup()
+		GridCommand.Type.INTERACT, GridCommand.Type.PICKUP:
+			_turn_manager.process_player_interact()
 		GridCommand.Type.DROP_SLOT_1:
 			_turn_manager.process_player_drop(0)
 		GridCommand.Type.DROP_SLOT_2:

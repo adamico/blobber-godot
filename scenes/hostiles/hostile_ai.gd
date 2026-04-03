@@ -172,6 +172,7 @@ func _is_cell_passable(cell: Vector2i) -> bool:
 
 	if _world_root != null and _world_root.get_tree() != null:
 		var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+		pickups.append_array(_world_root.get_tree().get_nodes_in_group(&"world_chests"))
 		for pickup in pickups:
 			if pickup != null and is_instance_valid(pickup):
 				if pickup.get("grid_cell") == cell and pickup.get("blocks_movement"):

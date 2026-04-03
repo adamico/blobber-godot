@@ -19,4 +19,5 @@ enum Type {
     CYCLE_TARGET_NEXT,
     ANALYZE_TARGET,
     PASS_TURN,
+    INTERACT,
 }

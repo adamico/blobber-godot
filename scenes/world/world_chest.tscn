@@ -1,0 +1,19 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/world/world_chest.gd" id="1_chest_script"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_chest_texture"]
+
+[node name="WorldChest" type="Node3D"]
+script = ExtResource("1_chest_script")
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+billboard = 2
+texture_filter = 0
+texture = ExtResource("2_chest_texture")
+
+[node name="StateLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+billboard = 1
+pixel_size = 0.003
+text = "Chest"

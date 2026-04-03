@@ -109,6 +109,7 @@ func _hostile_cell_passable(hostile, cell: Vector2i) -> bool:
 		var pickups := []
 		if _world_root != null:
 			pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+			pickups.append_array(_world_root.get_tree().get_nodes_in_group(&"world_chests"))
 		return _grid_module.is_hostile_cell_passable(hostile, cell, _hostiles, pickups)
 	return true
 
