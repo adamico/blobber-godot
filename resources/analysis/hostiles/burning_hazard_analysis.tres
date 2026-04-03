@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+summary_basic = "Highly flammable residue ignites nearby surfaces."
+summary_partial = "Pressure and blunt force can disperse it, but some tools barely slow it."
+summary_weakness = "Most effective counter: {weakness_tool}."
+summary_disposal = "Once neutralized, route remaining debris into a disposal chute."

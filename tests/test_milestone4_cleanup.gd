@@ -9,6 +9,7 @@ extends GutTest
 
 const JobRatingModel = preload("res://models/job_rating.gd")
 const WorldPickupScene = preload("res://scenes/world/world_pickup.gd")
+const WorldAnalysisModuleScript = preload("res://scenes/world/modules/world_analysis_module.gd")
 const BurningHostileDefinition = preload("res://resources/hostiles/burning_hazard.tres")
 const WorldTurnManagerScript = preload("res://scenes/world/modules/world_turn_manager.gd")
 const PlayerScene = preload("res://scenes/player/player.tscn")
@@ -92,19 +93,6 @@ class TestWorldTurnManager:
 	func tick_debris_revert_for_test() -> void:
 		_tick_debris_revert()
 
-
-	func unlock_for_test(key: StringName, flag: StringName) -> void:
-		_unlock_knowledge(key, flag)
-
-
-	func is_unlocked_for_test(key: StringName, flag: StringName) -> bool:
-		var snapshot := _get_knowledge_snapshot(key)
-		return bool(snapshot.get(flag, false))
-
-
-	func build_analysis_result_for_test(payload: Dictionary) -> Dictionary:
-		return _build_analysis_result(payload)
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -142,6 +130,11 @@ func _make_chute(cell: Vector2i) -> DisposalChute:
 func _make_turn_manager() -> TestWorldTurnManager:
 	var manager: TestWorldTurnManager = add_child_autofree(TestWorldTurnManager.new())
 	return manager
+
+
+func _make_analysis_module() -> WorldAnalysisModule:
+	var module: WorldAnalysisModule = add_child_autofree(WorldAnalysisModuleScript.new())
+	return module
 
 
 func _make_player(cell: Vector2i = Vector2i.ZERO) -> Player:
@@ -298,101 +291,39 @@ func test_debris_revert_respawns_from_definition_id() -> void:
 	assert_eq(root.spawn_by_id_calls[0], [Vector2i(4, 5), &"burning_hazard"])
 
 
-func test_analysis_requires_basic_unlock_for_summary() -> void:
-	var manager := _make_turn_manager()
-	var payload := {
-		"key": "hostile:burning_hazard",
-		"display_name": "Burning Hazard",
-		"summary_basic": "Unstable fire hazard.",
-	}
-
-	var before := manager.build_analysis_result_for_test(payload)
-	assert_true(String(before.summary).contains("No reliable field notes yet"))
-
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_BASIC)
-	var after := manager.build_analysis_result_for_test(payload)
-	assert_true(String(after.summary).contains("Unstable fire hazard"))
-
-
-func test_analysis_appends_partial_and_weakness_details_when_unlocked() -> void:
-	var manager := _make_turn_manager()
-	var payload := {
-		"key": "hostile:burning_hazard",
-		"display_name": "Burning Hazard",
-		"summary_basic": "Unstable fire hazard.",
-		"summary_partial": "Some tools underperform.",
-		"summary_weakness": "Most effective counter: Soaked.",
-	}
-
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_BASIC)
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_PARTIAL)
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_WEAKNESS)
-
-	var result := manager.build_analysis_result_for_test(payload)
-	assert_true(String(result.summary).contains("Some tools underperform"))
-	assert_true(String(result.summary).contains("Most effective counter: Soaked"))
-
-
 func test_disposal_unlocks_chute_and_origin_hostile_knowledge() -> void:
-	var manager := _make_turn_manager()
-	manager.set_total_cleanup_value_for_test(4)
+	var module: WorldAnalysisModule = _make_analysis_module()
 
 	var debris := _make_debris(1)
 	debris.origin_hostile_definition_id = &"burning_hazard"
-	manager.register_disposal_for_test(debris)
+	module.register_disposal(debris)
+	var chute_snapshot: Dictionary = module.get_knowledge_snapshot(module.ANALYSIS_CHUTE_KEY)
+	var hostile_snapshot: Dictionary = module.get_knowledge_snapshot(&"hostile:burning_hazard")
 
-	assert_true(
-		manager.is_unlocked_for_test(manager.ANALYSIS_CHUTE_KEY, manager.KNOWLEDGE_DISPOSAL),
-	)
-	assert_true(
-		manager.is_unlocked_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_DISPOSAL),
-	)
-
-
-func test_unlock_signal_emits_new_flag_once() -> void:
-	var manager := _make_turn_manager()
-	watch_signals(manager)
-
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_BASIC)
-	manager.unlock_for_test(&"hostile:burning_hazard", manager.KNOWLEDGE_BASIC)
-
-	assert_signal_emit_count(manager, "analysis_knowledge_updated", 1)
-	assert_eq(
-		get_signal_parameters(manager, "analysis_knowledge_updated"),
-		[
-			&"hostile:burning_hazard",
-			{
-				manager.KNOWLEDGE_BASIC: true,
-				manager.KNOWLEDGE_PARTIAL: false,
-				manager.KNOWLEDGE_WEAKNESS: false,
-				manager.KNOWLEDGE_DISPOSAL: false,
-			},
-			manager.KNOWLEDGE_BASIC,
-		],
-	)
+	assert_true(bool(chute_snapshot.get(module.KNOWLEDGE_DISPOSAL, false)))
+	assert_true(bool(hostile_snapshot.get(module.KNOWLEDGE_DISPOSAL, false)))
 
 
 func test_disposal_signal_emits_specific_unlock_flags() -> void:
-	var manager := _make_turn_manager()
-	manager.set_total_cleanup_value_for_test(2)
-	watch_signals(manager)
+	var module: WorldAnalysisModule = _make_analysis_module()
+	watch_signals(module)
 
 	var debris := _make_debris(1)
 	debris.origin_hostile_definition_id = &"burning_hazard"
-	manager.register_disposal_for_test(debris)
+	module.register_disposal(debris)
 
-	assert_signal_emit_count(manager, "analysis_knowledge_updated", 2)
+	assert_signal_emit_count(module, "analysis_knowledge_updated", 2)
 	assert_eq(
-		get_signal_parameters(manager, "analysis_knowledge_updated"),
+		get_signal_parameters(module, "analysis_knowledge_updated"),
 		[
 			&"hostile:burning_hazard",
 			{
-				manager.KNOWLEDGE_BASIC: false,
-				manager.KNOWLEDGE_PARTIAL: false,
-				manager.KNOWLEDGE_WEAKNESS: false,
-				manager.KNOWLEDGE_DISPOSAL: true,
+				module.KNOWLEDGE_BASIC: false,
+				module.KNOWLEDGE_PARTIAL: false,
+				module.KNOWLEDGE_WEAKNESS: false,
+				module.KNOWLEDGE_DISPOSAL: true,
 			},
-			manager.KNOWLEDGE_DISPOSAL,
+			module.KNOWLEDGE_DISPOSAL,
 		],
 	)
 

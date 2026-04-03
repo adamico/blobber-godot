@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="AnalysisEntityProfile" format=3]
+
+[ext_resource type="Script" path="res://models/analysis_entity_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+summary_basic = "Residual curse energy destabilizes movement and visibility."
+summary_partial = "It can be broken down over time, but resistant phases waste weaker tools."
+summary_weakness = "Most effective counter: {weakness_tool}."
+summary_disposal = "After collapse, contain cursed fragments by routing them into a chute."

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dx087llvdwy6g" path="res://models/hostile_actor_definition.gd" id="1_def"]
 [ext_resource type="Texture2D" uid="uid://b0m8bxqs3a1cs" path="res://assets/monster/statues/spooky_statue.png" id="2_sprite"]
+[ext_resource type="Resource" path="res://resources/analysis/hostiles/cursed_hazard_analysis.tres" id="3_analysis"]
 
 [resource]
 script = ExtResource("1_def")
@@ -10,3 +11,4 @@ display_name = "Cursed"
 sprite_texture = ExtResource("2_sprite")
 hostile_property = 2
 ai_behavior = 2
+analysis_profile = ExtResource("3_analysis")

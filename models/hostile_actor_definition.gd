@@ -19,3 +19,6 @@ extends Resource
 
 # Behavioral capabilities (data-driven instead of class-checks).
 @export var instant_clear_on_debris: bool = false
+
+# Separate analysis metadata from hostile behavior stats.
+@export var analysis_profile: Resource

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dx087llvdwy6g" path="res://models/hostile_actor_definition.gd" id="1_def"]
 [ext_resource type="Texture2D" uid="uid://btq0hbo4uq4x7" path="res://assets/monster/undead/skeletons/skeleton_humanoid_large_new.png" id="2_sprite"]
+[ext_resource type="Resource" path="res://resources/analysis/hostiles/burning_hazard_analysis.tres" id="3_analysis"]
 
 [resource]
 script = ExtResource("1_def")
@@ -10,3 +11,4 @@ display_name = "Burning"
 sprite_texture = ExtResource("2_sprite")
 speed = 2
 ai_behavior = 1
+analysis_profile = ExtResource("3_analysis")

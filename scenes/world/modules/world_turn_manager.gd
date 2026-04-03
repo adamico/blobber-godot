@@ -14,18 +14,7 @@ signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_
 const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 const WORLD_PICKUP_SCENE := preload("res://scenes/world/world_pickup.tscn")
-
-var _player: Player
-var _encounter_module: WorldEncounterModule
-var _grid_module: WorldGridModule
-var _world_root: Node
-var _analysis_module: WorldAnalysisModule
-
 const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
-
-var _total_cleanup_value: int = 0
-var _disposed_cleanup_value: int = 0
-
 const ANALYSIS_CHUTE_KEY := &"chute:disposal"
 const ANALYSIS_EXIT_KEY := &"exit:world"
 const KNOWLEDGE_BASIC := &"basic_known"
@@ -33,6 +22,14 @@ const KNOWLEDGE_PARTIAL := &"partial_clue_known"
 const KNOWLEDGE_WEAKNESS := &"weakness_known"
 const KNOWLEDGE_DISPOSAL := &"disposal_known"
 const HOVER_SELECTION_RADIUS_PX := 72.0
+
+var _player: Player
+var _encounter_module: WorldEncounterModule
+var _grid_module: WorldGridModule
+var _world_root: Node
+var _analysis_module: WorldAnalysisModule
+var _total_cleanup_value: int = 0
+var _disposed_cleanup_value: int = 0
 
 
 func configure(
@@ -59,11 +56,7 @@ func process_player_move(_new_state: GridState) -> void:
 	## Called after player successfully moved/turned on the grid.
 	if _player != null and _player.grid_state != null:
 		_check_contact_damage_from_tile(_player.grid_state.cell)
-	_tick_hostiles()
-	_tick_debris_revert()
-	_check_contact_damage_from_enemies()
-	_post_turn_checks()
-	turn_completed.emit()
+	_advance_turn()
 
 
 func process_slot_use(slot_index: int) -> void:
@@ -80,11 +73,7 @@ func process_slot_use(slot_index: int) -> void:
 	else:
 		_use_tool_on_facing(item, slot_index)
 
-	_tick_hostiles()
-	_tick_debris_revert()
-	_check_contact_damage_from_enemies()
-	_post_turn_checks()
-	turn_completed.emit()
+	_advance_turn()
 
 
 func process_wall_bump() -> void:
@@ -98,11 +87,7 @@ func process_wall_bump() -> void:
 			for h in hostiles:
 				h.deal_contact_damage(_player.stats)
 
-	_tick_hostiles()
-	_tick_debris_revert()
-	_check_contact_damage_from_enemies()
-	_post_turn_checks()
-	turn_completed.emit()
+	_advance_turn()
 
 
 func process_player_pickup() -> void:
@@ -138,11 +123,7 @@ func process_player_pickup() -> void:
 
 	if picked_any:
 		# TODO: unify with a single turn-advance method that can be called from all actions
-		_tick_hostiles()
-		_tick_debris_revert()
-		_check_contact_damage_from_enemies()
-		_post_turn_checks()
-		turn_completed.emit()
+		_advance_turn()
 
 
 func process_player_drop(slot_index: int) -> void:
@@ -210,6 +191,10 @@ func process_analyze_target() -> void:
 		action_feedback.emit("NO NEW INFORMATION", false)
 		return
 
+	_advance_turn()
+
+
+func _advance_turn() -> void:
 	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
@@ -543,13 +528,6 @@ func _ensure_analysis_module() -> void:
 		_analysis_module.analysis_knowledge_updated.connect(_on_analysis_knowledge_updated)
 
 
-func _unlock_knowledge(key: StringName, unlock_flag: StringName) -> void:
-	_ensure_analysis_module()
-	if _analysis_module == null:
-		return
-	_analysis_module.unlock_knowledge_for_test(key, unlock_flag)
-
-
 func _get_knowledge_snapshot(key: StringName) -> Dictionary:
 	_ensure_analysis_module()
 	if _analysis_module == null:
@@ -559,14 +537,14 @@ func _get_knowledge_snapshot(key: StringName) -> Dictionary:
 			KNOWLEDGE_WEAKNESS: false,
 			KNOWLEDGE_DISPOSAL: false,
 		}
-	return _analysis_module.get_knowledge_snapshot_for_test(key)
+	return _analysis_module.get_knowledge_snapshot(key)
 
 
 func _build_analysis_result(payload: Dictionary) -> Dictionary:
 	_ensure_analysis_module()
 	if _analysis_module == null:
 		return payload.duplicate(true)
-	return _analysis_module.build_analysis_result_for_test(payload)
+	return _analysis_module.build_analysis_result(payload)
 
 
 func _on_analysis_target_changed(target: Dictionary) -> void:
