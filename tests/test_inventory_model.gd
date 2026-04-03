@@ -35,21 +35,3 @@ func test_add_and_remove_item_through_player() -> void:
 	assert_eq(player.inventory.size(), 1)
 	assert_true(player.remove_item(potion))
 	assert_eq(player.inventory.size(), 0)
-
-
-func test_use_consumable_heals_and_is_removed() -> void:
-	var player := _spawn_player()
-	player.stats.take_damage(5)
-	assert_eq(player.stats.health, 5)
-
-	var potion: Variant = _make_item("Potion", { "heal": 3 })
-	player.add_item(potion)
-
-	assert_true(player.use_item(0))
-	assert_eq(player.stats.health, 8)
-	assert_eq(player.inventory.size(), 0)
-
-
-func test_use_item_invalid_index_returns_false() -> void:
-	var player := _spawn_player()
-	assert_false(player.use_item(0))

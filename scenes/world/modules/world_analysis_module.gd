@@ -183,7 +183,7 @@ func _deselect_hover_target() -> void:
 	analysis_target_changed.emit({ })
 
 
-func register_hazard_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
+func register_hostile_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
 	if hostile == null:
 		return
 	var key := StringName(_hostile_type_key(hostile))
@@ -289,10 +289,10 @@ func _collect_analysis_candidates() -> Array[Dictionary]:
 func _build_hostile_candidate(hostile) -> Dictionary:
 	var cell: Vector2i = hostile.grid_state.cell
 	var definition = _get_hostile_definition(hostile)
-	var hazard_property := hostile.hazard_property as RpsSystem.HazardProperty
+	var hostile_property := hostile.hostile_property as RpsSystem.HostileProperty
 	if definition != null:
-		hazard_property = definition.hazard_property
-	var weakness_tool := RpsSystem.effective_tool_for_hazard(hazard_property)
+		hostile_property = definition.hostile_property
+	var weakness_tool := _effective_tool_for_hostile_property(hostile_property)
 	var weakness_text := "Unknown"
 	if weakness_tool != RpsSystem.ToolProperty.OTHER:
 		weakness_text = _humanize_tool_property(weakness_tool)
@@ -310,6 +310,16 @@ func _build_hostile_candidate(hostile) -> Dictionary:
 		"facing_score": _facing_score(cell),
 		"node": hostile,
 	}
+
+
+func _effective_tool_for_hostile_property(
+		hostile_property: RpsSystem.HostileProperty,
+) -> RpsSystem.ToolProperty:
+	for tool_property in RpsSystem.WEAKNESS_TABLE.keys():
+		var weaknesses = RpsSystem.WEAKNESS_TABLE.get(tool_property, [])
+		if weaknesses.has(hostile_property):
+			return tool_property as RpsSystem.ToolProperty
+	return RpsSystem.ToolProperty.OTHER
 
 
 func _build_pickup_candidate(pickup: WorldPickup) -> Dictionary:
@@ -750,7 +760,7 @@ func _is_hostile_node(node) -> bool:
 		return false
 	if not node.has_method("deal_contact_damage"):
 		return false
-	if node.get("hazard_property") == null:
+	if node.get("hostile_property") == null:
 		return false
 	return true
 

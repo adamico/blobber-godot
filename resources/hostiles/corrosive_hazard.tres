@@ -8,5 +8,5 @@ script = ExtResource("1_def")
 definition_id = &"corrosive_hazard"
 display_name = "Corrosive"
 sprite_texture = ExtResource("2_sprite")
-hazard_property = 1
+hostile_property = 1
 instant_clear_on_debris = true

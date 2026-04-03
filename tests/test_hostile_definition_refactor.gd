@@ -63,37 +63,15 @@ class FakeInventory:
 		return _items.size()
 
 
-class LegacyCorrosiveHostile:
-	extends Node
-
-	signal hostile_cleared(hostile)
-
-	var grid_state: GridState
-	var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.CORROSIVE
-	var cleared := false
-	var hostile_definition_id: StringName = StringName()
-	var revert_turns_base: int = 5
-	var cleanup_value: int = 1
+class NonCorrosiveHostile:
+	extends Hostile
 
 
 	func _init(cell: Vector2i) -> void:
-		grid_state = GridState.new(cell, GridDefinitions.Facing.NORTH)
-
-
-	func is_cleared() -> bool:
-		return cleared
-
-
-	func deal_contact_damage(_target_stats) -> void:
-		pass
-
-
-	func receive_tool_hit(tool_property: RpsSystem.ToolProperty, _target_stats = null) -> bool:
-		if tool_property == RpsSystem.ToolProperty.INERT:
-			cleared = true
-			hostile_cleared.emit(self)
-			return true
-		return false
+		initial_cell = cell
+		initial_facing = GridDefinitions.Facing.NORTH
+		hostile_property = RpsSystem.HostileProperty.BURNING
+		hostile_definition_id = &"burning_hazard"
 
 
 func test_definition_capabilities_are_data_driven() -> void:
@@ -112,9 +90,9 @@ func test_definitions_use_resource_driven_hostile_visuals() -> void:
 	assert_not_null(CorrosiveHostile.sprite_texture)
 
 
-func test_spawn_uses_shared_hazard_scene_with_definition_visual_data() -> void:
+func test_spawn_uses_shared_hostile_scene_with_definition_visual_data() -> void:
 	var world := WorldMainScript.new()
-	var actor: Hazard = world.call("_spawn_hostile", Vector2i(3, 2), BurningHostile) as Hazard
+	var actor: Hostile = world.call("_spawn_hostile", Vector2i(3, 2), BurningHostile) as Hostile
 
 	assert_not_null(actor)
 	assert_eq(actor.sprite_texture, BurningHostile.sprite_texture)
@@ -192,7 +170,7 @@ func test_encounter_collect_prunes_freed_registered_enemy() -> void:
 	assert_eq(encounter.get_hostiles().size(), 0)
 
 
-func test_debris_clears_corrosive_even_without_definition_lookup() -> void:
+func test_debris_does_not_clear_non_corrosive_hostile() -> void:
 	var world = add_child_autofree(Node.new())
 	var manager = add_child_autofree(WorldTurnManagerScript.new())
 	var player = add_child_autofree(PlayerScene.instantiate())
@@ -203,7 +181,7 @@ func test_debris_clears_corrosive_even_without_definition_lookup() -> void:
 	debris.item_name = "Test Debris"
 	player.inventory = FakeInventory.new([debris])
 
-	var hostile = LegacyCorrosiveHostile.new(Vector2i(0, -1))
+	var hostile = NonCorrosiveHostile.new(Vector2i(0, -1))
 	world.add_child(hostile)
 	hostile.add_to_group("grid_hostiles")
 
@@ -211,6 +189,6 @@ func test_debris_clears_corrosive_even_without_definition_lookup() -> void:
 	watch_signals(manager)
 	manager.process_slot_use(0)
 
-	assert_true(hostile.cleared)
-	assert_eq(player.inventory.size(), 0)
-	assert_signal_emit_count(manager, "debris_consumed_as_weapon", 1)
+	assert_false(hostile.is_cleared())
+	assert_eq(player.inventory.size(), 1)
+	assert_signal_emit_count(manager, "debris_consumed_as_weapon", 0)

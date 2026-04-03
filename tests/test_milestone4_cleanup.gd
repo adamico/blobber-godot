@@ -45,22 +45,17 @@ class FakeWorldRoot:
 	extends Node
 
 	var spawn_by_id_calls: Array = []
-	var spawn_hazard_calls: Array = []
 
 
 	func _spawn_hostile_by_id(cell: Vector2i, definition_id: StringName) -> void:
 		spawn_by_id_calls.append([cell, definition_id])
 
 
-	func _spawn_hazard(cell: Vector2i, hazard_property: int) -> void:
-		spawn_hazard_calls.append([cell, hazard_property])
-
-
 class FakeHostileTarget:
 	extends Node3D
 
 	var grid_state: GridState
-	var hazard_property: int = RpsSystem.HazardProperty.BURNING
+	var hostile_property: int = RpsSystem.HostileProperty.BURNING
 	var hostile_definition_id: StringName = &"burning_hazard"
 	var cleanup_value: int = 1
 	var revert_turns_base: int = 5
@@ -301,7 +296,6 @@ func test_debris_revert_respawns_from_definition_id() -> void:
 
 	assert_eq(root.spawn_by_id_calls.size(), 1)
 	assert_eq(root.spawn_by_id_calls[0], [Vector2i(4, 5), &"burning_hazard"])
-	assert_eq(root.spawn_hazard_calls.size(), 0)
 
 
 func test_analysis_requires_basic_unlock_for_summary() -> void:

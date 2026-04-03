@@ -1,7 +1,6 @@
 class_name WorldTurnManager
 extends Node
 ## Sequential turn manager: player acts → resolve → enemies act → resolve → check state.
-## Replaces the overlay-based CombatRoundManager.
 
 signal turn_completed
 signal clean_status_changed(cleared: int, total: int)
@@ -315,11 +314,6 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 			if item.item_type == ItemData.ItemType.DEBRIS:
 				var definition = _get_hostile_definition(hostile)
 				var instant_clear := definition != null and bool(definition.instant_clear_on_debris)
-				# Fallback for legacy/spawned hostiles missing definition lookup wiring.
-				if not instant_clear and hostile.get("hazard_property") != null:
-					instant_clear = int(hostile.hazard_property) == int(
-						RpsSystem.HazardProperty.CORROSIVE,
-					)
 
 				if instant_clear:
 					# Instantly clear hostile via definition capability
@@ -334,10 +328,10 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 					continue
 
 			# Normal tool logic
-			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hazard_property)
+			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hostile_property)
 			var cleared = hostile.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
-			_register_hazard_tool_interaction(hostile, is_effective, cleared)
+			_register_hostile_tool_interaction(hostile, is_effective, cleared)
 
 			if is_effective:
 				action_feedback.emit("EFFECTIVE!", true)
@@ -452,8 +446,6 @@ func _connect_hostile_signals() -> void:
 
 
 func _on_hostile_cleared(hostile) -> void:
-	# No clean% credit on hostile defeat — credit comes only from chute disposal.
-	# Spawn debris on cleared hostile cell.
 	if hostile != null and hostile.grid_state != null:
 		var dupe := DEBRIS_ITEM.duplicate() as ItemData
 		dupe.origin_hostile_definition_id = hostile.hostile_definition_id
@@ -527,10 +519,10 @@ func _register_disposal(item: ItemData) -> void:
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 
 
-func _register_hazard_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
+func _register_hostile_tool_interaction(hostile, is_effective: bool, cleared: bool) -> void:
 	_ensure_analysis_module()
 	if _analysis_module != null:
-		_analysis_module.register_hazard_tool_interaction(hostile, is_effective, cleared)
+		_analysis_module.register_hostile_tool_interaction(hostile, is_effective, cleared)
 
 
 func _ensure_analysis_module() -> void:
@@ -600,6 +592,6 @@ func _is_hostile_node(node) -> bool:
 		return false
 	if not node.has_method("deal_contact_damage"):
 		return false
-	if node.get("hazard_property") == null:
+	if node.get("hostile_property") == null:
 		return false
 	return true

@@ -45,7 +45,7 @@ const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
-const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hostiles/hazard.tscn")
+const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hostiles/hostile.tscn")
 const DEFAULT_HOSTILE_DEFINITIONS := [
 	preload("res://resources/hostiles/burning_hazard.tres"),
 	preload("res://resources/hostiles/cursed_hazard.tres"),
@@ -360,16 +360,13 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Hosti
 	actor.hostile_definition_id = definition.definition_id
 	actor.initial_cell = cell
 	actor.speed = maxi(definition.speed, 1)
-
-	if actor is Hazard:
-		var hazard := actor as Hazard
-		hazard.hazard_property = definition.hazard_property
-		hazard.contact_damage = definition.contact_damage
-		hazard.hazard_hp = definition.hazard_hp
-		hazard.revert_turns_base = definition.revert_turns_base
-		hazard.cleanup_value = definition.cleanup_value
-		hazard.display_name_override = definition.display_name
-		hazard.sprite_texture = definition.sprite_texture
+	actor.hostile_property = definition.hostile_property
+	actor.contact_damage = definition.contact_damage
+	actor.hostile_hp = definition.hostile_hp
+	actor.revert_turns_base = definition.revert_turns_base
+	actor.cleanup_value = definition.cleanup_value
+	actor.display_name_override = definition.display_name
+	actor.sprite_texture = definition.sprite_texture
 
 	var ai = actor.get_node_or_null("HostileAI")
 	if ai != null:

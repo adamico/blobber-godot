@@ -83,25 +83,25 @@ func _patrol_command(hostile) -> int:
 	var step_dir := forward_vec * _patrol_direction
 	var next_cell: Vector2i = hostile.grid_state.cell + step_dir
 
-	if not _is_cell_passable(hostile, next_cell):
+	if not _is_cell_passable(next_cell):
 		_patrol_direction *= -1
 		_patrol_steps_taken = 0
 		step_dir = forward_vec * _patrol_direction
 		next_cell = hostile.grid_state.cell + step_dir
 
-		if not _is_cell_passable(hostile, next_cell):
+		if not _is_cell_passable(next_cell):
 			_patrol_direction = 1
 
 			var right_facing := GridDefinitions.rotate_right(hostile.grid_state.facing)
 			var right_cell: Vector2i = hostile.grid_state.cell
 			right_cell += GridDefinitions.facing_to_vec2i(right_facing)
-			if _is_cell_passable(hostile, right_cell):
+			if _is_cell_passable(right_cell):
 				return GridCommand.Type.TURN_RIGHT
 
 			var left_facing := GridDefinitions.rotate_left(hostile.grid_state.facing)
 			var left_cell: Vector2i = hostile.grid_state.cell
 			left_cell += GridDefinitions.facing_to_vec2i(left_facing)
-			if _is_cell_passable(hostile, left_cell):
+			if _is_cell_passable(left_cell):
 				return GridCommand.Type.TURN_LEFT
 
 			return NO_COMMAND
@@ -152,16 +152,16 @@ func _choose_best_step(_enemy, target: Vector2i) -> Vector2i:
 		primary_step = Vector2i(0, signi(delta.y))
 		secondary_step = Vector2i(signi(delta.x), 0)
 
-	if _is_cell_passable(_enemy, _enemy.grid_state.cell + primary_step):
+	if _is_cell_passable(_enemy.grid_state.cell + primary_step):
 		return primary_step
-	if _is_cell_passable(_enemy, _enemy.grid_state.cell + secondary_step):
+	if _is_cell_passable(_enemy.grid_state.cell + secondary_step):
 		if secondary_step != Vector2i.ZERO:
 			return secondary_step
 
 	return Vector2i.ZERO
 
 
-func _is_cell_passable(_enemy, cell: Vector2i) -> bool:
+func _is_cell_passable(cell: Vector2i) -> bool:
 	if _grid_module == null:
 		return true # Fallback if not wired
 	# For AI choice, we check basic grid passability.
@@ -170,7 +170,7 @@ func _is_cell_passable(_enemy, cell: Vector2i) -> bool:
 	if occ != null and not occ.is_passable(cell):
 		return false
 
-	if _world_root != null:
+	if _world_root != null and _world_root.get_tree() != null:
 		var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
 		for pickup in pickups:
 			if pickup != null and is_instance_valid(pickup):
