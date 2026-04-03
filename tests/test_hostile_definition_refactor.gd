@@ -8,6 +8,7 @@ const CursedHostile = preload("res://resources/hostiles/cursed_hazard.tres")
 const WorldPickupScript = preload("res://components/world_pickup.gd")
 const WorldTurnManagerScript = preload("res://scenes/world/modules/world_turn_manager.gd")
 const WorldEncounterModuleScript = preload("res://scenes/world/modules/world_encounter_module.gd")
+const WorldMainScript = preload("res://scenes/world/main.gd")
 const PlayerScene = preload("res://scenes/player/player.tscn")
 
 
@@ -101,13 +102,24 @@ func test_definition_capabilities_are_data_driven() -> void:
 	assert_false(CursedHostile.instant_clear_on_debris)
 
 
-func test_definitions_point_to_dedicated_scenes() -> void:
-	assert_eq(BurningHostile.actor_scene.resource_path, "res://scenes/hostiles/burning_hazard.tscn")
-	assert_eq(CursedHostile.actor_scene.resource_path, "res://scenes/hostiles/cursed_hazard.tscn")
-	assert_eq(
-		CorrosiveHostile.actor_scene.resource_path,
-		"res://scenes/hostiles/corrosive_hazard.tscn",
-	)
+func test_definitions_use_resource_driven_hostile_visuals() -> void:
+	assert_null(BurningHostile.actor_scene)
+	assert_null(CursedHostile.actor_scene)
+	assert_null(CorrosiveHostile.actor_scene)
+
+	assert_not_null(BurningHostile.sprite_texture)
+	assert_not_null(CursedHostile.sprite_texture)
+	assert_not_null(CorrosiveHostile.sprite_texture)
+
+
+func test_spawn_uses_shared_hazard_scene_with_definition_visual_data() -> void:
+	var world := WorldMainScript.new()
+	var actor: Hazard = world.call("_spawn_hostile", Vector2i(3, 2), BurningHostile) as Hazard
+
+	assert_not_null(actor)
+	assert_eq(actor.sprite_texture, BurningHostile.sprite_texture)
+
+	world.free()
 
 
 func test_world_pickup_revert_tracks_origin_definition_id() -> void:

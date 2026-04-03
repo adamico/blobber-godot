@@ -59,8 +59,6 @@ class FakeWorldRoot:
 class FakeHostileTarget:
 	extends Node3D
 
-	signal hostile_cleared(_hostile)
-
 	var grid_state: GridState
 	var hazard_property: int = RpsSystem.HazardProperty.BURNING
 	var hostile_definition_id: StringName = &"burning_hazard"
@@ -242,12 +240,9 @@ func test_world_pickup_revert_tracks_definition_id() -> void:
 	assert_eq(pickup.origin_hostile_definition_id, &"burning_hazard")
 
 
-func test_burning_definition_uses_dedicated_scene() -> void:
-	assert_not_null(BurningHostileDefinition.actor_scene)
-	assert_eq(
-		BurningHostileDefinition.actor_scene.resource_path,
-		"res://scenes/hostiles/burning_hazard.tscn",
-	)
+func test_burning_definition_uses_shared_scene_pattern_data() -> void:
+	assert_null(BurningHostileDefinition.actor_scene)
+	assert_not_null(BurningHostileDefinition.sprite_texture)
 
 # ---------------------------------------------------------------------------
 # WorldTurnManager — disposal and debris reversion

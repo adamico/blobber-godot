@@ -194,7 +194,6 @@ func process_cycle_target(direction: int) -> void:
 		action_feedback.emit("NO TARGETS", false)
 
 
-
 func process_analyze_target() -> void:
 	_ensure_analysis_module()
 	if _analysis_module == null:

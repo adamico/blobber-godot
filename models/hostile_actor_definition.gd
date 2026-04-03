@@ -4,6 +4,7 @@ extends Resource
 @export var definition_id: StringName
 @export var display_name: String = ""
 @export var actor_scene: PackedScene
+@export var sprite_texture: Texture2D
 
 # Shared hostile behavior contract. Hazards and enemies are configured through data.
 @export var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.BURNING

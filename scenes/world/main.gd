@@ -45,6 +45,7 @@ const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
+const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hazards/hazard.tscn")
 const DEFAULT_HOSTILE_DEFINITIONS := [
 	preload("res://resources/hostiles/burning_hazard.tres"),
 	preload("res://resources/hostiles/cursed_hazard.tres"),
@@ -352,10 +353,14 @@ func _get_hostile_definition_by_id(definition_id: StringName) -> HostileActorDef
 
 
 func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy:
-	if definition == null or definition.actor_scene == null:
+	if definition == null:
 		return null
 
-	var actor := definition.actor_scene.instantiate() as Enemy
+	var hostile_scene := definition.actor_scene
+	if hostile_scene == null:
+		hostile_scene = DEFAULT_HOSTILE_SCENE
+
+	var actor := hostile_scene.instantiate() as Enemy
 	if actor == null:
 		return null
 
@@ -370,6 +375,8 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy
 		hazard.hazard_hp = definition.hazard_hp
 		hazard.revert_turns_base = definition.revert_turns_base
 		hazard.cleanup_value = definition.cleanup_value
+		hazard.display_name_override = definition.display_name
+		hazard.sprite_texture = definition.sprite_texture
 
 	var ai = actor.get_node_or_null("EnemyAI")
 	if ai != null:

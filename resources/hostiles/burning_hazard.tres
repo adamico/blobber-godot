@@ -1,19 +1,12 @@
-[gd_resource type="Resource" script_class="HostileActorDefinition" format=3]
+[gd_resource type="Resource" script_class="HostileActorDefinition" format=3 uid="uid://dvicigdyyei8v"]
 
 [ext_resource type="Script" uid="uid://dx087llvdwy6g" path="res://models/hostile_actor_definition.gd" id="1_def"]
-[ext_resource type="PackedScene" path="res://scenes/hostiles/burning_hazard.tscn" id="2_actor"]
+[ext_resource type="Texture2D" uid="uid://btq0hbo4uq4x7" path="res://assets/monster/undead/skeletons/skeleton_humanoid_large_new.png" id="2_sprite"]
 
 [resource]
 script = ExtResource("1_def")
 definition_id = &"burning_hazard"
 display_name = "Burning"
-actor_scene = ExtResource("2_actor")
-hazard_property = 0
+sprite_texture = ExtResource("2_sprite")
 speed = 2
 ai_behavior = 1
-patrol_length = 3
-contact_damage = 1
-hazard_hp = 3
-revert_turns_base = 5
-cleanup_value = 1
-instant_clear_on_debris = false

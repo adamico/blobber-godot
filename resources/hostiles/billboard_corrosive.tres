@@ -1,8 +1,0 @@
-[gd_resource type="StandardMaterial3D" format=3 uid="uid://wmae1ecbg0v1"]
-
-[resource]
-shading_mode = 0
-albedo_color = Color(1, 0.4, 0.1, 0.8)
-billboard_mode = 2
-stencil_flags = 2
-stencil_color = Color(0.6509804, 1, 0.5882353, 1)

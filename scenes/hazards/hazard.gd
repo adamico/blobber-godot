@@ -4,12 +4,16 @@ extends Enemy
 signal hostile_cleared(hostile: Hazard)
 
 @export var hazard_property: RpsSystem.HazardProperty = RpsSystem.HazardProperty.BURNING
+@export var display_name_override: String = ""
+@export var sprite_texture: Texture2D
 @export var contact_damage: int = 1
 @export var hazard_hp: int = 3 ## Hits needed with non-matching tools
 @export var revert_turns_base: int = 5 ## Default turns until debris reverts to this hazard
 @export var cleanup_value: int = 1
 
 @onready var label: Label3D = %Label3D
+@onready var sprite: Sprite3D = get_node_or_null("Sprite3D") as Sprite3D
+@onready var mesh: MeshInstance3D = get_node_or_null("MeshInstance3D") as MeshInstance3D
 
 var _current_hp: int = 1
 
@@ -17,7 +21,20 @@ var _current_hp: int = 1
 func _ready() -> void:
 	super()
 	_current_hp = hazard_hp
-	label.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
+	if display_name_override != "":
+		label.text = display_name_override
+	else:
+		label.text = RpsSystem.HazardProperty.keys()[hazard_property].capitalize()
+
+	if sprite != null and sprite_texture != null:
+		sprite.texture = sprite_texture
+		var sprite_mat := sprite.material_override as ShaderMaterial
+		if sprite_mat != null:
+			sprite_mat = sprite_mat.duplicate() as ShaderMaterial
+			sprite.material_override = sprite_mat
+			sprite_mat.set_shader_parameter("sprite_texture", sprite_texture)
+		if mesh != null:
+			mesh.visible = false
 
 
 func receive_tool_hit(

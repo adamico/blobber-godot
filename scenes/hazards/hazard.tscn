@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://bs1aafm4hvs1x" path="res://scenes/hazards/hazard.gd" id="1_hazard"]
 [ext_resource type="Script" uid="uid://yn4bi7ef4jwu" path="res://scenes/enemies/enemy_ai.gd" id="2_ai"]
+[ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="3_outline"]
+[ext_resource type="Texture2D" uid="uid://dxwt5c8r2p6ul" path="res://icon.svg" id="4_default_texture"]
 
 [sub_resource type="QuadMesh" id="BillboardQuad"]
 size = Vector2(0.5, 0.8)
@@ -12,6 +14,18 @@ blend_mode = 1
 cull_mode = 2
 shading_mode = 0
 albedo_color = Color(0.2, 0.6, 1.0, 0.8)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outline"]
+render_priority = 0
+shader = ExtResource("3_outline")
+shader_parameter/sprite_texture = ExtResource("4_default_texture")
+shader_parameter/line_color = Color(0.6509804, 1, 0.5882353, 1)
+shader_parameter/glowSize = 0.0
+shader_parameter/glowDensity = 1
+shader_parameter/glowRadialCoverage = 5
+shader_parameter/glowAngle = 1.57
+shader_parameter/glowSharpness = 1.0000000475
+shader_parameter/alphaThreshold = 0.218000010355
 
 [node name="Hazard" type="Node3D" unique_id=1779973639]
 script = ExtResource("1_hazard")
@@ -25,6 +39,7 @@ script = ExtResource("2_ai")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 mesh = SubResource("BillboardQuad")
 material_override = SubResource("BillboardMaterial")
+visible = false
 
 [node name="Label3D" type="Label3D" parent="." unique_id=391576828]
 unique_name_in_owner = true
@@ -33,3 +48,11 @@ pixel_size = 0.0025
 billboard = 1
 text = ""
 visible = false
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=605638997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -0.06616944)
+material_override = SubResource("ShaderMaterial_outline")
+pixel_size = 0.02
+billboard = 2
+texture_filter = 0
+texture = ExtResource("4_default_texture")
