@@ -66,13 +66,14 @@ Each piece of dungeon hazard has a **material class**. Your equipment is rated t
 |---|---|---|
 | 1 | Day 1-2 | **Engine Foundations:** Grid movement, 3-slot inventory, raycast interaction. |
 | 2 | Day 3 | **RPS Interaction:** Damage logic, property-matching bonus, 100% Clean system. |
-| 3 | Day 4-5 | **Enemy AI & Leveling:** Patrol paths, proximity triggers, loading 5 floor layouts. |
+| 3 | Day 4-5 | **Hostile AI & Leveling:** Patrol paths, proximity triggers, loading 5 floor layouts. |
 | 4 | Day 6 | **Asset Pass:** 2D Billboards for the 5 items and 5 messes. Simple dungeon textures. |
 | 5 | Day 7 | **Polishing:** UI (HP Bar, Clean%), SFX, Win/Fail screens. |
 
 ---
 
 ## Asset List (Lean)
+
 - **Environment:** 1 Wall Texture, 1 Floor Texture, 1 Door Node.
 - **Item Billboards (5):** Flask, Candle, Ward, Mop, Potion.
 - **Mess Billboards (5):** Corpse, Fire, Slime, Armor, Trap.

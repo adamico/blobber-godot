@@ -22,7 +22,7 @@ class FakeWorldRoot:
 		spawn_by_id_calls.append([cell, definition_id])
 
 
-class FakeEnemy:
+class FakeHostile:
 	extends Node
 
 	var movement_controller = null
@@ -152,14 +152,14 @@ func test_encounter_collect_uses_explicit_registration() -> void:
 	var encounter = add_child_autofree(WorldEncounterModuleScript.new())
 	encounter.configure(world, null, null)
 
-	var enemy = FakeEnemy.new()
-	world.add_child(enemy)
+	var hostile = FakeHostile.new()
+	world.add_child(hostile)
 
-	encounter.register_hostile(enemy)
+	encounter.register_hostile(hostile)
 	encounter.collect()
 
-	assert_eq(encounter.get_enemies().size(), 1)
-	assert_true(encounter.get_enemies().has(enemy))
+	assert_eq(encounter.get_hostiles().size(), 1)
+	assert_true(encounter.get_hostiles().has(hostile))
 
 
 func test_encounter_unregister_removes_enemy_from_active_list() -> void:
@@ -167,14 +167,14 @@ func test_encounter_unregister_removes_enemy_from_active_list() -> void:
 	var encounter = add_child_autofree(WorldEncounterModuleScript.new())
 	encounter.configure(world, null, null)
 
-	var enemy = FakeEnemy.new()
-	world.add_child(enemy)
+	var hostile = FakeHostile.new()
+	world.add_child(hostile)
 
-	encounter.register_hostile(enemy)
-	encounter.unregister_hostile(enemy)
+	encounter.register_hostile(hostile)
+	encounter.unregister_hostile(hostile)
 	encounter.collect()
 
-	assert_eq(encounter.get_enemies().size(), 0)
+	assert_eq(encounter.get_hostiles().size(), 0)
 
 
 func test_encounter_collect_prunes_freed_registered_enemy() -> void:
@@ -182,14 +182,14 @@ func test_encounter_collect_prunes_freed_registered_enemy() -> void:
 	var encounter = add_child_autofree(WorldEncounterModuleScript.new())
 	encounter.configure(world, null, null)
 
-	var enemy = FakeEnemy.new()
-	world.add_child(enemy)
+	var hostile = FakeHostile.new()
+	world.add_child(hostile)
 
-	encounter.register_hostile(enemy)
-	enemy.free()
+	encounter.register_hostile(hostile)
+	hostile.free()
 	encounter.collect()
 
-	assert_eq(encounter.get_enemies().size(), 0)
+	assert_eq(encounter.get_hostiles().size(), 0)
 
 
 func test_debris_clears_corrosive_even_without_definition_lookup() -> void:
@@ -205,7 +205,7 @@ func test_debris_clears_corrosive_even_without_definition_lookup() -> void:
 
 	var hostile = LegacyCorrosiveHostile.new(Vector2i(0, -1))
 	world.add_child(hostile)
-	hostile.add_to_group("grid_enemies")
+	hostile.add_to_group("grid_hostiles")
 
 	manager.configure(player, null, null, world)
 	watch_signals(manager)

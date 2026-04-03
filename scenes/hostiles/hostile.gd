@@ -1,4 +1,4 @@
-class_name Enemy
+class_name Hostile
 extends GridEntity
 
 @export var hostile_definition_id: StringName
@@ -7,7 +7,7 @@ extends GridEntity
 ## 1 = acts every turn, 2 = acts every other turn, etc.
 @export var speed: int = 1
 
-@onready var _ai: EnemyAI = get_node_or_null("EnemyAI") as EnemyAI
+@onready var _ai: HostileAI = get_node_or_null("HostileAI") as HostileAI
 
 var _active_tween: Tween
 var _turn_counter: int = 0
@@ -15,7 +15,7 @@ var _turn_counter: int = 0
 
 func _ready() -> void:
 	super()
-	add_to_group("grid_enemies")
+	add_to_group("grid_hostiles")
 	movement_controller.action_started.connect(_on_action_started)
 
 
@@ -30,7 +30,7 @@ func tick_ai(player) -> bool:
 		return false
 
 	var cmd := _ai.choose_command(self, player)
-	if cmd == EnemyAI.NO_COMMAND:
+	if cmd == HostileAI.NO_COMMAND:
 		return false
 
 	return execute_command(cmd as GridCommand.Type)

@@ -12,7 +12,7 @@ signal analysis_target_changed(target: Dictionary)
 signal analysis_result_ready(result: Dictionary)
 signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
 
-const HOSTILE_GROUP := &"grid_enemies"
+const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 const WORLD_PICKUP_SCENE := preload("res://scenes/world/world_pickup.tscn")
 
@@ -60,7 +60,7 @@ func process_player_move(_new_state: GridState) -> void:
 	## Called after player successfully moved/turned on the grid.
 	if _player != null and _player.grid_state != null:
 		_check_contact_damage_from_tile(_player.grid_state.cell)
-	_tick_enemies()
+	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
@@ -81,7 +81,7 @@ func process_slot_use(slot_index: int) -> void:
 	else:
 		_use_tool_on_facing(item, slot_index)
 
-	_tick_enemies()
+	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
@@ -99,7 +99,7 @@ func process_wall_bump() -> void:
 			for h in hostiles:
 				h.deal_contact_damage(_player.stats)
 
-	_tick_enemies()
+	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
@@ -139,7 +139,7 @@ func process_player_pickup() -> void:
 
 	if picked_any:
 		# TODO: unify with a single turn-advance method that can be called from all actions
-		_tick_enemies()
+		_tick_hostiles()
 		_tick_debris_revert()
 		_check_contact_damage_from_enemies()
 		_post_turn_checks()
@@ -211,7 +211,7 @@ func process_analyze_target() -> void:
 		action_feedback.emit("NO NEW INFORMATION", false)
 		return
 
-	_tick_enemies()
+	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
 	_post_turn_checks()
@@ -365,7 +365,7 @@ func _get_hostiles_at(cell: Vector2i) -> Array:
 	return result
 
 
-func _tick_enemies() -> void:
+func _tick_hostiles() -> void:
 	if _encounter_module == null or _player == null:
 		return
 	_encounter_module.collect()
@@ -386,7 +386,7 @@ func _check_contact_damage_from_enemies() -> void:
 		if hostile.grid_state == null:
 			continue
 
-		var ai = hostile.get_node_or_null("EnemyAI")
+		var ai = hostile.get_node_or_null("HostileAI")
 		var is_mobile := false
 		if ai != null and "behavior" in ai and ai.behavior != 0: # 0 = STATIONARY
 			is_mobile = true
@@ -494,7 +494,7 @@ func _respawn_hostile_from_revert(pickup: WorldPickup) -> void:
 		_connect_hostile_signals()
 
 
-func _get_hostile_definition(hostile: Enemy):
+func _get_hostile_definition(hostile: Hostile):
 	if _world_root == null or hostile == null:
 		return null
 	if "hostile_definition_id" in hostile and hostile.hostile_definition_id != StringName():

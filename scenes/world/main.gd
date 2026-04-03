@@ -45,7 +45,7 @@ const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
-const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hazards/hazard.tscn")
+const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hostiles/hazard.tscn")
 const DEFAULT_HOSTILE_DEFINITIONS := [
 	preload("res://resources/hostiles/burning_hazard.tres"),
 	preload("res://resources/hostiles/cursed_hazard.tres"),
@@ -99,7 +99,7 @@ func _ready() -> void:
 	_wire_occupancy.call_deferred()
 	_wire_turn_manager.call_deferred()
 	_author_floor_1.call_deferred()
-	_wire_enemies.call_deferred()
+	_wire_hostiles.call_deferred()
 	_initialize_floor.call_deferred()
 	_refresh_minimap_overlay()
 	_add_huds.call_deferred()
@@ -244,8 +244,8 @@ func get_player_inventory_items() -> Array:
 	return _player.inventory.get_items()
 
 
-func get_enemies() -> Array:
-	return _encounter_module.get_enemies()
+func get_hostiles() -> Array:
+	return _encounter_module.get_hostiles()
 
 
 func get_pickups() -> Array:
@@ -259,7 +259,7 @@ func get_grid_occupancy() -> GridOccupancyMap:
 
 
 func _is_player_cell_passable(cell: Vector2i) -> bool:
-	return _grid_module.is_player_cell_passable(cell, get_enemies(), get_pickups())
+	return _grid_module.is_player_cell_passable(cell, get_hostiles(), get_pickups())
 
 
 func _add_huds() -> void:
@@ -291,13 +291,6 @@ func _add_huds() -> void:
 
 
 func _author_floor_1() -> void:
-	var old_enemy = get_node_or_null("FloorEnemy")
-	if old_enemy:
-		old_enemy.queue_free()
-	var old_pickup = get_node_or_null("PotionPickup")
-	if old_pickup:
-		old_pickup.queue_free()
-
 	var gm := get_node_or_null("GridMap") as GridMap
 	var valid_cells: Array[Vector2i] = []
 	if gm != null:
@@ -352,7 +345,7 @@ func _get_hostile_definition_by_id(definition_id: StringName) -> HostileActorDef
 	return _hostile_definitions_by_id.get(definition_id) as HostileActorDefinition
 
 
-func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy:
+func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Hostile:
 	if definition == null:
 		return null
 
@@ -360,7 +353,7 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy
 	if hostile_scene == null:
 		hostile_scene = DEFAULT_HOSTILE_SCENE
 
-	var actor := hostile_scene.instantiate() as Enemy
+	var actor := hostile_scene.instantiate() as Hostile
 	if actor == null:
 		return null
 
@@ -378,7 +371,7 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Enemy
 		hazard.display_name_override = definition.display_name
 		hazard.sprite_texture = definition.sprite_texture
 
-	var ai = actor.get_node_or_null("EnemyAI")
+	var ai = actor.get_node_or_null("HostileAI")
 	if ai != null:
 		if "behavior" in ai:
 			ai.set("behavior", definition.ai_behavior)
@@ -419,12 +412,12 @@ func _wire_occupancy() -> void:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
 
 
-func _wire_enemies() -> void:
-	_encounter_module.wire_enemies()
+func _wire_hostiles() -> void:
+	_encounter_module.wire_hostiles()
 	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
-	for enemy in get_enemies():
+	for hostile in get_hostiles():
 		if mcfg != null:
-			enemy.movement_config = mcfg
+			hostile.movement_config = mcfg
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
 

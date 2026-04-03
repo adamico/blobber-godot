@@ -409,7 +409,7 @@ func test_analyze_consumes_turn_when_new_information_unlocked() -> void:
 	var root := _make_world_root()
 	var hostile := FakeHostileTarget.new(Vector2i(0, -1))
 	root.add_child(hostile)
-	hostile.add_to_group(&"grid_enemies")
+	hostile.add_to_group(&"grid_hostiles")
 	manager.configure(player, null, null, root)
 
 	watch_signals(manager)
@@ -424,7 +424,7 @@ func test_analyze_without_new_information_is_free_action() -> void:
 	var root := _make_world_root()
 	var hostile := FakeHostileTarget.new(Vector2i(0, -1))
 	root.add_child(hostile)
-	hostile.add_to_group(&"grid_enemies")
+	hostile.add_to_group(&"grid_hostiles")
 	manager.configure(player, null, null, root)
 
 	watch_signals(manager)

@@ -1,5 +1,5 @@
 class_name Hazard
-extends Enemy
+extends Hostile
 
 signal hostile_cleared(hostile: Hazard)
 

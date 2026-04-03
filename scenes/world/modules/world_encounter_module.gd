@@ -2,11 +2,11 @@ class_name WorldEncounterModule
 extends Node
 
 signal encounter_detected(encountered: Array)
-signal enemy_acted
+signal hostile_acted
 
-const ENEMY_GROUP := &"grid_enemies"
+const HOSTILE_GROUP := &"grid_hostiles"
 
-var _enemies: Array = []
+var _hostiles: Array = []
 var _registered_hostiles: Array = []
 var _grid_module: WorldGridModule
 var _world_root: Node
@@ -19,40 +19,40 @@ func configure(world_root: Node, player, grid_module: WorldGridModule) -> void:
 	_grid_module = grid_module
 
 
-func get_enemies() -> Array:
-	return _enemies
+func get_hostiles() -> Array:
+	return _hostiles
 
 
-func register_hostile(enemy) -> void:
-	if enemy == null or not is_instance_valid(enemy):
+func register_hostile(hostile) -> void:
+	if hostile == null or not is_instance_valid(hostile):
 		return
-	if not enemy.has_method("tick_ai"):
+	if not hostile.has_method("tick_ai"):
 		return
-	if _registered_hostiles.has(enemy):
+	if _registered_hostiles.has(hostile):
 		return
-	_registered_hostiles.append(enemy)
-	_wire_enemy(enemy)
+	_registered_hostiles.append(hostile)
+	_wire_hostile(hostile)
 
 
-func unregister_hostile(enemy) -> void:
-	if enemy == null:
+func unregister_hostile(hostile) -> void:
+	if hostile == null:
 		return
-	_registered_hostiles.erase(enemy)
-	_enemies.erase(enemy)
+	_registered_hostiles.erase(hostile)
+	_hostiles.erase(hostile)
 
 
-func wire_enemies() -> void:
+func wire_hostiles() -> void:
 	_bootstrap_registered_hostiles_from_group()
 	collect()
-	for enemy in _enemies:
-		_wire_enemy(enemy)
+	for hostile in _hostiles:
+		_wire_hostile(hostile)
 
 
 func collect() -> void:
 	if _world_root == null or _world_root.get_tree() == null:
 		return
 
-	_enemies.clear()
+	_hostiles.clear()
 	var alive_registered: Array = []
 	for node in _registered_hostiles:
 		if node == null or not is_instance_valid(node):
@@ -60,7 +60,7 @@ func collect() -> void:
 		if node.get_tree() != _world_root.get_tree():
 			continue
 		alive_registered.append(node)
-		_enemies.append(node)
+		_hostiles.append(node)
 	_registered_hostiles = alive_registered
 
 
@@ -70,12 +70,12 @@ func tick_step_echo() -> void:
 
 	collect()
 
-	for enemy in _enemies:
-		if enemy == null:
+	for hostile in _hostiles:
+		if hostile == null:
 			continue
-		if not _is_enemy_alive(enemy):
+		if not _is_hostile_alive(hostile):
 			continue
-		enemy.tick_ai(_player)
+		hostile.tick_ai(_player)
 
 
 func check_combat_trigger() -> bool:
@@ -85,15 +85,15 @@ func check_combat_trigger() -> bool:
 	collect()
 
 	var encountered: Array = []
-	for enemy in _enemies:
-		if enemy == null or enemy.grid_state == null:
+	for hostile in _hostiles:
+		if hostile == null or hostile.grid_state == null:
 			continue
-		if not _is_enemy_alive(enemy):
+		if not _is_hostile_alive(hostile):
 			continue
-		var delta: Vector2i = enemy.grid_state.cell - _player.grid_state.cell
+		var delta: Vector2i = hostile.grid_state.cell - _player.grid_state.cell
 		var manhattan: int = absi(delta.x) + absi(delta.y)
 		if manhattan <= 1:
-			encountered.append(enemy)
+			encountered.append(hostile)
 
 	if encountered.is_empty():
 		return false
@@ -102,25 +102,25 @@ func check_combat_trigger() -> bool:
 	return true
 
 
-func _enemy_cell_passable(enemy, cell: Vector2i) -> bool:
+func _hostile_cell_passable(hostile, cell: Vector2i) -> bool:
 	if _player != null and _player.grid_state != null and _player.grid_state.cell == cell:
 		return false
 	if _grid_module != null:
 		var pickups := []
 		if _world_root != null:
 			pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
-		return _grid_module.is_enemy_cell_passable(enemy, cell, _enemies, pickups)
+		return _grid_module.is_hostile_cell_passable(hostile, cell, _hostiles, pickups)
 	return true
 
 
-func _on_enemy_action_completed(_cmd, _new_state, _enemy) -> void:
-	enemy_acted.emit()
+func _on_hostile_action_completed(_cmd, _new_state, _hostile) -> void:
+	hostile_acted.emit()
 
 
 func _bootstrap_registered_hostiles_from_group() -> void:
 	if _world_root == null or _world_root.get_tree() == null:
 		return
-	for node in _world_root.get_tree().get_nodes_in_group(ENEMY_GROUP):
+	for node in _world_root.get_tree().get_nodes_in_group(HOSTILE_GROUP):
 		if node == null or not is_instance_valid(node):
 			continue
 		if node.get_tree() != _world_root.get_tree():
@@ -132,34 +132,34 @@ func _bootstrap_registered_hostiles_from_group() -> void:
 		_registered_hostiles.append(node)
 
 
-func _wire_enemy(enemy) -> void:
-	if enemy == null or not is_instance_valid(enemy):
+func _wire_hostile(hostile) -> void:
+	if hostile == null or not is_instance_valid(hostile):
 		return
-	if enemy.movement_controller == null:
+	if hostile.movement_controller == null:
 		return
 
-	var captured_enemy = enemy
-	enemy.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
-		return _enemy_cell_passable(captured_enemy, cell)
+	var captured_hostile = hostile
+	hostile.movement_controller.passability_fn = func(cell: Vector2i) -> bool:
+		return _hostile_cell_passable(captured_hostile, cell)
 
-	if enemy.has_method("set_grid_module"):
-		enemy.set_grid_module(_grid_module, _world_root)
-	elif enemy.get_node_or_null("EnemyAI") != null:
-		var ai = enemy.get_node("EnemyAI")
+	if hostile.has_method("set_grid_module"):
+		hostile.set_grid_module(_grid_module, _world_root)
+	elif hostile.get_node_or_null("HostileAI") != null:
+		var ai = hostile.get_node("HostileAI")
 		if ai.has_method("set_grid_module"):
 			ai.set_grid_module(_grid_module, _world_root)
 
-	var action_sig: Signal = enemy.movement_controller.action_completed
-	var bind_cb := _on_enemy_action_completed.bind(enemy)
+	var action_sig: Signal = hostile.movement_controller.action_completed
+	var bind_cb := _on_hostile_action_completed.bind(hostile)
 	if not action_sig.is_connected(bind_cb):
 		action_sig.connect(bind_cb)
 
 
-func _is_enemy_alive(enemy) -> bool:
-	if enemy == null:
+func _is_hostile_alive(hostile) -> bool:
+	if hostile == null:
 		return false
-	if not is_instance_valid(enemy):
+	if not is_instance_valid(hostile):
 		return false
-	if enemy.stats == null:
+	if hostile.stats == null:
 		return true
-	return not enemy.stats.is_dead()
+	return not hostile.stats.is_dead()

@@ -1,18 +1,18 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scenes/enemies/enemy.gd" id="1_enemy"]
-[ext_resource type="Script" path="res://scenes/enemies/enemy_ai.gd" id="2_ai"]
+[ext_resource type="Script" path="res://scenes/hostiles/hostile.gd" id="1_hostile"]
+[ext_resource type="Script" path="res://scenes/hostiles/hostile_ai.gd" id="2_ai"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
 radius = 0.25
 height = 0.8
 
-[node name="Enemy" type="Node3D"]
-script = ExtResource("1_enemy")
+[node name="Hostile" type="Node3D"]
+script = ExtResource("1_hostile")
 initial_cell = Vector2i(2, 0)
 initial_facing = 3
 
-[node name="EnemyAI" type="Node" parent="."]
+[node name="HostileAI" type="Node" parent="."]
 script = ExtResource("2_ai")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]

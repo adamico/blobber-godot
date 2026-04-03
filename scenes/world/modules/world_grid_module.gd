@@ -20,16 +20,16 @@ func occupancy() -> GridOccupancyMap:
 	return _occupancy
 
 
-func is_player_cell_passable(cell: Vector2i, enemies: Array, pickups: Array = []) -> bool:
+func is_player_cell_passable(cell: Vector2i, hostiles: Array, pickups: Array = []) -> bool:
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
 
-	for enemy in enemies:
-		if enemy == null or enemy.grid_state == null:
+	for hostile in hostiles:
+		if hostile == null or hostile.grid_state == null:
 			continue
-		if enemy.stats != null and enemy.stats.is_dead():
+		if hostile.stats != null and hostile.stats.is_dead():
 			continue
-		if enemy.grid_state.cell == cell or enemy.grid_state.previous_cell == cell:
+		if hostile.grid_state.cell == cell or hostile.grid_state.previous_cell == cell:
 			return false
 
 	for pickup in pickups:
@@ -42,12 +42,17 @@ func is_player_cell_passable(cell: Vector2i, enemies: Array, pickups: Array = []
 	return true
 
 
-func is_enemy_cell_passable(enemy, cell: Vector2i, enemies: Array, pickups: Array = []) -> bool:
+func is_hostile_cell_passable(
+		hostile,
+		cell: Vector2i,
+		hostiles: Array,
+		pickups: Array = [],
+) -> bool:
 	if _occupancy != null and not _occupancy.is_passable(cell):
 		return false
 
-	for other in enemies:
-		if other == null or other == enemy or other.grid_state == null:
+	for other in hostiles:
+		if other == null or other == hostile or other.grid_state == null:
 			continue
 		if other.stats != null and other.stats.is_dead():
 			continue

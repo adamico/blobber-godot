@@ -123,8 +123,8 @@ Dragon sprites (F5): `scale = Vector3(1.5, 1.5, 1.5)`.
 
 ## Scene Placement Notes
 
-- **Enemies** — inherited scenes from `scenes/enemies/enemy.tscn`. Replace `MeshInstance3D/CapsuleMesh` child with `Sprite3D`.
-- **Hazards** — inherited scenes from `scenes/hazards/hazard.tscn`. Same swap.
+- **Hostiles** — inherited scenes from `scenes/hostiles/hostile.tscn`. Replace `MeshInstance3D/CapsuleMesh` child with `Sprite3D`.
+- **Hazards** — inherited scenes from `scenes/hostiles/hazard.tscn`. Same swap.
 - **World props** (torches, statues) — `MeshInstance3D` with `QuadMesh` size `Vector2(0.8, 0.8)` + `StandardMaterial3D`, billboard on, placed at world cells in `scenes/world/main.tscn`.
 - **Floor textures** — one `StandardMaterial3D .tres` per floor in `resources/mesh_library/`, referenced by the floor's `GridMap` cell material.
 - **Exit markers** — add `Sprite3D` billboard child to the `WorldExit` node, swap texture per floor table above.

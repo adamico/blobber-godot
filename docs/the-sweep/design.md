@@ -24,28 +24,28 @@ Defeating something is only half the job. Real work starts when the broadcast en
 
 ### Movement & Interaction
 
-Turn-based first-person grid. One action per turn, shared with enemies. Manual item and debris pickup — nothing is collected automatically. Items can be dropped freely but dropping restarts the revert timer on debris.
+Turn-based first-person grid. One action per turn, shared with hostiles. Manual item and debris pickup — nothing is collected automatically. Items can be dropped freely but dropping restarts the revert timer on debris.
 
 ### Property Tags
 
-Three counter pairs. Enemy tags describe threat behavior. Tool tags describe counter capability. `inert` bridges both as the universal post-combat debris state.
+Three counter pairs. Hostile tags describe threat behavior. Tool tags describe counter capability. `inert` bridges both as the universal post-combat debris state.
 
 | Tag | Appears on | Counters | Countered by |
 |---|---|---|---|
-| `burning` | enemies, hazards | — | `soaked` tools |
-| `soaked` | tools only | `burning` enemies | — |
-| `corrosive` | enemies, hazards | — | `inert` tools |
-| `inert` | tools, all debris | `corrosive` enemies | — |
-| `cursed` | enemies, hazards | — | `cleansed` tools |
-| `cleansed` | tools only | `cursed` enemies | — |
+| `burning` | hostiles, hazards | — | `soaked` tools |
+| `soaked` | tools only | `burning` hostiles | — |
+| `corrosive` | hostiles, hazards | — | `inert` tools |
+| `inert` | tools, all debris | `corrosive` hostiles | — |
+| `cursed` | hostiles, hazards | — | `cleansed` tools |
+| `cleansed` | tools only | `cursed` hostiles | — |
 
-Post-combat, every neutralized enemy becomes `inert` debris regardless of which tag pair resolved the fight.
+Post-combat, every neutralized hostile becomes `inert` debris regardless of which tag pair resolved the fight.
 
 ### Combat
 
-Face an enemy, select a tool from inventory, resolve damage. Matching a tool's tag to the enemy's weakness deals bonus damage. Enemy retaliates on their turn. Neutralized enemies become `inert` debris on their tile.
+Face a hostile, select a tool from inventory, resolve damage. Matching a tool's tag to the hostile's weakness deals bonus damage. Hostiles retaliate on their turn. Neutralized hostiles become `inert` debris on their tile.
 
-`inert` debris can be used as a weapon against `corrosive` enemies in a pinch — it resolves the threat but the debris is consumed without contributing to clean%. A small professional penalty.
+`inert` debris can be used as a weapon against `corrosive` hostiles in a pinch — it resolves the threat but the debris is consumed without contributing to clean%. A small professional penalty.
 
 ### Debris & Revert System
 
@@ -138,16 +138,16 @@ Letter grade per floor based on clean% at exit.
 
 **Known AI Limitations (Milestone 5 Polish):**
 
-- **Patrol loops & walls:** Patrol enemies currently do not flip direction if they hit a wall before their step counter resets. They will lose turns until the step counter reaches the limit.
+- **Patrol loops & walls:** Patrol hostiles currently do not flip direction if they hit a wall before their step counter resets. They will lose turns until the step counter reaches the limit.
 
-Five hand-crafted floors, each introducing one new element. Topology drawn from five room shapes: corridor, open room, T-junction, loop, dead end. Each floor combines two shapes. Enemy placement considers chute distance — enemies near chutes are easier to clean, enemies in dead ends create the hardest debris routing challenges.
+Five hand-crafted floors, each introducing one new element. Topology drawn from five room shapes: corridor, open room, T-junction, loop, dead end. Each floor combines two shapes. Hostile placement considers chute distance — hostiles near chutes are easier to clean, hostiles in dead ends create the hardest debris routing challenges.
 
-| Floor | New element | Topology | Enemy count |
+| Floor | New element | Topology | Hostile count |
 |---|---|---|---|
 | 1 | Combat basics, manual pickup, inventory | Corridor | 2–3 |
 | 2 | Disposal chute, clean%, job rating | Open room | 3–4 |
 | 3 | Revert timer, debris blocking | T-junction | 4–5 |
-| 4 | `corrosive` + `cursed` enemies | Loop | 5–6 |
+| 4 | `corrosive` + `cursed` hostiles | Loop | 5–6 |
 | 5 | Full system, supply closet stakes | Two connected shapes | 7–8 |
 
 ---
@@ -163,8 +163,8 @@ Interstitial scene between floors. No grid navigation. Job rating determines wha
 | # | Phase | Goal |
 |---|---|---|
 | 1 | Foundations | Engine stable: grid movement, 3-slot inventory, raycast interaction, pickup/drop, basic UI |
-| 2 | Action & Combat | Combat action menu, damage resolution, RPS weakness definitions, enemy turn execution. |
-| 3 | AI & Ecology | Enemy movement patterns, adjacency damage, patrol loops, **revert timers**. |
+| 2 | Action & Combat | Combat action menu, damage resolution, RPS weakness definitions, hostile turn execution. |
+| 3 | AI & Ecology | Hostile movement patterns, adjacency damage, patrol loops, **revert timers**. |
 | 4 | Disposal & Progression | **Debris routing, inert state floor blocking, disposal chutes**, Clean% tracker, Job Rating. |
 | 5 | Authoring I | Art pass, hand-crafting floors 1–3, tuning encounters. |
 | 6 | Authoring II | Hand-crafting floors 4–5, final boss mess distribution, **supply closet**, win screen. |

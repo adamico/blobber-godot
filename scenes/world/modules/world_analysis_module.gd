@@ -5,7 +5,7 @@ signal analysis_target_changed(target: Dictionary)
 signal analysis_result_ready(result: Dictionary)
 signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
 
-const HOSTILE_GROUP := &"grid_enemies"
+const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
 
 const ANALYSIS_CHUTE_KEY := &"chute:disposal"
