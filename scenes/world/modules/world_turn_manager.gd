@@ -13,6 +13,14 @@ signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_
 
 const HOSTILE_GROUP := &"grid_hostiles"
 const DISPOSAL_CHUTE_GROUP := &"disposal_chutes"
+const WORLD_PICKUPS_GROUP := &"world_pickups"
+const WORLD_EXIT_GROUP := &"world_exit_cells"
+const DISTANCE_TINT_MAX_CELLS := 2
+const DISTANCE_TINT_BASE_MATERIAL_KEY := "distance_tint_base_material"
+const DISTANCE_TINT_BLACK_MATERIAL_KEY := "distance_tint_black_material"
+const DISTANCE_TINT_BLACK_SHADER := preload(
+	"res://resources/shaders/distance_black_sprite.gdshader"
+)
 const WORLD_PICKUP_SCENE := preload("res://scenes/world/world_pickup.tscn")
 const DEBRIS_ITEM := preload("res://resources/items/debris_base.tres")
 const AnalysisKnowledgeStateModel = preload("res://models/analysis_knowledge_state.gd")
@@ -43,12 +51,14 @@ func configure(
 	_grid_module = grid_module
 	_world_root = world_root
 	_ensure_analysis_module()
+	_refresh_distance_tinted_sprites()
 
 
 func initialize_floor() -> void:
 	_disposed_cleanup_value = 0
 	_total_cleanup_value = _count_cleanup_value()
 	_connect_hostile_signals()
+	_refresh_distance_tinted_sprites()
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 
 
@@ -198,6 +208,7 @@ func _advance_turn() -> void:
 	_tick_hostiles()
 	_tick_debris_revert()
 	_check_contact_damage_from_enemies()
+	_refresh_distance_tinted_sprites()
 	_post_turn_checks()
 	turn_completed.emit()
 
@@ -560,6 +571,111 @@ func _on_analysis_knowledge_updated(
 		unlock_flag: StringName,
 ) -> void:
 	analysis_knowledge_updated.emit(key, snapshot, unlock_flag)
+
+
+func _refresh_distance_tinted_sprites() -> void:
+	if _world_root == null or _player == null or _player.grid_state == null:
+		return
+
+	_refresh_group_distance_tint(HOSTILE_GROUP)
+	_refresh_group_distance_tint(WORLD_PICKUPS_GROUP)
+	_refresh_group_distance_tint(DISPOSAL_CHUTE_GROUP)
+	_refresh_group_distance_tint(WORLD_EXIT_GROUP)
+
+
+func _refresh_group_distance_tint(group_name: StringName) -> void:
+	for node in _world_root.get_tree().get_nodes_in_group(group_name):
+		if node == null or not is_instance_valid(node):
+			continue
+		_refresh_node_distance_tint(node)
+
+
+func _refresh_node_distance_tint(node) -> void:
+	var sprite := _find_primary_sprite(node)
+	if sprite == null:
+		return
+
+	if not sprite.has_meta(DISTANCE_TINT_BASE_MATERIAL_KEY):
+		sprite.set_meta(DISTANCE_TINT_BASE_MATERIAL_KEY, sprite.material_override)
+
+	var cell: Variant = _entity_cell(node)
+	if not (cell is Vector2i):
+		_restore_sprite_base_material(sprite)
+		return
+
+	var distance := _manhattan_distance_to_player(cell)
+	if distance > DISTANCE_TINT_MAX_CELLS:
+		_apply_sprite_black_material(sprite)
+		return
+
+	_restore_sprite_base_material(sprite)
+
+
+func _apply_sprite_black_material(sprite: Sprite3D) -> void:
+	var black_material: Variant = null
+	if sprite.has_meta(DISTANCE_TINT_BLACK_MATERIAL_KEY):
+		black_material = sprite.get_meta(DISTANCE_TINT_BLACK_MATERIAL_KEY)
+	if black_material == null:
+		var mat := ShaderMaterial.new()
+		mat.shader = DISTANCE_TINT_BLACK_SHADER
+		var tex := _sprite_texture_for_distance_tint(sprite)
+		if tex != null:
+			mat.set_shader_parameter("sprite_texture", tex)
+		black_material = mat
+		sprite.set_meta(DISTANCE_TINT_BLACK_MATERIAL_KEY, black_material)
+
+	sprite.material_override = black_material as Material
+
+
+func _restore_sprite_base_material(sprite: Sprite3D) -> void:
+	var base_material: Variant = null
+	if sprite.has_meta(DISTANCE_TINT_BASE_MATERIAL_KEY):
+		base_material = sprite.get_meta(DISTANCE_TINT_BASE_MATERIAL_KEY)
+	if base_material is Material:
+		sprite.material_override = base_material as Material
+		return
+	sprite.material_override = null
+
+
+func _sprite_texture_for_distance_tint(sprite: Sprite3D) -> Texture2D:
+	if sprite.texture != null:
+		return sprite.texture
+	if sprite.material_override is ShaderMaterial:
+		var shader_material := sprite.material_override as ShaderMaterial
+		var tex: Variant = shader_material.get_shader_parameter("sprite_texture")
+		if tex is Texture2D:
+			return tex as Texture2D
+	return null
+
+
+func _find_primary_sprite(node) -> Sprite3D:
+	if node is Sprite3D:
+		return node as Sprite3D
+	if node is Node:
+		var direct := (node as Node).get_node_or_null("Sprite3D") as Sprite3D
+		if direct != null:
+			return direct
+		for child in (node as Node).get_children():
+			if child is Sprite3D:
+				return child as Sprite3D
+	return null
+
+
+func _entity_cell(node) -> Variant:
+	if node == null:
+		return null
+	if "grid_state" in node and node.grid_state != null and "cell" in node.grid_state:
+		return node.grid_state.cell
+	if "grid_cell" in node:
+		return node.grid_cell
+	return null
+
+
+func _manhattan_distance_to_player(cell: Vector2i) -> int:
+	if _player == null or _player.grid_state == null:
+		return 0
+	var delta := cell - _player.grid_state.cell
+	return absi(delta.x) + absi(delta.y)
 
 
 func _is_hostile_node(node) -> bool:

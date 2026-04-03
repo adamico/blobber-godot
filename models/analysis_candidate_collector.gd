@@ -12,6 +12,7 @@ const ANALYSIS_KIND_DEFINITION_PATHS := [
 
 const HOVER_RAY_HIT_RADIUS := 0.45
 const MAX_ANALYSIS_DISTANCE_CELLS := 2
+const ANALYSIS_DISTANCE_METRIC := "chebyshev"
 const DEFAULT_HOVER_HEIGHT_SAMPLES: Array[float] = [0.1, 0.3, 0.5]
 const DEFAULT_INDICATOR_HEIGHT := 0.5
 const DEFAULT_INDICATOR_SIZE := Vector2(0.35, 0.35)
@@ -21,8 +22,8 @@ const DEFAULT_INDICATOR_DEPTH_RATIO := 1.5
 var _player: Player
 var _world_root: Node
 var _kind_definitions: Array[AnalysisCandidateKindDefinition] = []
-var _kind_definitions_by_kind: Dictionary = {}
-var _resource_cache: Dictionary = {}
+var _kind_definitions_by_kind: Dictionary = { }
+var _resource_cache: Dictionary = { }
 
 
 func configure(player: Player, world_root: Node) -> void:
@@ -121,7 +122,7 @@ func build_pickup_target_data_from_item(item: ItemData):
 	_ensure_kind_definitions_loaded()
 	var def := _kind_definitions_by_kind.get("pickup", null) as AnalysisCandidateKindDefinition
 	if def == null:
-		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({ })
 	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(
 		_build_candidate_from_kind(def, null, Vector2i.ZERO, item),
 	)
@@ -131,7 +132,7 @@ func build_chute_target_data(chute = null):
 	_ensure_kind_definitions_loaded()
 	var def := _kind_definitions_by_kind.get("chute", null) as AnalysisCandidateKindDefinition
 	if def == null:
-		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({ })
 	var cell: Vector2i = Vector2i.ZERO if chute == null else chute.grid_cell
 	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(_build_candidate_from_kind(def, chute, cell))
 
@@ -140,10 +141,10 @@ func build_exit_target_data(exit_node: WorldExit = null):
 	_ensure_kind_definitions_loaded()
 	var def := _kind_definitions_by_kind.get("exit", null) as AnalysisCandidateKindDefinition
 	if def == null:
-		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({})
+		return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict({ })
 	var cell := Vector2i.ZERO if exit_node == null else exit_node.grid_cell
 	return load(ANALYSIS_TARGET_DATA_SCRIPT).from_dict(
-		_build_candidate_from_kind(def, exit_node, cell)
+		_build_candidate_from_kind(def, exit_node, cell),
 	)
 
 
@@ -483,6 +484,21 @@ func _manhattan_to_player(cell: Vector2i) -> int:
 	return absi(delta.x) + absi(delta.y)
 
 
+func _analysis_distance_to_player(cell: Vector2i) -> float:
+	if _player == null or _player.grid_state == null:
+		return 0.0
+	var delta := cell - _player.grid_state.cell
+	var dx := absf(float(delta.x))
+	var dy := absf(float(delta.y))
+	match ANALYSIS_DISTANCE_METRIC:
+		"manhattan":
+			return dx + dy
+		"euclidean":
+			return sqrt((dx * dx) + (dy * dy))
+		_:
+			return maxf(dx, dy)
+
+
 func _facing_score(cell: Vector2i) -> int:
 	if _player == null or _player.grid_state == null:
 		return 1
@@ -512,7 +528,7 @@ func _is_node_visible_for_analysis(node: Node, cell: Vector2i) -> bool:
 	if (
 		_player != null
 		and _player.grid_state != null
-		and _manhattan_to_player(cell) > MAX_ANALYSIS_DISTANCE_CELLS
+		and _analysis_distance_to_player(cell) > float(MAX_ANALYSIS_DISTANCE_CELLS)
 	):
 		return false
 	if node is Node3D and not (node as Node3D).is_visible_in_tree():
