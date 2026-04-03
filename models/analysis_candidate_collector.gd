@@ -11,6 +11,7 @@ const ANALYSIS_KIND_DEFINITION_PATHS := [
 ]
 
 const HOVER_RAY_HIT_RADIUS := 0.45
+const MAX_ANALYSIS_DISTANCE_CELLS := 2
 const DEFAULT_HOVER_HEIGHT_SAMPLES: Array[float] = [0.1, 0.3, 0.5]
 const DEFAULT_INDICATOR_HEIGHT := 0.5
 const DEFAULT_INDICATOR_SIZE := Vector2(0.35, 0.35)
@@ -507,6 +508,12 @@ func first_non_empty_line(text: String) -> String:
 
 func _is_node_visible_for_analysis(node: Node, cell: Vector2i) -> bool:
 	if node == null or not is_instance_valid(node):
+		return false
+	if (
+		_player != null
+		and _player.grid_state != null
+		and _manhattan_to_player(cell) > MAX_ANALYSIS_DISTANCE_CELLS
+	):
 		return false
 	if node is Node3D and not (node as Node3D).is_visible_in_tree():
 		return false
