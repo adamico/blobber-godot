@@ -47,7 +47,7 @@ Five milestones. M1 is a strict prerequisite for everything else. M4 model work 
 
 **Delivered:**
 - `ItemData` (`res://models/item_data.gd`) — `item_name`, `description`, `stat_effect: Dictionary`, `item_type` enum (`CONSUMABLE`, `EQUIPMENT`, `QUEST`)
-- `WorldPickup` (`res://components/world_pickup.gd`) — grid-cell positioned, `collect_if_player_on_cell`, auto `queue_free` on collect
+- `WorldPickup` (`res://scenes/world/world_pickup.gd`) — grid-cell positioned, `collect_if_player_on_cell`, auto `queue_free` on collect
 - `Inventory` (`res://models/inventory.gd`) — `add_item`, `remove_item`, `use_item` (applies `stat_effect` to `CharacterStats`), `item_added/removed/used` signals
 - `Player` — `add_item`, `remove_item`, `use_item` delegates to `Inventory`
 - `inventory_overlay.tscn` / `inventory_overlay.gd` — real item list UI with Use button, HP display, `open_inventory` action wired

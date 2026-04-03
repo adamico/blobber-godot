@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://iw6dqags3f3v"]
 
-[ext_resource type="Script" uid="uid://c8u5rftbyaq1a" path="res://components/disposal_chute.gd" id="1_chute"]
+[ext_resource type="Script" uid="uid://c8u5rftbyaq1a" path="res://scenes/world/disposal_chute.gd" id="1_chute"]
 [ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_heagb"]
 [ext_resource type="Texture2D" uid="uid://bw27ygkj60i5j" path="res://assets/dungeon/traps/gas_trap.png" id="3_heagb"]
 

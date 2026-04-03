@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c61j6iww5da2a"]
 
-[ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://components/world_pickup.gd" id="1_pickup_script"]
+[ext_resource type="Script" uid="uid://dns2f6u0brbej" path="res://scenes/world/world_pickup.gd" id="1_pickup_script"]
 [ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_outline_shader"]
 [ext_resource type="Texture2D" uid="uid://dxwt5c8r2p6ul" path="res://icon.svg" id="3_pickup_texture"]
 

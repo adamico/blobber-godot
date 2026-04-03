@@ -8,7 +8,7 @@
 extends GutTest
 
 const JobRatingModel = preload("res://models/job_rating.gd")
-const WorldPickupScene = preload("res://components/world_pickup.gd")
+const WorldPickupScene = preload("res://scenes/world/world_pickup.gd")
 const BurningHostileDefinition = preload("res://resources/hostiles/burning_hazard.tres")
 const WorldTurnManagerScript = preload("res://scenes/world/modules/world_turn_manager.gd")
 const PlayerScene = preload("res://scenes/player/player.tscn")

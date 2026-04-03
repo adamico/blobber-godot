@@ -5,7 +5,7 @@ extends GutTest
 const BurningHostile = preload("res://resources/hostiles/burning_hazard.tres")
 const CorrosiveHostile = preload("res://resources/hostiles/corrosive_hazard.tres")
 const CursedHostile = preload("res://resources/hostiles/cursed_hazard.tres")
-const WorldPickupScript = preload("res://components/world_pickup.gd")
+const WorldPickupScript = preload("res://scenes/world/world_pickup.gd")
 const WorldTurnManagerScript = preload("res://scenes/world/modules/world_turn_manager.gd")
 const WorldEncounterModuleScript = preload("res://scenes/world/modules/world_encounter_module.gd")
 const WorldMainScript = preload("res://scenes/world/main.gd")
