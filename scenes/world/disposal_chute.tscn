@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c8u5rftbyaq1a" path="res://scenes/world/disposal_chute.gd" id="1_chute"]
 [ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_heagb"]
-[ext_resource type="Texture2D" uid="uid://bw27ygkj60i5j" path="res://assets/dungeon/traps/gas_trap.png" id="3_heagb"]
+[ext_resource type="Texture2D" uid="uid://c554133k4p8ct" path="res://assets/gas_trap.png" id="3_heagb"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_chute"]
 size = Vector3(0.6, 0.2, 0.6)
