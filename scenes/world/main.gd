@@ -309,10 +309,12 @@ func _author_floor_1() -> void:
 
 	valid_cells.shuffle()
 
-	if valid_cells.size() >= 7:
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), mop_item)
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), holy_symbol_item)
-		_turn_manager.spawn_pickup(valid_cells.pop_back(), flask_item)
+	if valid_cells.size() >= 8:
+		# Tools are distributed via chests instead of loose floor pickups.
+		_spawn_chest(valid_cells.pop_back(), mop_item)
+		_spawn_chest(valid_cells.pop_back(), holy_symbol_item)
+		_spawn_chest(valid_cells.pop_back(), flask_item)
+		_spawn_chest(valid_cells.pop_back(), ward_item)
 
 		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_BURNING)
 		_spawn_hostile_by_id(valid_cells.pop_back(), HOSTILE_ID_CURSED)

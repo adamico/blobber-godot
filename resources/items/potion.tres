@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="ItemData" format=3 uid="uid://cbshjds4a3ref"]
 
+[ext_resource type="Texture2D" uid="uid://dawk8s7iobflm" path="res://assets/ruby_new.png" id="1_36hb1"]
 [ext_resource type="Script" uid="uid://c7625qae0re6d" path="res://models/item_data.gd" id="1_mxxb9"]
 
 [resource]
@@ -7,6 +8,7 @@ script = ExtResource("1_mxxb9")
 item_name = "Potion"
 description = "Veridian Restorative Fluid. Restores HP on use."
 item_type = 0
+pickup_texture = ExtResource("1_36hb1")
 use_range = 0
 is_reusable = false
 stat_effect = {

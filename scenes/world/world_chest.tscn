@@ -1,19 +1,34 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://3pqh2xilin1"]
 
-[ext_resource type="Script" path="res://scenes/world/world_chest.gd" id="1_chest_script"]
-[ext_resource type="Texture2D" path="res://icon.svg" id="2_chest_texture"]
+[ext_resource type="Script" uid="uid://j8mpt8o851a6" path="res://scenes/world/world_chest.gd" id="1_chest_script"]
+[ext_resource type="Texture2D" uid="uid://bkdevx02pt834" path="res://assets/chest.png" id="2_7vn4w"]
+[ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="2_outline_shader"]
 
-[node name="WorldChest" type="Node3D"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_outline"]
+render_priority = 0
+shader = ExtResource("2_outline_shader")
+shader_parameter/sprite_texture = ExtResource("2_7vn4w")
+shader_parameter/line_color = Color(0.6509804, 1, 0.5882353, 1)
+shader_parameter/glowSize = 0.0
+shader_parameter/glowDensity = 1
+shader_parameter/glowRadialCoverage = 5
+shader_parameter/glowAngle = 1.57
+shader_parameter/glowSharpness = 1.0
+shader_parameter/alphaThreshold = 0.218
+
+[node name="WorldChest" type="Node3D" unique_id=1707108150]
 script = ExtResource("1_chest_script")
 
-[node name="Sprite3D" type="Sprite3D" parent="."]
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1354660353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+material_override = SubResource("ShaderMaterial_outline")
 billboard = 2
 texture_filter = 0
-texture = ExtResource("2_chest_texture")
+texture = ExtResource("2_7vn4w")
 
-[node name="StateLabel" type="Label3D" parent="."]
+[node name="StateLabel" type="Label3D" parent="." unique_id=615475016]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-billboard = 1
+visible = false
 pixel_size = 0.003
+billboard = 1
 text = "Chest"
