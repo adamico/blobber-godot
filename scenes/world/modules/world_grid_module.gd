@@ -8,12 +8,6 @@ func build_occupancy(grid_map: GridMap, wall_layer: int, auto_align: bool) -> vo
 	if auto_align:
 		_align_gridmap_to_player_grid(grid_map)
 	_occupancy = GridOccupancyMap.from_grid_map(grid_map, wall_layer)
-	print(
-		"[Occupancy] layer=%d wired %d blocked cells" % [
-			wall_layer,
-			_occupancy.get_blocked_count(),
-		],
-	)
 
 
 func occupancy() -> GridOccupancyMap:

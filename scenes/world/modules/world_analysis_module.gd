@@ -1,6 +1,9 @@
 class_name WorldAnalysisModule
 extends Node
 
+#TODO: Refactor to separate concerns:
+# candidate collection, knowledge tracking, indicator management, etc.
+
 signal analysis_target_changed(target: Dictionary)
 signal analysis_result_ready(result: Dictionary)
 signal analysis_knowledge_updated(key: StringName, snapshot: Dictionary, unlock_flag: StringName)
@@ -147,18 +150,15 @@ func hover_target(mouse_position: Vector2, camera: Camera3D) -> bool:
 
 	_refresh_analysis_candidates()
 	if _analysis_candidates.is_empty():
-		_debug_hover("no candidates; clearing hover selection")
 		_deselect_hover_target()
 		return false
 
 	var ray_pick := _pick_hover_candidate_by_ray(mouse_position, camera)
 	if ray_pick.is_empty():
-		_debug_hover("no hover target near ray")
 		_deselect_hover_target()
 		return false
 
 	var best_index := int(ray_pick.get("index", -1))
-	var best_distance := float(ray_pick.get("distance", INF))
 
 	if best_index < 0:
 		_deselect_hover_target()
@@ -169,13 +169,6 @@ func hover_target(mouse_position: Vector2, camera: Camera3D) -> bool:
 		return false
 
 	_analysis_selected_index = best_index
-	_debug_hover(
-		"hover selected key=%s ray_distance=%.3f index=%d" % [
-			String(best_key),
-			best_distance,
-			best_index,
-		],
-	)
 	_emit_selected_analysis_target("hover")
 	return true
 
@@ -183,7 +176,6 @@ func hover_target(mouse_position: Vector2, camera: Camera3D) -> bool:
 func _deselect_hover_target() -> void:
 	if _analysis_selected_index < 0 and _analysis_selected_key == StringName():
 		return
-	_debug_hover("hover deselected")
 	_analysis_selected_index = -1
 	_analysis_selected_key = StringName()
 	_hide_target_indicator()
@@ -246,12 +238,6 @@ func _refresh_analysis_candidates() -> void:
 	# Keep hover/cycle/analyze behavior explicit: do not auto-select index 0 during refresh.
 	_analysis_selected_index = -1
 	_analysis_selected_key = StringName()
-
-
-func _debug_hover(message: String) -> void:
-	if not DEBUG_HOVER_SELECTION:
-		return
-	print("[AnalysisHover] %s" % [message])
 
 
 func _collect_analysis_candidates() -> Array[Dictionary]:
