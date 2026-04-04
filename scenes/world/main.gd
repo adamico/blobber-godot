@@ -73,6 +73,7 @@ var _context_orchestrator: WorldContextOrchestrator
 var _turn_manager: WorldTurnManager
 var _dialog_module: Node
 var _audio_orchestrator: Node
+var _belt_hud: Control
 var _hostile_definitions_by_id: Dictionary = { }
 var _controls_ready_emitted := false
 
@@ -429,6 +430,7 @@ func _configure_huds() -> void:
 		belt_hud.configure(_player, _turn_manager)
 	if belt_hud != null and belt_hud.has_signal("slot_clicked"):
 		belt_hud.slot_clicked.connect(_on_belt_slot_clicked)
+	_belt_hud = belt_hud
 
 	var clean_hud := hud.get_node_or_null("CleanHUD")
 	if clean_hud != null and clean_hud.has_method("configure"):
@@ -713,6 +715,10 @@ func _input(event: InputEvent) -> void:
 		if mouse_event.button_index != MOUSE_BUTTON_LEFT:
 			return
 		if not mouse_event.pressed:
+			return
+
+		# Ignore clicks inside the belt HUD — those are slot use/drop actions.
+		if _belt_hud != null and _belt_hud.get_global_rect().has_point(mouse_event.position):
 			return
 
 		# Ensure the click location becomes the active target before analysis.
