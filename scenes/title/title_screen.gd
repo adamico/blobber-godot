@@ -14,6 +14,7 @@ var _ui_sfx_player: AudioStreamPlayer
 
 
 func _ready() -> void:
+	var scene_init_started_at := Time.get_ticks_msec()
 	if _start_button != null:
 		_start_button.pressed.connect(_on_start_pressed)
 		_start_button.call_deferred("grab_focus")
@@ -22,11 +23,22 @@ func _ready() -> void:
 
 	_play_menu_music()
 	_ensure_ui_sfx_player()
+	_log_scene_init_time(scene_init_started_at)
 
 
 func _exit_tree() -> void:
 	if _music_player != null:
 		_music_player.stop()
+
+
+func _log_scene_init_time(started_at_ms: int) -> void:
+	var elapsed_ms := Time.get_ticks_msec() - started_at_ms
+	var boot_node := get_node_or_null("/root/GameBoot")
+	var total_ms := 0
+	if boot_node != null and boot_node.has_method("get_start_time"):
+		total_ms = boot_node.call("get_start_time")
+	var log_msg := "[BootSequence] title_screen._ready() | ticks_ms=%d | method_ms=%d"
+	print(log_msg % [total_ms, elapsed_ms])
 
 
 func _unhandled_input(event: InputEvent) -> void:
