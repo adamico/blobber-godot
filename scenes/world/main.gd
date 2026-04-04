@@ -19,7 +19,7 @@ signal controls_ready
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
 @export var player_scene: PackedScene
-@export var authored_floor_scene: PackedScene
+@export var floor_scenes: Array[PackedScene] = []
 @export var mop_item: ItemData
 @export var holy_symbol_item: ItemData
 @export var flask_item: ItemData
@@ -42,7 +42,6 @@ var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.t
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 @export_group("Dialog")
 @export var floor_number := 1
-@export var max_floor_number := 1
 @export_group("Audio")
 @export var audio_wiring_profile: AudioWiringProfile
 @export_group("VFX")
@@ -98,6 +97,11 @@ var _controls_ready_emitted := false
 func _ready() -> void:
 	var scene_init_started_at := Time.get_ticks_msec()
 	_log_timing("Instantiation", "_ready() start", 0)
+
+	# Check if GameBoot has a persisted floor number
+	var game_boot := get_node_or_null("/root/GameBoot")
+	if game_boot != null and "current_floor_number" in game_boot:
+		floor_number = game_boot.current_floor_number
 
 	var phase_marker := Time.get_ticks_msec()
 	_context_orchestrator = get_node_or_null(NODE_CONTEXT_ORCHESTRATOR) as WorldContextOrchestrator
@@ -253,6 +257,21 @@ func finish_with_failure() -> void:
 
 func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
+	if floor_number < floor_scenes.size():
+		floor_number += 1
+		# Persist floor number in GameBoot for next scene reload
+		var game_boot := get_node_or_null("/root/GameBoot")
+		if game_boot != null:
+			game_boot.current_floor_number = floor_number
+		if _player != null:
+			_player.input_actions_enabled = false
+		var tree := get_tree()
+		if tree == null:
+			return
+		if tree.current_scene == self:
+			tree.reload_current_scene.call_deferred()
+		return
+
 	var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
 	if _dialog_module != null:
 		if _dialog_module.present_success_then(pct, Callable(self, "_open_victory_overlay")):
@@ -310,7 +329,7 @@ func _wire_dialog_module() -> void:
 
 	_dialog_module.configure(_overlay_module, _turn_manager, _encounter_module, _player, self)
 	_dialog_module.present_intro_then(Callable())
-	_dialog_module.begin_floor(floor_number, max_floor_number)
+	_dialog_module.begin_floor(floor_number, floor_scenes.size())
 	_log_task_timing("_wire_dialog_module", Time.get_ticks_msec() - task_started)
 
 
@@ -566,7 +585,17 @@ func _author_floor_1() -> void:
 
 func _mount_authored_floor_grid() -> void:
 	_authored_floor_layout.clear()
-	if authored_floor_scene == null:
+	if floor_scenes.is_empty():
+		push_warning("No floor scenes configured.")
+		return
+
+	if floor_number < 1 or floor_number > floor_scenes.size():
+		push_error("Floor number %d out of range [1, %d]." % [floor_number, floor_scenes.size()])
+		return
+
+	var floor_scene = floor_scenes[floor_number - 1]
+	if floor_scene == null:
+		push_warning("Floor %d scene is not assigned." % floor_number)
 		return
 
 	var loader = WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.new()
@@ -574,7 +603,7 @@ func _mount_authored_floor_grid() -> void:
 		push_error("Failed to create authored floor loader.")
 		return
 
-	var layout: Dictionary = loader.load_into_world(self, authored_floor_scene)
+	var layout: Dictionary = loader.load_into_world(self, floor_scene)
 	_report_authored_floor_messages(layout)
 	if not bool(layout.get("ok", false)):
 		return

@@ -6,7 +6,7 @@ const STORAGE_PATH := "user://dialog_seen.cfg"
 const STORAGE_SECTION := "seen"
 const LOW_HP_RATIO := 0.3
 ## TODO: Move this to settings menu as a "Reset Progress" action.
-const ENABLE_SEEN_STATE_PERSISTENCE := false
+const ENABLE_SEEN_STATE_PERSISTENCE := true
 
 var _phrases: Dictionary = {
 	"intro.job_briefing": {
@@ -19,7 +19,7 @@ var _phrases: Dictionary = {
 			+ "Protective equipment has been provided. Results are expected.\n\n"
 			+ "Good luck. You will need it."
 		),
-		"once": false,
+		"once": true,
 	},
 	"onboarding.first_pickup": {
 		"title": "Intake Notice",
@@ -648,6 +648,13 @@ func _save_seen_state() -> void:
 	if not ENABLE_SEEN_STATE_PERSISTENCE:
 		return
 	var config := ConfigFile.new()
+	# Load existing state first to preserve previously seen messages
+	if config.load(STORAGE_PATH) == OK:
+		var existing_keys := config.get_section_keys(STORAGE_SECTION)
+		for key in existing_keys:
+			if not _seen.has(key):
+				_seen[String(key)] = bool(config.get_value(STORAGE_SECTION, key, false))
+	# Now save all seen messages
 	for key in _seen.keys():
 		config.set_value(STORAGE_SECTION, key, bool(_seen[key]))
 	config.save(STORAGE_PATH)
@@ -664,3 +671,13 @@ func _mark_seen(key: String) -> void:
 		return
 	_seen[key] = true
 	_save_seen_state()
+
+
+func clear_all_seen_state() -> void:
+	_seen.clear()
+	if STORAGE_PATH.is_empty():
+		return
+	var file := FileAccess.open(STORAGE_PATH, FileAccess.WRITE)
+	if file == null:
+		return
+	file.store_string("")

@@ -4,6 +4,7 @@ extends Node
 @export var enable_timing_logs := false
 
 var _game_start_time := 0
+var current_floor_number := 1
 
 
 func _notification(what: int) -> void:
@@ -19,10 +20,24 @@ func _ready() -> void:
 	var elapsed := Time.get_ticks_msec() - _game_start_time
 	if enable_timing_logs:
 		print("[BootSequence] GameBoot._ready() | ticks_ms=%d" % [elapsed])
+	
+	# Clear dialog persistence on fresh boot
+	_clear_dialog_persistence()
+	
 	_prime_gameplay_scene()
 	elapsed = Time.get_ticks_msec() - _game_start_time
 	if enable_timing_logs:
 		print("[BootSequence] GameBoot prime_requested | ticks_ms=%d" % [elapsed])
+
+
+func _clear_dialog_persistence() -> void:
+	var file_path := "user://dialog_seen.cfg"
+	var dir := DirAccess.open("user://")
+	if dir != null:
+		if dir.file_exists(file_path.get_file()):
+			var err := dir.remove(file_path.get_file())
+			if err != OK and enable_timing_logs:
+				print("[BootSequence] Failed to clear dialog persistence: error %d" % err)
 
 
 func _prime_gameplay_scene() -> void:
