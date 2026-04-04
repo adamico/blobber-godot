@@ -49,6 +49,15 @@ var _phrases: Dictionary = {
 		),
 		"once": true,
 	},
+	"onboarding.first_interact_space": {
+		"title": "Interaction Prompt",
+		"text": (
+			"See that object? You can interact with it.\n\n"
+			+ "Press SPACE to interact.\n"
+			+ "Use it to pick up items and open chests."
+		),
+		"once": true,
+	},
 	"onboarding.debris_revert_warning": {
 		"title": "Instability Warning",
 		"text": (
@@ -115,6 +124,7 @@ var _phrases: Dictionary = {
 		),
 		"once": false,
 	},
+	# Unused future function for meta progression
 	"onboarding.supply_closet": {
 		"title": "Supply Closet",
 		"text": (
@@ -143,6 +153,8 @@ var _phrases: Dictionary = {
 			+ "You move.\n"
 			+ "Things move.\n"
 			+ "Nobody moves at the same time.\n\n"
+			+ "Use WASD to move forward, back, left, and right.\n"
+			+ "Use Q and E to turn.\n\n"
 			+ "This is not a suggestion.\n"
 			+ "This is physics."
 		),
@@ -152,6 +164,7 @@ var _phrases: Dictionary = {
 		"title": "Instability Indicator",
 		"text": (
 			"Note the instability indicator.\n\n"
+			+ "Fresh debris blocks passage while it sits on the floor.\n\n"
 			+ "The remains are attempting to reconstitute.\n"
 			+ "This is normal.\n"
 			+ "This is also your problem."
@@ -180,6 +193,30 @@ var _phrases: Dictionary = {
 			+ "You knew that.\n\n"
 			+ "You did it anyway.\n"
 			+ "Professional assessment pending."
+		),
+		"once": true,
+	},
+	"onboarding.first_item_use": {
+		"title": "Tool Deployment",
+		"text": (
+			"You are now equipped with a tool.\n\n"
+			+ "Press 1, 2, or 3 (or left mouse click on the item in your inventory) "
+			+ "to deploy it.\n\n"
+			+ "Tools have specific effects.\n"
+			+ "Choose wisely.\n"
+			+ "Or don't. Results will vary."
+		),
+		"once": true,
+	},
+	"onboarding.first_item_drop": {
+		"title": "Inventory Management",
+		"text": (
+			"Your inventory space is limited.\n\n"
+			+ "To drop an item, hold SHIFT and press 1, 2, or 3.\n"
+			+ "(Or hold SHIFT and left mouse click on the item.)\n\n"
+			+ "Dropped items remain on the floor.\n"
+			+ "They will be here if you need them again.\n"
+			+ "Probably."
 		),
 		"once": true,
 	},
@@ -292,6 +329,9 @@ var _seen: Dictionary = { }
 
 var _floor_number := 1
 var _max_floor_number := 1
+var _shown_first_item_use := false
+var _shown_first_item_drop := false
+var _shown_first_interact_space := false
 
 
 func configure(
@@ -381,6 +421,9 @@ func _connect_signals() -> void:
 			_turn_manager.turn_completed.connect(_on_turn_completed)
 		if not _turn_manager.debris_consumed_as_weapon.is_connected(_on_debris_weapon):
 			_turn_manager.debris_consumed_as_weapon.connect(_on_debris_weapon)
+		if _turn_manager.has_signal("item_dropped"):
+			if not _turn_manager.item_dropped.is_connected(_on_item_dropped):
+				_turn_manager.item_dropped.connect(_on_item_dropped)
 		if _turn_manager.has_signal("debris_reverted"):
 			if not _turn_manager.debris_reverted.is_connected(_on_debris_reverted):
 				_turn_manager.debris_reverted.connect(_on_debris_reverted)
@@ -395,6 +438,11 @@ func _connect_signals() -> void:
 				_on_hostile_spotted_first_time,
 			):
 				_turn_manager.hostile_spotted_first_time.connect(_on_hostile_spotted_first_time)
+		if _turn_manager.has_signal("chest_spotted_first_time"):
+			if not _turn_manager.chest_spotted_first_time.is_connected(
+				_on_chest_spotted_first_time,
+			):
+				_turn_manager.chest_spotted_first_time.connect(_on_chest_spotted_first_time)
 		if _turn_manager.has_signal("aoe_multi_hit"):
 			if not _turn_manager.aoe_multi_hit.is_connected(_on_aoe_multi_hit):
 				_turn_manager.aoe_multi_hit.connect(_on_aoe_multi_hit)
@@ -501,6 +549,17 @@ func _on_hostile_spotted_first_time(_hostile) -> void:
 	queue_phrase("onboarding.first_enemy")
 
 
+func _on_chest_spotted_first_time(_chest) -> void:
+	_queue_first_interact_space_prompt()
+
+
+func _queue_first_interact_space_prompt() -> void:
+	if _shown_first_interact_space:
+		return
+	_shown_first_interact_space = true
+	queue_phrase("onboarding.first_interact_space")
+
+
 func _on_action_feedback(text: String, _is_positive: bool) -> void:
 	if text == "INVENTORY FULL":
 		queue_phrase("onboarding.inventory_full")
@@ -544,6 +603,9 @@ func _on_item_added(item) -> void:
 		queue_phrase("onboarding.first_pickup")
 		if item_data.item_type == ItemData.ItemType.DEBRIS:
 			queue_phrase("onboarding.pickup_debris")
+		elif not _shown_first_item_use:
+			_shown_first_item_use = true
+			queue_phrase("onboarding.first_item_use")
 
 
 func _on_item_used(item) -> void:
@@ -576,6 +638,12 @@ func _on_debris_reverted(_cell: Vector2i, _hostile_definition_id: StringName) ->
 
 func _on_debris_dropped(_cell: Vector2i) -> void:
 	queue_phrase("onboarding.drop_debris")
+
+
+func _on_item_dropped(_cell: Vector2i) -> void:
+	if not _shown_first_item_drop:
+		_shown_first_item_drop = true
+		queue_phrase("onboarding.first_item_drop")
 
 
 func _on_hostile_hit(

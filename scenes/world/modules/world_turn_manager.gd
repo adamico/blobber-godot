@@ -26,6 +26,7 @@ signal hostile_hit(
 signal hostile_impacted(hostile: Hostile, cell: Vector2i)
 signal hostile_killed(cell: Vector2i, hostile_definition_id: StringName)
 signal hostile_spotted_first_time(hostile)
+signal chest_spotted_first_time(chest)
 signal aoe_multi_hit(item_name: String, hit_count: int)
 signal action_feedback(text: String, is_positive: bool)
 signal analysis_target_changed(target: Dictionary)
@@ -62,6 +63,7 @@ var _analysis_module: WorldAnalysisModule
 var _total_cleanup_value: int = 0
 var _disposed_cleanup_value: int = 0
 var _spotted_hostiles: Dictionary = { }
+var _spotted_chests: Dictionary = { }
 
 
 func configure(
@@ -82,6 +84,7 @@ func initialize_floor() -> void:
 	_disposed_cleanup_value = 0
 	_total_cleanup_value = _count_cleanup_value()
 	_spotted_hostiles.clear()
+	_spotted_chests.clear()
 	_connect_hostile_signals()
 	_refresh_distance_tinted_sprites()
 	if _encounter_module != null:
@@ -723,6 +726,7 @@ func _refresh_node_distance_tint(node) -> void:
 	var distance := _manhattan_distance_to_player(cell)
 	if distance <= DISTANCE_TINT_MAX_CELLS:
 		_emit_hostile_spotted_first_time(node)
+		_emit_chest_spotted_first_time(node)
 	if distance > DISTANCE_TINT_MAX_CELLS:
 		_apply_sprite_black_material(sprite)
 		return
@@ -740,6 +744,16 @@ func _emit_hostile_spotted_first_time(node) -> void:
 		return
 	_spotted_hostiles[id] = true
 	hostile_spotted_first_time.emit(node)
+
+
+func _emit_chest_spotted_first_time(node) -> void:
+	if not (node is WorldChest):
+		return
+	var id: int = node.get_instance_id()
+	if _spotted_chests.has(id):
+		return
+	_spotted_chests[id] = true
+	chest_spotted_first_time.emit(node)
 
 
 func _apply_sprite_black_material(sprite: Sprite3D) -> void:
