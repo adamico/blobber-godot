@@ -5,15 +5,18 @@ const OVERLAY_DIALOG := &"dialog_message"
 const STORAGE_PATH := "user://dialog_seen.cfg"
 const STORAGE_SECTION := "seen"
 const LOW_HP_RATIO := 0.3
+## TODO: Move this to settings menu as a "Reset Progress" action.
+const ENABLE_SEEN_STATE_PERSISTENCE := false
 
 var _phrases: Dictionary = {
 	"intro.job_briefing": {
 		"title": "Job Briefing",
 		"text": (
-			"SWEEP PROTOCOL INITIATED. The hero has vacated the premises. "
-			+ "Structural integrity: nominal. Biological hazards: significant. "
-			+ "You have been contracted to restore dungeon conditions to pre-incursion standards. "
-			+ "Protective equipment has been provided. Results are expected. "
+			"SWEEP PROTOCOL INITIATED. The hero has vacated the premises.\n\n"
+			+ "Structural integrity: nominal.\n"
+			+ "Biological debris: significant.\n\n"
+			+ "You have been contracted to restore dungeon conditions to pre-incursion standards.\n"
+			+ "Protective equipment has been provided. Results are expected.\n\n"
 			+ "Good luck. You will need it."
 		),
 		"once": false,
@@ -21,75 +24,83 @@ var _phrases: Dictionary = {
 	"onboarding.first_pickup": {
 		"title": "Intake Notice",
 		"text": (
-			"That's a mop. Industrial grade, pre-soaked. It won't make you feel heroic. "
-			+ "It will, however, make certain things stop being on fire. Pick it up."
+			"That's a mop.\n\nIndustrial grade, pre-soaked.\nIt won't make you feel heroic. "
+			+ "It will, however, make certain things stop being on fire.\nPick it up."
 		),
 		"once": true,
 	},
 	"onboarding.inventory_full": {
 		"title": "Capacity Alert",
 		"text": (
-			"You are carrying the maximum recommended load. This is a professional "
-			+ "assessment, not a suggestion. Put something down."
+			"You are carrying the maximum recommended load.\n\nThis is a professional "
+			+ "assessment, not a suggestion.\nPut something down."
 		),
 		"once": true,
 	},
 	"onboarding.first_enemy": {
 		"title": "Hazard Contact",
 		"text": (
-			"Ah. The corpse is moving. This is, unfortunately, within expected parameters. "
-			+ "The hero's residual magic has a half-life problem. Deal with it. "
-			+ "Then pick it up. Then dispose of it properly. In that order."
+			"Ah. The corpse is moving. This is, unfortunately, within expected parameters.\n\n"
+			+ "The hero's residual magic has a half-life problem.\n"
+			+ "Deal with it.\n\n"
+			+ "Then pick it up.\n"
+			+ "Then dispose of it properly.\n"
+			+ "In that order."
 		),
 		"once": true,
 	},
 	"onboarding.debris_revert_warning": {
 		"title": "Instability Warning",
 		"text": (
-			"That remains is becoming less inert by the second. "
+			"That remains is becoming less inert by the second.\n\n"
 			+ "You may want to address that."
 		),
 		"once": true,
 	},
 	"onboarding.debris_reverted": {
 		"title": "Containment Failure",
-		"text": "You left it too long. It's angry now. This one's on you.",
+		"text": "You left it too long.\nIt's angry now.\n\nThis one's on you.",
 		"once": true,
 	},
 	"onboarding.debris_weapon": {
 		"title": "Field Adjustment",
 		"text": (
-			"Unorthodox. Effective. The disposal report is going to be a nightmare to file."
+			"Unorthodox.\nEffective.\n\n"
+			+ "The disposal report is going to be a nightmare to file."
 		),
 		"once": true,
 	},
 	"onboarding.disposal_chute": {
 		"title": "Disposal Log",
 		"text": (
-			"Disposal logged. The dungeon thanks you for your responsible waste "
-			+ "management. It will not say so directly."
+			"Disposal logged.\n\n"
+			+ "The dungeon thanks you for your responsible waste management.\n"
+			+ "It will not say so directly."
 		),
 		"once": true,
 	},
 	"onboarding.low_hp": {
 		"title": "Medical Advisory",
 		"text": (
-			"You are in suboptimal condition. The contract does not cover medical expenses."
+			"You are in suboptimal condition.\n\n"
+			+ "The contract does not cover medical expenses."
 		),
 		"once": true,
 	},
 	"outcome.job_rating_a": {
 		"title": "Performance Summary",
 		"text": (
-			"Floor certified clean. Impressive. The dungeon hasn't seen this level "
-			+ "of professional conduct since... well. Ever, actually."
+			"Floor certified clean. Impressive.\n\n"
+			+ "The dungeon hasn't seen this level of professional conduct\n"
+			+ "since... well. Ever, actually."
 		),
 		"once": false,
 	},
 	"outcome.job_rating_c": {
 		"title": "Performance Summary",
 		"text": (
-			"Floor cleared. Technically. The word 'thorough' does not apply here. "
+			"Floor cleared. Technically.\n\n"
+			+ "The word 'thorough' does not apply here.\n"
 			+ "Moving on."
 		),
 		"once": false,
@@ -97,24 +108,30 @@ var _phrases: Dictionary = {
 	"outcome.job_rating_d": {
 		"title": "Performance Summary",
 		"text": (
-			"This is not what was agreed upon. The remaining hazards will be someone "
-			+ "else's problem. You know this. You did it anyway."
+			"This is not what was agreed upon.\n\n"
+			+ "The remaining hazards will be someone else's problem.\n"
+			+ "You know this.\n"
+			+ "You did it anyway."
 		),
 		"once": false,
 	},
 	"onboarding.supply_closet": {
 		"title": "Supply Closet",
 		"text": (
-			"Resupply station. Everything here was left by previous contractors. "
-			+ "Most of them finished the job. Take what you need."
+			"Resupply station.\n\n"
+			+ "Everything here was left by previous contractors.\n"
+			+ "Most of them finished the job.\n"
+			+ "Take what you need."
 		),
 		"once": true,
 	},
 	"outcome.final_floor_cleared": {
 		"title": "Contract Status",
 		"text": (
-			"All floors cleared. Hazard index: nominal. The dungeon is ready to receive "
-			+ "its next hero. They will make an enormous mess. "
+			"All floors cleared.\n"
+			+ "Hazard index: nominal.\n\n"
+			+ "The dungeon is ready to receive its next hero.\n"
+			+ "They will make an enormous mess.\n"
 			+ "You will not be surprised when they call again."
 		),
 		"once": false,
@@ -122,92 +139,142 @@ var _phrases: Dictionary = {
 	"onboarding.first_move": {
 		"title": "Protocol Reminder",
 		"text": (
-			"The dungeon operates on a strict turn-based protocol. You move. "
-			+ "Things move. Nobody moves at the same time. "
-			+ "This is not a suggestion. This is physics."
+			"The dungeon operates on a strict turn-based protocol.\n\n"
+			+ "You move.\n"
+			+ "Things move.\n"
+			+ "Nobody moves at the same time.\n\n"
+			+ "This is not a suggestion.\n"
+			+ "This is physics."
 		),
 		"once": true,
 	},
 	"onboarding.first_revert_timer": {
 		"title": "Instability Indicator",
 		"text": (
-			"Note the instability indicator. The remains are attempting to reconstitute. "
-			+ "This is normal. This is also your problem."
+			"Note the instability indicator.\n\n"
+			+ "The remains are attempting to reconstitute.\n"
+			+ "This is normal.\n"
+			+ "This is also your problem."
 		),
 		"once": true,
 	},
 	"onboarding.pickup_debris": {
 		"title": "Containment Update",
 		"text": (
-			"Contained. You now have possession of a biohazard. "
-			+ "Try not to think about it too hard."
+			"Contained. You now have possession of a biological debris.\n\n"
+			+ "Try not to think about it too hard.\n\n"
+			+ "Disposal is still recommended.\n"
+			+ "You can do it.\n"
+			+ "We believe in you.\n\n"
+			+ "A disposal chute is available on this floor.\n"
+			+ "It's not a suggestion.\n"
+			+ "It's logistics."
 		),
 		"once": true,
 	},
 	"onboarding.drop_debris": {
 		"title": "Containment Update",
 		"text": (
-			"You put it down. The clock restarted. You knew that. "
-			+ "You did it anyway. Professional assessment pending."
+			"You put it down.\n"
+			+ "The clock restarted.\n"
+			+ "You knew that.\n\n"
+			+ "You did it anyway.\n"
+			+ "Professional assessment pending."
+		),
+		"once": true,
+	},
+	"onboarding.first_floor_complete": {
+		"title": "Initial Success",
+		"text": (
+			"You've cleared the floor.\n"
+			+ "Congratulations.\n\n"
+			+ "The dungeon is slightly less disaster-adjacent than it was before.\n"
+			+ "Keep it up.\n\n"
+			+ "You may proceed to the next floor.\n"
+			+ "Don't worry about the next hero.\n"
+			+ "They will make an enormous mess."
 		),
 		"once": true,
 	},
 	"onboarding.splash_aoe": {
 		"title": "Efficiency Log",
-		"text": "Efficient. The quarterly report appreciates efficiency.",
+		"text": "Efficient.\n\nThe quarterly report appreciates efficiency.",
 		"once": true,
 	},
 	"onboarding.enter_floor": {
 		"title": "Floor Intake",
 		"text": (
-			"Floor [N]. Previous contractor status: unknown. "
-			+ "Proceed with standard caution. Or non-standard caution. Results will vary."
+			"Floor [N].\n"
+			+ "Previous contractor status: unknown.\n\n"
+			+ "Proceed with standard caution.\n"
+			+ "Or non-standard caution.\n"
+			+ "Results will vary."
 		),
 		"once": false,
 	},
-	"onboarding.cursed_hit": {
-		"title": "Curse Containment",
+	"onboarding.hostile_survived": {
+		"title": "Engagement Update",
 		"text": (
-			"The curse is attempting to transfer. The holy item disagrees. "
-			+ "Holiness is winning, for now."
+			"Direct contact.\n"
+			+ "Hazard remains active.\n\n"
+			+ "Continue applying tools until it doesn't."
 		),
 		"once": true,
 	},
-	"onboarding.corrosive_tool_damage": {
-		"title": "Equipment Alert",
+	"onboarding.hostile_killed_noneffective": {
+		"title": "Anomalous Clearance",
 		"text": (
-			"Your equipment has been compromised. "
-			+ "File a replacement request after you survive."
+			"Hazard neutralised.\n\n"
+			+ "The tool selection was technically incorrect.\n"
+			+ "It worked anyway.\n\n"
+			+ "The dungeon has logged this as a statistical anomaly and moved on."
 		),
 		"once": true,
 	},
-	"outcome.floor_complete": {
-		"title": "Sanitation Report",
+	"onboarding.hostile_killed_effective": {
+		"title": "Protocol Confirmed",
 		"text": (
-			"Clean. The dungeon smells marginally less like catastrophe. "
-			+ "This is progress."
+			"Hazard neutralised.\n"
+			+ "Correct tool.\n"
+			+ "Correct result.\n\n"
+			+ "This is what the contract describes.\n"
+			+ "Keep doing this."
+		),
+		"once": true,
+	},
+	"onboarding.player_hit": {
+		"title": "Contact Incident",
+		"text": (
+			"You have been hit.\n"
+			+ "This is not ideal.\n\n"
+			+ "Try to avoid being hit again.\n"
+			+ "The contract does not cover injuries."
 		),
 		"once": true,
 	},
 	"outcome.death": {
 		"title": "Contract Status",
 		"text": (
-			"Contract terminated. Cause: occupational. "
-			+ "A replacement contractor will be sourced. The dungeon will wait."
+			"Contract terminated.\n"
+			+ "Cause: occupational.\n\n"
+			+ "A replacement contractor will be sourced.\n"
+			+ "The dungeon will wait."
 		),
 		"once": false,
 	},
 	"onboarding.potion_use": {
 		"title": "Consumption Log",
 		"text": (
-			"Hero-grade restorative. Technically expired. "
-			+ "Effective nonetheless. Don't read the label."
+			"Hero-grade restorative.\n"
+			+ "Technically expired.\n\n"
+			+ "Effective nonetheless.\n"
+			+ "Don't read the label."
 		),
 		"once": true,
 	},
 	"onboarding.floor_visible_assessment": {
 		"title": "Initial Assessment",
-		"text": "Initial assessment: manageable. Adjust expectations accordingly.",
+		"text": "Initial assessment: manageable.\n\nAdjust expectations accordingly.",
 		"once": true,
 	},
 }
@@ -312,8 +379,6 @@ func _connect_signals() -> void:
 			_turn_manager.action_feedback.connect(_on_action_feedback)
 		if not _turn_manager.turn_completed.is_connected(_on_turn_completed):
 			_turn_manager.turn_completed.connect(_on_turn_completed)
-		if not _turn_manager.clean_status_changed.is_connected(_on_clean_status_changed):
-			_turn_manager.clean_status_changed.connect(_on_clean_status_changed)
 		if not _turn_manager.debris_consumed_as_weapon.is_connected(_on_debris_weapon):
 			_turn_manager.debris_consumed_as_weapon.connect(_on_debris_weapon)
 		if _turn_manager.has_signal("debris_reverted"):
@@ -325,13 +390,14 @@ func _connect_signals() -> void:
 		if _turn_manager.has_signal("hostile_hit"):
 			if not _turn_manager.hostile_hit.is_connected(_on_hostile_hit):
 				_turn_manager.hostile_hit.connect(_on_hostile_hit)
+		if _turn_manager.has_signal("hostile_spotted_first_time"):
+			if not _turn_manager.hostile_spotted_first_time.is_connected(
+				_on_hostile_spotted_first_time,
+			):
+				_turn_manager.hostile_spotted_first_time.connect(_on_hostile_spotted_first_time)
 		if _turn_manager.has_signal("aoe_multi_hit"):
 			if not _turn_manager.aoe_multi_hit.is_connected(_on_aoe_multi_hit):
 				_turn_manager.aoe_multi_hit.connect(_on_aoe_multi_hit)
-
-	if _encounter_module != null:
-		if not _encounter_module.encounter_detected.is_connected(_on_encounter_detected):
-			_encounter_module.encounter_detected.connect(_on_encounter_detected)
 
 	if _player != null:
 		if not _player.turn_action_performed.is_connected(_on_player_turn_action):
@@ -431,7 +497,7 @@ func _on_player_turn_action(cmd: GridCommand.Type) -> void:
 		queue_phrase("onboarding.first_move")
 
 
-func _on_encounter_detected(_encountered: Array) -> void:
+func _on_hostile_spotted_first_time(_hostile) -> void:
 	queue_phrase("onboarding.first_enemy")
 
 
@@ -441,6 +507,8 @@ func _on_action_feedback(text: String, _is_positive: bool) -> void:
 		return
 	if text == "DISPOSED":
 		queue_phrase("onboarding.disposal_chute")
+		if _turn_manager != null and _turn_manager.is_floor_clean():
+			queue_phrase("onboarding.first_floor_complete")
 		return
 
 
@@ -492,6 +560,7 @@ func _on_player_damaged(_amount: int, _old_health: int, new_health: int) -> void
 		return
 	if _player.stats.max_health <= 0:
 		return
+	queue_phrase("onboarding.player_hit")
 	var threshold := float(_player.stats.max_health) * LOW_HP_RATIO
 	if float(new_health) <= threshold:
 		queue_phrase("onboarding.low_hp")
@@ -510,16 +579,19 @@ func _on_debris_dropped(_cell: Vector2i) -> void:
 
 
 func _on_hostile_hit(
-		definition_id: StringName,
+		_definition_id: StringName,
 		_used_item_name: String,
-		_is_effective: bool,
-		item_consumed: bool,
+		is_effective: bool,
+		_item_consumed: bool,
 		_item_is_aoe: bool,
+		hostile_cleared: bool,
 ) -> void:
-	if definition_id == &"cursed_hazard":
-		queue_phrase("onboarding.cursed_hit")
-	if definition_id == &"corrosive_hazard" and item_consumed:
-		queue_phrase("onboarding.corrosive_tool_damage")
+	if not hostile_cleared:
+		queue_phrase("onboarding.hostile_survived")
+	elif is_effective:
+		queue_phrase("onboarding.hostile_killed_effective")
+	else:
+		queue_phrase("onboarding.hostile_killed_noneffective")
 
 
 func _on_aoe_multi_hit(item_name: String, hit_count: int) -> void:
@@ -527,11 +599,6 @@ func _on_aoe_multi_hit(item_name: String, hit_count: int) -> void:
 		return
 	if item_name.to_lower().contains("splash"):
 		queue_phrase("onboarding.splash_aoe")
-
-
-func _on_clean_status_changed(cleared: int, total: int) -> void:
-	if total > 0 and cleared >= total:
-		queue_phrase("outcome.floor_complete")
 
 
 func _success_phrase_for_percent(clean_percent: int) -> String:
@@ -567,6 +634,8 @@ func _is_gameplay_active() -> bool:
 
 func _load_seen_state() -> void:
 	_seen.clear()
+	if not ENABLE_SEEN_STATE_PERSISTENCE:
+		return
 	var config := ConfigFile.new()
 	if config.load(STORAGE_PATH) != OK:
 		return
@@ -576,6 +645,8 @@ func _load_seen_state() -> void:
 
 
 func _save_seen_state() -> void:
+	if not ENABLE_SEEN_STATE_PERSISTENCE:
+		return
 	var config := ConfigFile.new()
 	for key in _seen.keys():
 		config.set_value(STORAGE_SECTION, key, bool(_seen[key]))

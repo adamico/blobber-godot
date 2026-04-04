@@ -18,13 +18,17 @@ signal controls_ready
 
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
+@export var player_scene: PackedScene
+@export var authored_floor_scene: PackedScene
 @export var mop_item: ItemData
 @export var holy_symbol_item: ItemData
 @export var flask_item: ItemData
 @export var ward_item: ItemData
 @export var potion_item: ItemData
+@export var debris_item: ItemData
 @export var disposal_chute_scene: PackedScene
 @export var chest_scene: PackedScene
+@export var floor_exit_scene: PackedScene
 
 @export_group("Overlays")
 @export_file("*.tscn") \
@@ -54,7 +58,12 @@ const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_COMPOSITION_ORCHESTRATOR := "CompositionOrchestrator"
 const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
+const NODE_PLAYER := "Player"
 const WORLD_TURN_MANAGER_SCRIPT := preload("res://scenes/world/modules/world_turn_manager.gd")
+const WORLD_AUTHORED_FLOOR_LOADER_SCRIPT := preload(
+	"res://scenes/world/modules/world_authored_floor_loader.gd"
+)
+const DEFAULT_PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
@@ -82,6 +91,7 @@ var _audio_orchestrator: Node
 var _vfx_orchestrator: Node
 var _belt_hud: Control
 var _hostile_definitions_by_id: Dictionary = { }
+var _authored_floor_layout: Dictionary = { }
 var _controls_ready_emitted := false
 
 
@@ -99,6 +109,10 @@ func _ready() -> void:
 		"_context_orchestrator resolved",
 		Time.get_ticks_msec() - phase_marker,
 	)
+
+	phase_marker = Time.get_ticks_msec()
+	_ensure_player_instance()
+	_log_timing("Instantiation", "player ensured", Time.get_ticks_msec() - phase_marker)
 
 	phase_marker = Time.get_ticks_msec()
 	var resolved_context := _context_orchestrator.resolve_world_context(
@@ -128,9 +142,10 @@ func _ready() -> void:
 
 	phase_marker = Time.get_ticks_msec()
 	_setup_game_state_machine()
-	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
 	_index_hostile_definitions()
+	_mount_authored_floor_grid()
+	_add_world_environment()
 	_log_timing("Instantiation", "sync setup complete", Time.get_ticks_msec() - phase_marker)
 
 	phase_marker = Time.get_ticks_msec()
@@ -146,9 +161,9 @@ func _run_staged_bootstrap(started_at_ms: int) -> void:
 		return
 
 	# Keep turn-facing visuals warm before enabling controls.
+	_author_floor_1()
 	_wire_occupancy()
 	_wire_turn_manager()
-	_author_floor_1()
 	_wire_hostiles()
 	_initialize_floor()
 	_configure_huds()
@@ -179,6 +194,19 @@ func is_controls_ready() -> bool:
 
 func _add_world_environment() -> void:
 	_scene_initializer_module.add_environment(self)
+
+
+func _ensure_player_instance() -> void:
+	if get_node_or_null(NODE_PLAYER) != null:
+		return
+
+	var scene := player_scene if player_scene != null else DEFAULT_PLAYER_SCENE
+	var player := scene.instantiate() as Player
+	if player == null:
+		push_error("Failed to instantiate Player scene.")
+		return
+	player.name = NODE_PLAYER
+	add_child(player)
 
 
 func has_active_overlay() -> bool:
@@ -502,6 +530,13 @@ func _configure_huds() -> void:
 
 func _author_floor_1() -> void:
 	var task_started := Time.get_ticks_msec()
+	if not _authored_floor_layout.is_empty():
+		_apply_authored_player_spawn(_authored_floor_layout)
+		_spawn_authored_floor_entities(_authored_floor_layout)
+		_clear_authored_positioning_cells(_authored_floor_layout)
+		_log_task_timing("_author_floor_1", Time.get_ticks_msec() - task_started)
+		return
+
 	var gm := get_node_or_null("GridMap") as GridMap
 	var valid_cells: Array[Vector2i] = []
 	if gm != null:
@@ -527,6 +562,117 @@ func _author_floor_1() -> void:
 		_spawn_chest(valid_cells.pop_back(), potion_item)
 
 	_log_task_timing("_author_floor_1", Time.get_ticks_msec() - task_started)
+
+
+func _mount_authored_floor_grid() -> void:
+	_authored_floor_layout.clear()
+	if authored_floor_scene == null:
+		return
+
+	var loader = WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.new()
+	if loader == null:
+		push_error("Failed to create authored floor loader.")
+		return
+
+	var layout: Dictionary = loader.load_into_world(self, authored_floor_scene)
+	_report_authored_floor_messages(layout)
+	if not bool(layout.get("ok", false)):
+		return
+	_authored_floor_layout = layout
+
+
+func _report_authored_floor_messages(layout: Dictionary) -> void:
+	for message in layout.get("warnings", []):
+		push_warning(String(message))
+	for message in layout.get("errors", []):
+		push_error(String(message))
+
+
+func _apply_authored_player_spawn(layout: Dictionary) -> void:
+	if not bool(layout.get("has_player_spawn", false)):
+		return
+	if _player == null:
+		push_warning("Authored floor loaded, but Player node is missing.")
+		return
+
+	var spawn_cell := layout.get("player_spawn", Vector2i.ZERO) as Vector2i
+	_player.initial_cell = spawn_cell
+	if _player.grid_state != null:
+		_player.grid_state.cell = spawn_cell
+		_player.grid_state.previous_cell = spawn_cell
+		_player.apply_canonical_transform()
+	if _player.movement_controller != null:
+		_player.movement_controller.grid_state = _player.grid_state
+
+
+func _spawn_authored_floor_entities(layout: Dictionary) -> void:
+	for cell in layout.get("chute_cells", []):
+		_spawn_chute(cell as Vector2i)
+
+	for cell in layout.get("exit_cells", []):
+		_spawn_exit(cell as Vector2i)
+
+	for hostile_spawn in layout.get("hostile_spawns", []):
+		if not (hostile_spawn is Dictionary):
+			continue
+		var hostile_cell := hostile_spawn.get("cell", Vector2i.ZERO) as Vector2i
+		var hostile_id := _hostile_definition_id_for_marker(int(hostile_spawn.get("marker_id", -1)))
+		if hostile_id == StringName():
+			push_warning("Skipping hostile marker with unknown mapping at %s." % hostile_cell)
+			continue
+		_spawn_hostile_by_id(hostile_cell, hostile_id)
+
+	for chest_spawn in layout.get("chest_spawns", []):
+		if not (chest_spawn is Dictionary):
+			continue
+		var chest_cell := chest_spawn.get("cell", Vector2i.ZERO) as Vector2i
+		var item := _item_for_marker(int(chest_spawn.get("marker_id", -1)))
+		if item == null:
+			push_warning("Skipping chest marker with unknown item mapping at %s." % chest_cell)
+			continue
+		_spawn_chest(chest_cell, item)
+
+
+func _clear_authored_positioning_cells(layout: Dictionary) -> void:
+	var gm := get_node_or_null("GridMap") as GridMap
+	if gm == null:
+		return
+
+	var loader = WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.new()
+	if loader == null:
+		push_warning("Unable to clear authored positioning cells: loader unavailable.")
+		return
+	loader.clear_positioning_cells(gm, layout)
+
+
+func _hostile_definition_id_for_marker(marker_id: int) -> StringName:
+	match marker_id:
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING:
+			return HOSTILE_ID_BURNING
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CURSED:
+			return HOSTILE_ID_CURSED
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CORROSIVE:
+			return HOSTILE_ID_CORROSIVE
+		_:
+			return StringName()
+
+
+func _item_for_marker(marker_id: int) -> ItemData:
+	match marker_id:
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_MOP:
+			return mop_item
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOLY_SYMBOL:
+			return holy_symbol_item
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_SPLASH_FLASK:
+			return flask_item
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_IRON_WARD:
+			return ward_item
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_POTION:
+			return potion_item
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS:
+			return debris_item
+		_:
+			return null
 
 
 func _index_hostile_definitions() -> void:
@@ -609,6 +755,18 @@ func _spawn_chute(cell: Vector2i) -> void:
 	chute.name = "DisposalChute_%d_%d" % [cell.x, cell.y]
 
 	add_child(chute)
+
+
+func _spawn_exit(cell: Vector2i) -> void:
+	var floor_exit: WorldExit
+	if floor_exit_scene != null:
+		floor_exit = floor_exit_scene.instantiate() as WorldExit
+	if floor_exit == null:
+		floor_exit = WorldExit.new()
+	floor_exit.grid_cell = cell
+	floor_exit.name = "FloorExit_%d_%d" % [cell.x, cell.y]
+
+	add_child(floor_exit)
 
 
 func _spawn_chest(cell: Vector2i, item: ItemData) -> void:

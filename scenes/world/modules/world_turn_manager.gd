@@ -21,9 +21,11 @@ signal hostile_hit(
 		is_effective: bool,
 		item_consumed: bool,
 		item_is_aoe: bool,
+		hostile_cleared: bool,
 )
 signal hostile_impacted(hostile: Hostile, cell: Vector2i)
 signal hostile_killed(cell: Vector2i, hostile_definition_id: StringName)
+signal hostile_spotted_first_time(hostile)
 signal aoe_multi_hit(item_name: String, hit_count: int)
 signal action_feedback(text: String, is_positive: bool)
 signal analysis_target_changed(target: Dictionary)
@@ -59,6 +61,7 @@ var _world_root: Node
 var _analysis_module: WorldAnalysisModule
 var _total_cleanup_value: int = 0
 var _disposed_cleanup_value: int = 0
+var _spotted_hostiles: Dictionary = { }
 
 
 func configure(
@@ -78,8 +81,11 @@ func configure(
 func initialize_floor() -> void:
 	_disposed_cleanup_value = 0
 	_total_cleanup_value = _count_cleanup_value()
+	_spotted_hostiles.clear()
 	_connect_hostile_signals()
 	_refresh_distance_tinted_sprites()
+	if _encounter_module != null:
+		_encounter_module.check_combat_trigger()
 	clean_status_changed.emit(_disposed_cleanup_value, _total_cleanup_value)
 
 
@@ -228,6 +234,8 @@ func process_analyze_target() -> void:
 func _advance_turn() -> void:
 	_tick_hostiles()
 	_tick_debris_revert()
+	if _encounter_module != null:
+		_encounter_module.check_combat_trigger()
 	_check_contact_damage_from_enemies()
 	_refresh_distance_tinted_sprites()
 	_post_turn_checks()
@@ -362,6 +370,7 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 				is_effective,
 				will_consume,
 				item.is_aoe,
+				cleared,
 			)
 			_register_hostile_tool_interaction(hostile, is_effective, cleared)
 
@@ -712,11 +721,25 @@ func _refresh_node_distance_tint(node) -> void:
 		return
 
 	var distance := _manhattan_distance_to_player(cell)
+	if distance <= DISTANCE_TINT_MAX_CELLS:
+		_emit_hostile_spotted_first_time(node)
 	if distance > DISTANCE_TINT_MAX_CELLS:
 		_apply_sprite_black_material(sprite)
 		return
 
 	_restore_sprite_base_material(sprite)
+
+
+func _emit_hostile_spotted_first_time(node) -> void:
+	if not _is_hostile_node(node):
+		return
+	if node.is_cleared():
+		return
+	var id: int = node.get_instance_id()
+	if _spotted_hostiles.has(id):
+		return
+	_spotted_hostiles[id] = true
+	hostile_spotted_first_time.emit(node)
 
 
 func _apply_sprite_black_material(sprite: Sprite3D) -> void:

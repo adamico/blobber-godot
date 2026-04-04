@@ -1,8 +1,10 @@
 [gd_scene format=3 uid="uid://ci5c4s13iefpr"]
 
+[ext_resource type="PackedScene" uid="uid://fib5upfjwmcx" path="res://scenes/player/player.tscn" id="1_player"]
 [ext_resource type="Script" uid="uid://gu3lsi7vt4st" path="res://scenes/world/main.gd" id="1_wbupf"]
 [ext_resource type="Resource" path="res://resources/presets/movement_config_snap.tres" id="2_713oj"]
 [ext_resource type="Resource" path="res://resources/presets/movement_config_smooth.tres" id="3_r3w6i"]
+[ext_resource type="PackedScene" uid="uid://ci3pp1g44kips" path="res://scenes/world/floor1.tscn" id="5_4m2ge"]
 [ext_resource type="Script" uid="uid://1vfbj4weoq0b" path="res://scenes/world/modules/world_overlay_module.gd" id="6_75n3u"]
 [ext_resource type="Script" uid="uid://e0fqu3puk2jv" path="res://scenes/world/modules/world_scene_initializer_module.gd" id="7_tk6wu"]
 [ext_resource type="Resource" uid="uid://7ujyorbpecsq" path="res://resources/items/mop.tres" id="8_5ebq0"]
@@ -13,9 +15,11 @@
 [ext_resource type="Resource" uid="uid://c5q5v1oeaihvk" path="res://resources/items/iron_ward.tres" id="11_ironward"]
 [ext_resource type="Script" uid="uid://jtgb5hi51epy" path="res://scenes/world/modules/world_ui_module.gd" id="11_jv3ce"]
 [ext_resource type="Script" uid="uid://cff7ym466bd6l" path="res://scenes/world/modules/world_state_orchestrator.gd" id="12_4j8kp"]
+[ext_resource type="Resource" uid="uid://gpif3rpuvf2y" path="res://resources/items/debris_base.tres" id="12_debris"]
 [ext_resource type="Resource" uid="uid://cbshjds4a3ref" path="res://resources/items/potion.tres" id="12_potion"]
 [ext_resource type="PackedScene" uid="uid://iw6dqags3f3v" path="res://scenes/world/disposal_chute.tscn" id="13_28gua"]
 [ext_resource type="PackedScene" uid="uid://3pqh2xilin1" path="res://scenes/world/world_chest.tscn" id="13_chest"]
+[ext_resource type="PackedScene" uid="uid://xn65te06dv" path="res://scenes/world/floor_exit.tscn" id="13_exit"]
 [ext_resource type="Shader" uid="uid://dvyjkawvlqut0" path="res://resources/shaders/crt.gdshader" id="14_5ebq0"]
 [ext_resource type="Script" uid="uid://b30rxinare8sx" path="res://scenes/world/modules/world_composition_orchestrator.gd" id="14_wk2mb"]
 [ext_resource type="Script" uid="uid://dpspbqqs4t1ms" path="res://scenes/world/modules/world_movement_orchestrator.gd" id="17_4a2zs"]
@@ -42,13 +46,17 @@ script = ExtResource("1_wbupf")
 show_debug_panel = true
 preset_snap_config = ExtResource("2_713oj")
 preset_smooth_config = ExtResource("3_r3w6i")
+player_scene = ExtResource("1_player")
+authored_floor_scene = ExtResource("5_4m2ge")
 mop_item = ExtResource("8_5ebq0")
 holy_symbol_item = ExtResource("10_holy")
 flask_item = ExtResource("10_1notw")
 ward_item = ExtResource("11_ironward")
 potion_item = ExtResource("12_potion")
+debris_item = ExtResource("12_debris")
 disposal_chute_scene = ExtResource("13_28gua")
 chest_scene = ExtResource("13_chest")
+floor_exit_scene = ExtResource("13_exit")
 audio_wiring_profile = ExtResource("21_audio_profile")
 vfx_wiring_profile = ExtResource("22_vfx_profile")
 

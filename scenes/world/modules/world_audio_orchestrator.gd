@@ -196,6 +196,7 @@ func _on_hostile_hit(
 		_is_effective: bool,
 		_item_consumed: bool,
 		_item_is_aoe: bool,
+		_hostile_cleared: bool,
 ) -> void:
 	play_by_signal_key(KEY_HOSTILE_HIT)
 
