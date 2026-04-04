@@ -1,6 +1,9 @@
 extends Control
 ## Always-visible 3-slot utility belt at the bottom of the screen.
 ## Shows slot key and icon (1/2/3).
+## Supports mouse interaction: left click = use, Shift+left click = drop.
+
+signal slot_clicked(slot_index: int, is_drop: bool)
 
 @onready var _slot_1_key: Label = %Key1
 @onready var _slot_2_key: Label = %Key2
@@ -26,6 +29,9 @@ func _ready() -> void:
 	_bind_slot_hover(_slot_1_panel, 0)
 	_bind_slot_hover(_slot_2_panel, 1)
 	_bind_slot_hover(_slot_3_panel, 2)
+	_bind_slot_click(_slot_1_panel, 0)
+	_bind_slot_click(_slot_2_panel, 1)
+	_bind_slot_click(_slot_3_panel, 2)
 	_hide_slot_popup()
 
 
@@ -139,6 +145,24 @@ func _bind_slot_hover(panel: Control, slot_index: int) -> void:
 	)
 
 
+func _bind_slot_click(panel: Control, slot_index: int) -> void:
+	if panel == null:
+		return
+	panel.gui_input.connect(
+		func(event: InputEvent) -> void:
+			_on_slot_gui_input(event, slot_index)
+	)
+
+
+func _on_slot_gui_input(event: InputEvent, slot_index: int) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed:
+			var is_drop := mb.shift_pressed
+			get_viewport().set_input_as_handled()
+			slot_clicked.emit(slot_index, is_drop)
+
+
 func _on_slot_mouse_entered(slot_index: int) -> void:
 	_hovered_slot_index = slot_index
 	_update_slot_popup()
@@ -208,8 +232,8 @@ func _position_slot_popup(slot_index: int) -> void:
 		return
 
 	var popup_size := _slot_popup.size
-	var slot_pos := panel.global_position - global_position
-	var x := slot_pos.x + (panel.size.x - popup_size.x) * 0.5
+	var slot_pos_x := panel.global_position.x - global_position.x
+	var x := slot_pos_x + (panel.size.x - popup_size.x) * 0.5
 	x = clamp(x, 0.0, max(0.0, size.x - popup_size.x))
 	_slot_popup.position.x = x
 

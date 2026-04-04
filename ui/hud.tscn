@@ -45,8 +45,8 @@ horizontal_alignment = 2
 
 [node name="Hud Separator" parent="." unique_id=334027125 instance=ExtResource("3_ff8ar")]
 layout_mode = 1
-offset_top = 258.0
-offset_bottom = 258.0
+offset_top = 252.0
+offset_bottom = 252.0
 
 [node name="HPHUD" parent="." unique_id=1522271836 instance=ExtResource("4_m0eg6")]
 unique_name_in_owner = true
