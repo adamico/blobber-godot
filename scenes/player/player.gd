@@ -10,7 +10,7 @@ signal wall_bumped
 @export var input_actions_enabled := true
 @export var debug_log_input_actions := false
 
-@onready var _camera: Camera3D = $Camera3D
+@onready var _camera: Camera3D = %Camera3D
 
 var _active_tween: Tween
 var _blocked_tween: Tween
