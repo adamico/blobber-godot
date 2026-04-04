@@ -30,6 +30,15 @@ volume_db = -2.0
 cooldown_ms = 50
 pitch_variation = 0.04
 
+[sub_resource type="Resource" id="EntryDrop"]
+script = ExtResource("2_entry")
+signal_key = &"inventory.item_dropped"
+sound_name = &"sfx.drop"
+stream_path = "uid://rw7h83wdf6ng"
+volume_db = -4.0
+cooldown_ms = 40
+pitch_variation = 0.03
+
 [sub_resource type="Resource" id="EntryHit"]
 script = ExtResource("2_entry")
 signal_key = &"combat.hostile_hit"
@@ -47,6 +56,23 @@ stream_path = "uid://r8yqvtdxgp4l"
 volume_db = -1.0
 cooldown_ms = 200
 
+[sub_resource type="Resource" id="EntryPlayerHurt"]
+script = ExtResource("2_entry")
+signal_key = &"player.hurt"
+sound_name = &"sfx.player_hurt"
+stream_path = "uid://rw7h83wdf6ng"
+volume_db = -3.0
+cooldown_ms = 80
+pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryPlayerHeal"]
+script = ExtResource("2_entry")
+signal_key = &"player.heal"
+sound_name = &"sfx.player_heal"
+stream_path = "uid://dsbihwry48den"
+volume_db = -8.0
+cooldown_ms = 120
+
 [sub_resource type="Resource" id="EntryDisposal"]
 script = ExtResource("2_entry")
 signal_key = &"world.disposal"
@@ -55,6 +81,40 @@ stream_path = "uid://d3it1wd4ej2l4"
 volume_db = -2.0
 cooldown_ms = 60
 pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryClean100"]
+script = ExtResource("2_entry")
+signal_key = &"world.clean_100"
+sound_name = &"sfx.clean_100"
+stream_path = "uid://bx77tewwqh6b4"
+volume_db = -6.0
+cooldown_ms = 250
+
+[sub_resource type="Resource" id="EntryDebrisCountdownTick"]
+script = ExtResource("2_entry")
+signal_key = &"world.debris_countdown_tick"
+sound_name = &"sfx.debris_countdown_tick"
+stream_path = "uid://iik62u83hmqv"
+volume_db = -12.0
+cooldown_ms = 60
+pitch_variation = 0.01
+
+[sub_resource type="Resource" id="EntryDebrisRespawnFromDrop"]
+script = ExtResource("2_entry")
+signal_key = &"world.debris_respawn_from_drop"
+sound_name = &"sfx.debris_respawn_from_drop"
+stream_path = "uid://bkccu1x0nydyl"
+volume_db = -4.0
+cooldown_ms = 100
+pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryFloorExitReached"]
+script = ExtResource("2_entry")
+signal_key = &"world.floor_exit_reached"
+sound_name = &"sfx.floor_exit_reached"
+stream_path = "uid://utql6hhj6wcx"
+volume_db = -3.0
+cooldown_ms = 400
 
 [sub_resource type="Resource" id="EntryAnalysisNewKnowledge"]
 script = ExtResource("2_entry")
@@ -100,4 +160,4 @@ volume_db = -10.0
 
 [resource]
 script = ExtResource("1_profile")
-entries = Array[Resource]([SubResource("EntryStep"), SubResource("EntryBump"), SubResource("EntryPickup"), SubResource("EntryHit"), SubResource("EntryDeath"), SubResource("EntryDisposal"), SubResource("EntryAnalysisNewKnowledge"), SubResource("EntryAnalysisNoNewKnowledge"), SubResource("EntryDialogContinue"), SubResource("EntryMusicGameplay"), SubResource("EntryMusicMenu")])
+entries = Array[Resource]([SubResource("EntryStep"), SubResource("EntryBump"), SubResource("EntryPickup"), SubResource("EntryDrop"), SubResource("EntryHit"), SubResource("EntryDeath"), SubResource("EntryPlayerHurt"), SubResource("EntryPlayerHeal"), SubResource("EntryDisposal"), SubResource("EntryClean100"), SubResource("EntryDebrisCountdownTick"), SubResource("EntryDebrisRespawnFromDrop"), SubResource("EntryFloorExitReached"), SubResource("EntryAnalysisNewKnowledge"), SubResource("EntryAnalysisNoNewKnowledge"), SubResource("EntryDialogContinue"), SubResource("EntryMusicGameplay"), SubResource("EntryMusicMenu")])

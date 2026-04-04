@@ -10,6 +10,7 @@ signal collected(item: ItemData)
 var blocks_movement: bool = false
 var revert_turns_remaining: int = 0
 var origin_hostile_definition_id: StringName = StringName()
+var spawned_from_player_drop: bool = false
 
 var _timer_label: Label3D
 

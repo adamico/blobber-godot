@@ -597,6 +597,8 @@ func _check_exit_condition() -> void:
 	for node in get_tree().get_nodes_in_group(&"world_exit_cells"):
 		if node is WorldExit and node.matches_cell(_player.grid_state.cell):
 			if node.can_trigger(false):
+				if _turn_manager != null:
+					_turn_manager.notify_floor_exit_reached()
 				finish_with_success()
 				return
 

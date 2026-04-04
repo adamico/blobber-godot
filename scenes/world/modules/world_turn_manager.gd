@@ -8,12 +8,17 @@ signal player_died
 signal debris_consumed_as_weapon(cell: Vector2i)
 signal debris_reverted(cell: Vector2i, hostile_definition_id: StringName)
 signal debris_dropped(cell: Vector2i)
+signal debris_countdown_ticked(cell: Vector2i, turns_remaining: int)
+signal debris_respawned(cell: Vector2i, hostile_definition_id: StringName)
+signal item_dropped(cell: Vector2i)
+signal disposal_registered(item: ItemData)
+signal floor_exit_reached
 signal hostile_hit(
-	definition_id: StringName,
-	used_item_name: String,
-	is_effective: bool,
-	item_consumed: bool,
-	item_is_aoe: bool,
+		definition_id: StringName,
+		used_item_name: String,
+		is_effective: bool,
+		item_consumed: bool,
+		item_is_aoe: bool,
 )
 signal aoe_multi_hit(item_name: String, hit_count: int)
 signal action_feedback(text: String, is_positive: bool)
@@ -159,6 +164,7 @@ func process_player_drop(slot_index: int) -> void:
 			turn_completed.emit()
 			return
 		if _player.inventory.remove_at(slot_index):
+			disposal_registered.emit(item)
 			_register_disposal(item)
 			action_feedback.emit("DISPOSED", true)
 			turn_completed.emit()
@@ -173,6 +179,8 @@ func process_player_drop(slot_index: int) -> void:
 		var p = spawn_pickup(target_cell, item)
 		if p != null and item.origin_hostile_definition_id != StringName():
 			p.setup_revert(item.revert_turns_base, item.origin_hostile_definition_id)
+			p.spawned_from_player_drop = true
+		item_dropped.emit(target_cell)
 		if item.item_type == ItemData.ItemType.DEBRIS:
 			debris_dropped.emit(target_cell)
 		# Free action: no turn tick, but emit completion for UI sync
@@ -223,6 +231,10 @@ func process_hover_target(mouse_position: Vector2, camera: Camera3D) -> void:
 	if _analysis_module == null or camera == null:
 		return
 	_analysis_module.hover_target(mouse_position, camera)
+
+
+func notify_floor_exit_reached() -> void:
+	floor_exit_reached.emit()
 
 
 func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
@@ -478,7 +490,14 @@ func _tick_debris_revert() -> void:
 		if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
 			continue
 		if node is WorldPickup and node.revert_turns_remaining > 0:
-			if node.tick_revert():
+			var did_revert: bool = node.tick_revert()
+			if node.revert_turns_remaining > 0:
+				debris_countdown_ticked.emit(node.grid_cell, node.revert_turns_remaining)
+			if did_revert:
+				debris_respawned.emit(
+					node.grid_cell,
+					node.origin_hostile_definition_id,
+				)
 				debris_reverted.emit(node.grid_cell, node.origin_hostile_definition_id)
 				_respawn_hostile_from_revert(node)
 				node.queue_free()
