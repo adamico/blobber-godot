@@ -2,11 +2,11 @@ extends CanvasLayer
 
 signal transition_finished(scene_path: String)
 
-@export var default_fade_out_duration := 0.1
-@export var default_fade_in_duration := 0.1
+@export var default_fade_out_duration := 0.2
+@export var default_fade_in_duration := 0.2
 @export var fade_color := Color(0, 0, 0, 1)
 @export var loading_overlay_delay := 0.5
-@export var enable_timing_logs := true
+@export var enable_timing_logs := false
 @export var wait_for_first_frame_before_fade_in := false
 @export var wait_for_controls_ready_before_fade_in := true
 @export var controls_ready_wait_timeout_ms := 500
@@ -176,6 +176,9 @@ func _wait_for_controls_ready(scene_path: String, started_at_ms: int) -> void:
 	if tree == null:
 		return
 
+	# change_scene_to_packed only queues the swap; wait one frame for it to commit.
+	await tree.process_frame
+
 	var current_scene := tree.current_scene
 	if current_scene == null:
 		return
@@ -184,12 +187,12 @@ func _wait_for_controls_ready(scene_path: String, started_at_ms: int) -> void:
 		_log_timing("controls_ready.unavailable", scene_path, started_at_ms)
 		return
 	if current_scene.has_method("is_controls_ready") and bool(
-		current_scene.call("is_controls_ready")
+		current_scene.call("is_controls_ready"),
 	):
 		_log_timing("controls_ready.already", scene_path, started_at_ms)
 		return
 
-	var readiness := {"done": false}
+	var readiness := { "done": false }
 	var on_controls_ready := func() -> void:
 		readiness["done"] = true
 

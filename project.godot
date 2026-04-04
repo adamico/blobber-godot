@@ -17,8 +17,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-GameBoot="res://systems/game_boot.gd"
-SceneTransition="res://systems/scene_transition.gd"
+GameBoot="*uid://bcqe24d18m8lo"
+SceneTransition="*uid://bq02vsgtgmp3s"
 
 [display]
 

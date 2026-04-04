@@ -5,8 +5,9 @@ extends Node3D
 
 signal controls_ready
 
-var _controls_ready_emitted := false
-
+@export_group("Debug")
+@export var enable_timing_logs := false
+@export_group("")
 @export var occupancy_wall_layer := 0
 @export var auto_align_gridmap_visual := true
 @export var show_debug_panel := false
@@ -14,13 +15,6 @@ var _controls_ready_emitted := false
 @export_enum("Snap", "Smooth") var active_movement_preset := "Smooth"
 @export var preset_snap_config: MovementConfig
 @export var preset_smooth_config: MovementConfig
-
-@export_group("HUD Scenes")
-@export var hp_hud_scene: PackedScene
-@export var belt_hud_scene: PackedScene
-@export var clean_hud_scene: PackedScene
-@export var analysis_hud_scene: PackedScene
-@export var toast_hud_scene: PackedScene
 
 @export_group("Entities & Items")
 @export var hostile_definitions: Array[HostileActorDefinition] = []
@@ -80,35 +74,34 @@ var _turn_manager: WorldTurnManager
 var _dialog_module: Node
 var _audio_orchestrator: Node
 var _hostile_definitions_by_id: Dictionary = { }
+var _controls_ready_emitted := false
 
 
 func _ready() -> void:
 	var scene_init_started_at := Time.get_ticks_msec()
-	print("[Instantiation] _ready() start | ticks_ms=0")
+	_log_timing("Instantiation", "_ready() start", 0)
 
 	var phase_marker := Time.get_ticks_msec()
 	_context_orchestrator = get_node_or_null(NODE_CONTEXT_ORCHESTRATOR) as WorldContextOrchestrator
 	if _context_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_CONTEXT_ORCHESTRATOR)
 		return
-	print("[Instantiation] _context_orchestrator resolved | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
+	_log_timing(
+		"Instantiation",
+		"_context_orchestrator resolved",
+		Time.get_ticks_msec() - phase_marker,
+	)
 
 	phase_marker = Time.get_ticks_msec()
 	var resolved_context := _context_orchestrator.resolve_world_context(
 		self,
 		_context_orchestrator.default_node_paths(),
 	)
-	print("[Instantiation] context resolved | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
+	_log_timing("Instantiation", "context resolved", Time.get_ticks_msec() - phase_marker)
 
 	phase_marker = Time.get_ticks_msec()
 	_context_orchestrator.assign_resolved_world_context(self, resolved_context)
-	print("[Instantiation] context assigned | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
+	_log_timing("Instantiation", "context assigned", Time.get_ticks_msec() - phase_marker)
 
 	if _composition_orchestrator == null:
 		push_error("Missing required node: %s" % NODE_COMPOSITION_ORCHESTRATOR)
@@ -123,27 +116,19 @@ func _ready() -> void:
 		_composition_orchestrator.build_bootstrap_context(self, resolved_context),
 	):
 		return
-	print("[Instantiation] bootstrap_world complete | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
+	_log_timing("Instantiation", "bootstrap_world complete", Time.get_ticks_msec() - phase_marker)
 
 	phase_marker = Time.get_ticks_msec()
 	_setup_game_state_machine()
 	_add_world_environment()
 	apply_movement_preset(active_movement_preset)
 	_index_hostile_definitions()
-	print("[Instantiation] sync setup complete | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
+	_log_timing("Instantiation", "sync setup complete", Time.get_ticks_msec() - phase_marker)
 
 	phase_marker = Time.get_ticks_msec()
 	_run_staged_bootstrap.call_deferred(scene_init_started_at)
-	print("[Instantiation] deferred calls queued | elapsed=%dms" % [
-		Time.get_ticks_msec() - phase_marker
-	])
-	print("[Instantiation] _ready() complete | total_elapsed=%dms" % [
-		Time.get_ticks_msec() - scene_init_started_at
-	])
+	_log_timing("Instantiation", "deferred calls queued", Time.get_ticks_msec() - phase_marker)
+	_log_timing("Instantiation", "_ready() complete", Time.get_ticks_msec() - scene_init_started_at)
 	_log_scene_init_time.call_deferred(scene_init_started_at)
 
 
@@ -152,33 +137,24 @@ func _run_staged_bootstrap(started_at_ms: int) -> void:
 	if tree == null:
 		return
 
-	# Prioritize controls-ready wiring so player input becomes responsive ASAP.
+	# Keep turn-facing visuals warm before enabling controls.
 	_wire_occupancy()
 	_wire_turn_manager()
+	_author_floor_1()
+	_wire_hostiles()
+	_initialize_floor()
+	_configure_huds()
 	_refresh_minimap_overlay()
 	_emit_controls_ready_once()
-	print("[SceneInitTime] controls_ready | total_elapsed_ms=%d" % [
-		Time.get_ticks_msec() - started_at_ms
-	])
+	_log_timing("SceneInitTime", "controls_ready", Time.get_ticks_msec() - started_at_ms)
 
 	# Defer non-critical world composition and presentation work across frames.
 	await tree.process_frame
 
-	_author_floor_1()
-	await tree.process_frame
-
-	_wire_hostiles()
-	_initialize_floor()
-	_refresh_minimap_overlay()
-	await tree.process_frame
-
-	_add_huds()
 	_wire_dialog_module()
 	_wire_audio_orchestrator()
 
-	print("[SceneInitTime] staged_bootstrap.complete | total_elapsed_ms=%d" % [
-		Time.get_ticks_msec() - started_at_ms
-	])
+	_log_timing("SceneInitTime", "staged_bootstrap.complete", Time.get_ticks_msec() - started_at_ms)
 
 
 func _emit_controls_ready_once() -> void:
@@ -280,8 +256,7 @@ func _wire_dialog_module() -> void:
 	_dialog_module.configure(_overlay_module, _turn_manager, _encounter_module, _player, self)
 	_dialog_module.present_intro_then(Callable())
 	_dialog_module.begin_floor(floor_number, max_floor_number)
-	var elapsed := Time.get_ticks_msec() - task_started
-	print("[DeferredTask] _wire_dialog_module | elapsed=%dms" % [elapsed])
+	_log_task_timing("_wire_dialog_module", Time.get_ticks_msec() - task_started)
 
 
 func _wire_audio_orchestrator() -> void:
@@ -291,7 +266,7 @@ func _wire_audio_orchestrator() -> void:
 
 	if _audio_orchestrator == null:
 		var audio_orchestrator_script := load(
-			"res://scenes/world/modules/world_audio_orchestrator.gd"
+			"res://scenes/world/modules/world_audio_orchestrator.gd",
 		) as Script
 		if audio_orchestrator_script == null:
 			return
@@ -305,8 +280,7 @@ func _wire_audio_orchestrator() -> void:
 		_overlay_module,
 		audio_wiring_profile,
 	)
-	var elapsed := Time.get_ticks_msec() - task_started
-	print("[DeferredTask] _wire_audio_orchestrator | elapsed=%dms" % [elapsed])
+	_log_task_timing("_wire_audio_orchestrator", Time.get_ticks_msec() - task_started)
 
 
 func _setup_game_state_machine() -> void:
@@ -349,7 +323,7 @@ func restart_current_run() -> void:
 	if tree == null:
 		return
 	if tree.current_scene == self:
-		print("[SceneRestartTiming] reload_current_scene() called | elapsed_ms=0")
+		_log_timing("SceneRestartTiming", "reload_current_scene() called")
 		tree.reload_current_scene()
 		return
 
@@ -361,7 +335,7 @@ func restart_current_run() -> void:
 	if packed_scene == null:
 		start_gameplay()
 		return
-	print("[SceneRestartTiming] _deferred_restart_with_scene() queued | scene=%s" % path)
+	_log_timing("SceneRestartTiming", "_deferred_restart_with_scene() queued | scene=%s" % path)
 	call_deferred("_deferred_restart_with_scene", packed_scene)
 
 
@@ -399,13 +373,21 @@ func get_player_inventory_items() -> Array:
 	return _player.inventory.get_items()
 
 
+func _log_timing(tag: String, label: String, elapsed_ms: int = -1) -> void:
+	if not enable_timing_logs:
+		return
+	if elapsed_ms >= 0:
+		print("[%s] %s | elapsed_ms=%d" % [tag, label, elapsed_ms])
+	else:
+		print("[%s] %s" % [tag, label])
+
+
 func _log_scene_init_time(started_at_ms: int) -> void:
-	var elapsed_ms := Time.get_ticks_msec() - started_at_ms
-	print("[SceneInitTime] main._ready() | elapsed_ms=%d" % [elapsed_ms])
+	_log_timing("SceneInitTime", "main._ready()", Time.get_ticks_msec() - started_at_ms)
 
 
-func _log_task_timing(task_name: String) -> void:
-	print("[DeferredTask] %s completed" % [task_name])
+func _log_task_timing(task_name: String, elapsed_ms: int = -1) -> void:
+	_log_timing("DeferredTask", task_name, elapsed_ms)
 
 
 func get_hostiles() -> Array:
@@ -432,34 +414,34 @@ func _is_player_cell_passable(cell: Vector2i) -> bool:
 	return _grid_module.is_player_cell_passable(cell, get_hostiles(), get_blockable_entities())
 
 
-func _add_huds() -> void:
+func _configure_huds() -> void:
 	var task_started := Time.get_ticks_msec()
-	var layer := get_node_or_null("OverlayLayer") as CanvasLayer
-	if layer == null:
+	var hud := get_node_or_null("OverlayLayer/HUD")
+	if hud == null:
 		return
 
-	if hp_hud_scene != null:
-		var hp_hud := hp_hud_scene.instantiate()
-		layer.add_child(hp_hud)
+	var hp_hud := hud.get_node_or_null("HPHUD")
+	if hp_hud != null and hp_hud.has_method("configure"):
 		hp_hud.configure(_player)
 
-	if belt_hud_scene != null:
-		var belt_hud := belt_hud_scene.instantiate()
-		layer.add_child(belt_hud)
+	var belt_hud := hud.get_node_or_null("BeltHUD")
+	if belt_hud != null and belt_hud.has_method("configure"):
 		belt_hud.configure(_player, _turn_manager)
+	if belt_hud != null and belt_hud.has_signal("slot_clicked"):
+		belt_hud.slot_clicked.connect(_on_belt_slot_clicked)
 
-	if clean_hud_scene != null:
-		var clean_hud := clean_hud_scene.instantiate()
-		layer.add_child(clean_hud)
+	var clean_hud := hud.get_node_or_null("CleanHUD")
+	if clean_hud != null and clean_hud.has_method("configure"):
 		clean_hud.configure(_turn_manager)
 
-	_ui_module.setup_analysis_panel(layer, analysis_hud_scene, _turn_manager)
-
-	if toast_hud_scene != null:
-		var toast_hud := toast_hud_scene.instantiate()
-		layer.add_child(toast_hud)
+	var toast_hud := hud.get_node_or_null("ToastHUD")
+	if toast_hud != null and toast_hud.has_method("configure"):
 		toast_hud.configure(_turn_manager)
-	print("[DeferredTask] _add_huds | elapsed=%dms" % [Time.get_ticks_msec() - task_started])
+
+	var analysis_hud := hud.get_node_or_null("AnalysisHUD") as Control
+	_ui_module.assign_analysis_hud(analysis_hud, _turn_manager)
+
+	_log_task_timing("_configure_huds", Time.get_ticks_msec() - task_started)
 
 
 func _author_floor_1() -> void:
@@ -488,8 +470,7 @@ func _author_floor_1() -> void:
 		_spawn_chute(Vector2i(6, 5))
 		_spawn_chest(valid_cells.pop_back(), potion_item)
 
-	var elapsed := Time.get_ticks_msec() - task_started
-	print("[DeferredTask] _author_floor_1 | elapsed=%dms" % [elapsed])
+	_log_task_timing("_author_floor_1", Time.get_ticks_msec() - task_started)
 
 
 func _index_hostile_definitions() -> void:
@@ -598,7 +579,7 @@ func _wire_occupancy() -> void:
 	_refresh_minimap_overlay()
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
-	print("[DeferredTask] _wire_occupancy | elapsed=%dms" % [Time.get_ticks_msec() - task_started])
+	_log_task_timing("_wire_occupancy", Time.get_ticks_msec() - task_started)
 
 
 func _wire_hostiles() -> void:
@@ -610,7 +591,7 @@ func _wire_hostiles() -> void:
 			hostile.movement_config = mcfg
 	if _player != null and _player.movement_controller != null:
 		_player.movement_controller.passability_fn = _is_player_cell_passable
-	print("[DeferredTask] _wire_hostiles | elapsed=%dms" % [Time.get_ticks_msec() - task_started])
+	_log_task_timing("_wire_hostiles", Time.get_ticks_msec() - task_started)
 
 
 func _wire_turn_manager() -> void:
@@ -622,8 +603,7 @@ func _wire_turn_manager() -> void:
 	_turn_manager.name = "TurnManager"
 	add_child(_turn_manager)
 	_turn_manager.configure(_player, _encounter_module, _grid_module, self)
-	var elapsed := Time.get_ticks_msec() - task_started
-	print("[DeferredTask] _wire_turn_manager | elapsed=%dms" % [elapsed])
+	_log_task_timing("_wire_turn_manager", Time.get_ticks_msec() - task_started)
 
 	# Wire player signals to turn manager
 	if not _player.turn_action_performed.is_connected(_on_player_turn_action):
@@ -694,8 +674,7 @@ func _initialize_floor() -> void:
 	var task_started := Time.get_ticks_msec()
 	if _turn_manager != null:
 		_turn_manager.initialize_floor()
-	var elapsed := Time.get_ticks_msec() - task_started
-	print("[DeferredTask] _initialize_floor | elapsed=%dms" % [elapsed])
+	_log_task_timing("_initialize_floor", Time.get_ticks_msec() - task_started)
 
 
 func _check_exit_condition() -> void:
@@ -739,3 +718,17 @@ func _input(event: InputEvent) -> void:
 		# Ensure the click location becomes the active target before analysis.
 		_turn_manager.process_hover_target(mouse_event.position, camera)
 		_turn_manager.process_analyze_target()
+
+
+func _on_belt_slot_clicked(slot_index: int, is_drop: bool) -> void:
+	if not is_gameplay_state_active():
+		return
+	if _turn_manager == null:
+		return
+	if has_active_overlay():
+		return
+
+	if is_drop:
+		_turn_manager.process_player_drop(slot_index)
+	else:
+		_turn_manager.process_slot_use(slot_index)

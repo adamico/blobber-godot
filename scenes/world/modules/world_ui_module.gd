@@ -55,22 +55,10 @@ func setup_hp_bar(overlay_layer: CanvasLayer) -> void:
 	_player.stats.healed.connect(_on_player_healed)
 
 
-func setup_analysis_panel(
-		overlay_layer: CanvasLayer,
-		analysis_hud_scene: PackedScene,
-		turn_manager: WorldTurnManager,
-) -> void:
-	if overlay_layer == null or analysis_hud_scene == null or turn_manager == null:
+func assign_analysis_hud(hud: Control, turn_manager: WorldTurnManager) -> void:
+	if hud == null or turn_manager == null:
 		return
-
-	if _analysis_hud != null and is_instance_valid(_analysis_hud):
-		return
-
-	_analysis_hud = analysis_hud_scene.instantiate() as Control
-	if _analysis_hud == null:
-		return
-
-	overlay_layer.add_child(_analysis_hud)
+	_analysis_hud = hud
 	if _analysis_hud.has_method("configure"):
 		_analysis_hud.call("configure", turn_manager)
 

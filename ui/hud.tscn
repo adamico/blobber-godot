@@ -1,0 +1,73 @@
+[gd_scene format=3 uid="uid://sh86p1wy48gu"]
+
+[ext_resource type="Theme" uid="uid://bnwtjlgtjkys8" path="res://hud_theme.tres" id="1_srpbi"]
+[ext_resource type="Script" uid="uid://c7krl4pwfdtn5" path="res://scenes/overlays/minimap_overlay.gd" id="2_spcu4"]
+[ext_resource type="PackedScene" uid="uid://fyuw05stj1rb" path="res://ui/hud_separator.tscn" id="3_ff8ar"]
+[ext_resource type="PackedScene" uid="uid://k4eo6chcrluc" path="res://ui/hp_hud.tscn" id="4_m0eg6"]
+[ext_resource type="PackedScene" uid="uid://wfhusc5x0ssf" path="res://ui/belt_hud.tscn" id="5_b00kl"]
+[ext_resource type="PackedScene" uid="uid://1rq7cemd3thf" path="res://ui/clean_hud.tscn" id="6_so1yu"]
+[ext_resource type="PackedScene" uid="uid://fhdav1vof61b" path="res://ui/analysis_hud.tscn" id="7_65xic"]
+[ext_resource type="PackedScene" uid="uid://tqht4f75jbjl" path="res://ui/toast_hud.tscn" id="8_mp5xd"]
+
+[node name="HUD" type="Control" unique_id=1819277184]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MinimapOverlay" type="Control" parent="." unique_id=840603830]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 1016.0
+offset_top = 16.0
+offset_right = 1264.0
+offset_bottom = 264.0
+mouse_filter = 2
+theme = ExtResource("1_srpbi")
+script = ExtResource("2_spcu4")
+border_color = Color(0.6509804, 1, 0.5882353, 1)
+blocked_color = Color(0.6509804, 1, 0.5882353, 1)
+player_color = Color(1, 1, 1, 0.9490196)
+
+[node name="GridCoordsLabel" type="Label" parent="MinimapOverlay" unique_id=1174449129]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = -8.0
+offset_bottom = 32.0
+grow_horizontal = 2
+text = "X: 0  Y: 0"
+horizontal_alignment = 2
+
+[node name="Hud Separator" parent="." unique_id=334027125 instance=ExtResource("3_ff8ar")]
+layout_mode = 1
+offset_top = 258.0
+offset_bottom = 258.0
+
+[node name="HPHUD" parent="." unique_id=1522271836 instance=ExtResource("4_m0eg6")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="BeltHUD" parent="." unique_id=262300838 instance=ExtResource("5_b00kl")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="CleanHUD" parent="." unique_id=1389235038 instance=ExtResource("6_so1yu")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="AnalysisHUD" parent="." unique_id=167237793 instance=ExtResource("7_65xic")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="ToastHUD" parent="." unique_id=1849302741 instance=ExtResource("8_mp5xd")]
+unique_name_in_owner = true
+layout_mode = 1

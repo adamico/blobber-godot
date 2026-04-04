@@ -17,8 +17,8 @@ func default_node_paths() -> Dictionary:
 		"event_router_orchestrator": "EventRouterOrchestrator",
 		"overlay_mount": "OverlayLayer/OverlayMount",
 		"debug_panel": "OverlayLayer/DebugPanel",
-		"grid_coords_label": "OverlayLayer/MinimapOverlay/GridCoordsLabel",
-		"minimap_overlay": "OverlayLayer/MinimapOverlay",
+		"grid_coords_label": "OverlayLayer/HUD/MinimapOverlay/GridCoordsLabel",
+		"minimap_overlay": "OverlayLayer/HUD/MinimapOverlay",
 		"btn_toggle_minimap": "OverlayLayer/DebugPanel/Margin/VBox/ToggleMinimap",
 	}
 
