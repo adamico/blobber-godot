@@ -52,9 +52,29 @@ var _phrases: Dictionary = {
 	"onboarding.first_interact_space": {
 		"title": "Interaction Prompt",
 		"text": (
-			"See that object? You can interact with it.\n\n"
-			+ "Press SPACE to interact.\n"
-			+ "Use it to pick up items and open chests."
+			"Nearby objects are available for manual interaction.\n\n"
+			+ "Press SPACE to process the selected object.\n"
+			+ "Approved outcomes include item pickup and chest access."
+		),
+		"once": true,
+	},
+	"onboarding.analysis_intro": {
+		"title": "Field Analysis",
+		"text": (
+			"Analytical review is available for nearby hazards and equipment.\n\n"
+			+ "Hover the mouse over a target to select it.\n"
+			+ "Press F or left click to file an analysis request.\n\n"
+			+ "Use R and T to cycle candidates if your standards are unusually high."
+		),
+		"once": true,
+	},
+	"onboarding.analysis_turn_cost": {
+		"title": "Analysis Compliance",
+		"text": (
+			"Analysis confirmed.\n\n"
+			+ "Successful analysis consumes your turn.\n"
+			+ "The hazards will then proceed with theirs.\n\n"
+			+ "Please schedule curiosity accordingly."
 		),
 		"once": true,
 	},
@@ -332,6 +352,7 @@ var _max_floor_number := 1
 var _shown_first_item_use := false
 var _shown_first_item_drop := false
 var _shown_first_interact_space := false
+var _shown_analysis_intro := false
 
 
 func configure(
@@ -352,7 +373,7 @@ func configure(
 
 
 func present_intro_then(on_done: Callable) -> bool:
-	return present_phrase_then("intro.job_briefing", on_done, { }, true)
+	return present_phrase_then("intro.job_briefing", on_done, { }, false)
 
 
 func begin_floor(floor_number: int, max_floor_number: int) -> void:
@@ -360,6 +381,13 @@ func begin_floor(floor_number: int, max_floor_number: int) -> void:
 	_max_floor_number = maxi(max_floor_number, 1)
 	queue_phrase("onboarding.enter_floor", { "N": _floor_number }, false)
 	queue_phrase("onboarding.floor_visible_assessment")
+	if (
+		_floor_number >= 2
+		and not _shown_analysis_intro
+		and not _has_seen("onboarding.analysis_intro")
+	):
+		_shown_analysis_intro = true
+		queue_phrase("onboarding.analysis_intro")
 
 
 func present_failure_then(on_done: Callable) -> bool:
@@ -443,6 +471,9 @@ func _connect_signals() -> void:
 				_on_chest_spotted_first_time,
 			):
 				_turn_manager.chest_spotted_first_time.connect(_on_chest_spotted_first_time)
+		if _turn_manager.has_signal("analysis_target_changed"):
+			if not _turn_manager.analysis_target_changed.is_connected(_on_analysis_target_changed):
+				_turn_manager.analysis_target_changed.connect(_on_analysis_target_changed)
 		if _turn_manager.has_signal("aoe_multi_hit"):
 			if not _turn_manager.aoe_multi_hit.is_connected(_on_aoe_multi_hit):
 				_turn_manager.aoe_multi_hit.connect(_on_aoe_multi_hit)
@@ -553,6 +584,20 @@ func _on_chest_spotted_first_time(_chest) -> void:
 	_queue_first_interact_space_prompt()
 
 
+func _on_analysis_target_changed(target: Dictionary) -> void:
+	if _shown_analysis_intro or _has_seen("onboarding.analysis_intro"):
+		return
+	if target.is_empty():
+		return
+	if String(target.get("source", "")) != "hover":
+		return
+	var kind := String(target.get("kind", ""))
+	if kind != "pickup" and kind != "chest" and kind != "chute" and kind != "exit":
+		return
+	_shown_analysis_intro = true
+	queue_phrase("onboarding.analysis_intro")
+
+
 func _queue_first_interact_space_prompt() -> void:
 	if _shown_first_interact_space:
 		return
@@ -563,6 +608,9 @@ func _queue_first_interact_space_prompt() -> void:
 func _on_action_feedback(text: String, _is_positive: bool) -> void:
 	if text == "INVENTORY FULL":
 		queue_phrase("onboarding.inventory_full")
+		return
+	if text == "ANALYZED":
+		queue_phrase("onboarding.analysis_turn_cost")
 		return
 	if text == "DISPOSED":
 		queue_phrase("onboarding.disposal_chute")
