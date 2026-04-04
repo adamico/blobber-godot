@@ -258,6 +258,10 @@ func apply_movement_preset(preset_name: String = "") -> bool:
 func return_to_title() -> void:
 	if title_scene_path.is_empty():
 		return
+	var scene_transition := get_node_or_null("/root/SceneTransition")
+	if scene_transition != null and scene_transition.has_method("change_scene_to_file"):
+		scene_transition.call("change_scene_to_file", title_scene_path)
+		return
 	get_tree().change_scene_to_file(title_scene_path)
 
 

@@ -115,6 +115,10 @@ func _play_ui_signal_key(signal_key: StringName) -> void:
 
 
 func _change_to_gameplay_scene() -> void:
+	var scene_transition := get_node_or_null("/root/SceneTransition")
+	if scene_transition != null and scene_transition.has_method("change_scene_to_file"):
+		scene_transition.call("change_scene_to_file", gameplay_scene_path)
+		return
 	get_tree().change_scene_to_file(gameplay_scene_path)
 
 

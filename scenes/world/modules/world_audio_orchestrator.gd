@@ -46,6 +46,37 @@ func configure(
 		add_child(_music_player)
 
 	_connect_signals()
+	_start_gameplay_music_when_ready()
+
+
+func _start_gameplay_music_when_ready() -> void:
+	var scene_transition := get_node_or_null("/root/SceneTransition")
+	if scene_transition == null:
+		play_by_signal_key(KEY_MUSIC_GAMEPLAY)
+		return
+
+	var transitioning := false
+	if scene_transition.has_method("is_transitioning"):
+		transitioning = bool(scene_transition.call("is_transitioning"))
+
+	if not transitioning:
+		play_by_signal_key(KEY_MUSIC_GAMEPLAY)
+		return
+
+	if not scene_transition.has_signal("transition_finished"):
+		play_by_signal_key(KEY_MUSIC_GAMEPLAY)
+		return
+
+	var finished_callable := Callable(self, "_on_scene_transition_finished")
+	if not scene_transition.is_connected("transition_finished", finished_callable):
+		scene_transition.connect(
+			"transition_finished",
+			finished_callable,
+			CONNECT_ONE_SHOT,
+		)
+
+
+func _on_scene_transition_finished(_scene_path: String) -> void:
 	play_by_signal_key(KEY_MUSIC_GAMEPLAY)
 
 
