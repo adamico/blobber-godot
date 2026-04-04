@@ -1,0 +1,103 @@
+[gd_resource type="Resource" script_class="AudioWiringProfile" format=3 uid="uid://b54xiw0dwonaq"]
+
+[ext_resource type="Script" uid="uid://cy655pbpi1ieu" path="res://models/audio_wiring_profile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://bot6wbyec4mgf" path="res://models/audio_wiring_entry.gd" id="2_entry"]
+
+[sub_resource type="Resource" id="EntryStep"]
+script = ExtResource("2_entry")
+signal_key = &"player.step_completed"
+sound_name = &"sfx.step"
+stream_path = "uid://bsso1s0va6gvw"
+volume_db = -4.0
+cooldown_ms = 20
+pitch_variation = 0.03
+
+[sub_resource type="Resource" id="EntryBump"]
+script = ExtResource("2_entry")
+signal_key = &"player.wall_bumped"
+sound_name = &"sfx.bump"
+stream_path = "uid://dm2o3ybdw0mku"
+volume_db = -3.0
+cooldown_ms = 50
+pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryPickup"]
+script = ExtResource("2_entry")
+signal_key = &"inventory.item_added"
+sound_name = &"sfx.pickup"
+stream_path = "uid://dm1ux12x156dr"
+volume_db = -2.0
+cooldown_ms = 50
+pitch_variation = 0.04
+
+[sub_resource type="Resource" id="EntryHit"]
+script = ExtResource("2_entry")
+signal_key = &"combat.hostile_hit"
+sound_name = &"sfx.hit"
+stream_path = "uid://d0b5d41dffteb"
+volume_db = -2.0
+cooldown_ms = 20
+pitch_variation = 0.04
+
+[sub_resource type="Resource" id="EntryDeath"]
+script = ExtResource("2_entry")
+signal_key = &"player.died"
+sound_name = &"sfx.death"
+stream_path = "uid://r8yqvtdxgp4l"
+volume_db = -1.0
+cooldown_ms = 200
+
+[sub_resource type="Resource" id="EntryDisposal"]
+script = ExtResource("2_entry")
+signal_key = &"world.disposal"
+sound_name = &"sfx.disposal"
+stream_path = "uid://d3it1wd4ej2l4"
+volume_db = -2.0
+cooldown_ms = 60
+pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryAnalysisNewKnowledge"]
+script = ExtResource("2_entry")
+signal_key = &"analysis.new_knowledge"
+sound_name = &"sfx.analysis.new_knowledge"
+stream_path = "uid://b6q87npfw2qbj"
+volume_db = -4.0
+cooldown_ms = 40
+pitch_variation = 0.02
+
+[sub_resource type="Resource" id="EntryAnalysisNoNewKnowledge"]
+script = ExtResource("2_entry")
+signal_key = &"analysis.no_new_knowledge"
+sound_name = &"sfx.analysis.no_new_knowledge"
+stream_path = "uid://mti28f1djbka"
+volume_db = -6.0
+cooldown_ms = 40
+pitch_variation = 0.01
+
+[sub_resource type="Resource" id="EntryDialogContinue"]
+script = ExtResource("2_entry")
+signal_key = &"ui.dialog_continue"
+sound_name = &"ui.dialog_continue"
+stream_path = "uid://dmssvw1fbj464"
+volume_db = -8.0
+cooldown_ms = 30
+
+[sub_resource type="Resource" id="EntryMusicGameplay"]
+script = ExtResource("2_entry")
+signal_key = &"music.gameplay"
+sound_name = &"music.gameplay"
+stream_path = "uid://d3b10bu48jh60"
+bus = &"Music"
+volume_db = -10.0
+
+[sub_resource type="Resource" id="EntryMusicMenu"]
+script = ExtResource("2_entry")
+signal_key = &"music.menu"
+sound_name = &"music.menu"
+stream_path = "uid://bctvnahph6f76"
+bus = &"Music"
+volume_db = -10.0
+
+[resource]
+script = ExtResource("1_profile")
+entries = Array[Resource]([SubResource("EntryStep"), SubResource("EntryBump"), SubResource("EntryPickup"), SubResource("EntryHit"), SubResource("EntryDeath"), SubResource("EntryDisposal"), SubResource("EntryAnalysisNewKnowledge"), SubResource("EntryAnalysisNoNewKnowledge"), SubResource("EntryDialogContinue"), SubResource("EntryMusicGameplay"), SubResource("EntryMusicMenu")])

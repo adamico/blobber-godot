@@ -1,6 +1,7 @@
 extends Control
 
 signal close_requested
+signal continue_pressed
 
 @export var title_text := "Operational Briefing"
 @export var body_text := ""
@@ -47,9 +48,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_pressed():
 		return
 	if event.is_action_pressed("ui_accept"):
+		continue_pressed.emit()
 		close_requested.emit()
 		get_viewport().set_input_as_handled()
 
 
 func _on_continue_pressed() -> void:
+	continue_pressed.emit()
 	close_requested.emit()

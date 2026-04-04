@@ -39,6 +39,8 @@ var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.t
 @export_group("Dialog")
 @export var floor_number := 1
 @export var max_floor_number := 1
+@export_group("Audio")
+@export var audio_wiring_profile: AudioWiringProfile
 
 const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
 const OVERLAY_DEFEAT := &"defeat"
@@ -72,6 +74,7 @@ var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
 var _turn_manager: WorldTurnManager
 var _dialog_module: Node
+var _audio_orchestrator: Node
 var _hostile_definitions_by_id: Dictionary = { }
 
 
@@ -113,6 +116,7 @@ func _ready() -> void:
 	_refresh_minimap_overlay()
 	_add_huds.call_deferred()
 	_wire_dialog_module.call_deferred()
+	_wire_audio_orchestrator.call_deferred()
 
 
 func _add_world_environment() -> void:
@@ -202,6 +206,28 @@ func _wire_dialog_module() -> void:
 	_dialog_module.configure(_overlay_module, _turn_manager, _encounter_module, _player, self)
 	_dialog_module.present_intro_then(Callable())
 	_dialog_module.begin_floor(floor_number, max_floor_number)
+
+
+func _wire_audio_orchestrator() -> void:
+	if _player == null or _turn_manager == null:
+		return
+
+	if _audio_orchestrator == null:
+		var audio_orchestrator_script := load(
+			"res://scenes/world/modules/world_audio_orchestrator.gd"
+		) as Script
+		if audio_orchestrator_script == null:
+			return
+		_audio_orchestrator = audio_orchestrator_script.new()
+		_audio_orchestrator.name = "AudioOrchestrator"
+		add_child(_audio_orchestrator)
+
+	_audio_orchestrator.configure(
+		_player,
+		_turn_manager,
+		_overlay_module,
+		audio_wiring_profile,
+	)
 
 
 func _setup_game_state_machine() -> void:
