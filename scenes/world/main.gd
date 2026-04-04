@@ -258,25 +258,30 @@ func finish_with_failure() -> void:
 func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
 	if floor_number < floor_scenes.size():
-		floor_number += 1
-		# Persist floor number in GameBoot for next scene reload
-		var game_boot := get_node_or_null("/root/GameBoot")
-		if game_boot != null:
-			game_boot.current_floor_number = floor_number
-		if _player != null:
-			_player.input_actions_enabled = false
-		var tree := get_tree()
-		if tree == null:
-			return
-		if tree.current_scene == self:
-			tree.reload_current_scene.call_deferred()
+		_open_floor_complete_overlay()
 		return
 
 	var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
+
 	if _dialog_module != null:
 		if _dialog_module.present_success_then(pct, Callable(self, "_open_victory_overlay")):
 			return
 	_open_victory_overlay()
+
+
+func _advance_to_next_floor() -> void:
+	floor_number += 1
+	# Persist floor number in GameBoot for next scene reload
+	var game_boot := get_node_or_null("/root/GameBoot")
+	if game_boot != null:
+		game_boot.current_floor_number = floor_number
+	if _player != null:
+		_player.input_actions_enabled = false
+	var tree := get_tree()
+	if tree == null:
+		return
+	if tree.current_scene == self:
+		tree.reload_current_scene.call_deferred()
 
 
 func _open_defeat_overlay() -> void:
@@ -421,6 +426,11 @@ func return_to_title() -> void:
 
 
 func restart_current_run() -> void:
+	if _overlay_module != null:
+		if _overlay_module.active_overlay_kind() == OVERLAY_FLOOR_COMPLETE:
+			_advance_to_next_floor()
+			return
+
 	var tree := get_tree()
 	if tree == null:
 		return
@@ -921,6 +931,9 @@ func _initialize_floor() -> void:
 
 
 func _check_exit_condition() -> void:
+	if _dialog_module != null and _dialog_module.has_method("has_blocking_dialog"):
+		if bool(_dialog_module.call("has_blocking_dialog")):
+			return
 	if _player == null or _player.grid_state == null:
 		return
 

@@ -566,9 +566,19 @@ func _on_action_feedback(text: String, _is_positive: bool) -> void:
 		return
 	if text == "DISPOSED":
 		queue_phrase("onboarding.disposal_chute")
-		if _turn_manager != null and _turn_manager.is_floor_clean():
-			queue_phrase("onboarding.first_floor_complete")
 		return
+
+
+func has_blocking_dialog() -> bool:
+	return _showing_dialog or not _queue.is_empty()
+
+
+func _request_world_exit_recheck() -> void:
+	if _world_root == null:
+		return
+	if not _world_root.has_method("_check_exit_condition"):
+		return
+	_world_root.call_deferred("_check_exit_condition")
 
 
 func _on_turn_completed() -> void:
