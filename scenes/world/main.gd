@@ -39,6 +39,8 @@ var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.t
 @export var max_floor_number := 1
 @export_group("Audio")
 @export var audio_wiring_profile: AudioWiringProfile
+@export_group("VFX")
+@export var vfx_wiring_profile: Resource
 
 const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
 const OVERLAY_DEFEAT := &"defeat"
@@ -49,6 +51,7 @@ const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
 const GAME_STATE_GAMEOVER_SUCCESS := &"gameover_success"
 const NODE_COMPOSITION_ORCHESTRATOR := "CompositionOrchestrator"
 const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
+const WORLD_TURN_MANAGER_SCRIPT := preload("res://scenes/world/modules/world_turn_manager.gd")
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
@@ -70,9 +73,10 @@ var _state_orchestrator: WorldStateOrchestrator
 var _composition_orchestrator: WorldCompositionOrchestrator
 var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
-var _turn_manager: WorldTurnManager
+var _turn_manager: Node
 var _dialog_module: Node
 var _audio_orchestrator: Node
+var _vfx_orchestrator: Node
 var _belt_hud: Control
 var _hostile_definitions_by_id: Dictionary = { }
 var _controls_ready_emitted := false
@@ -154,6 +158,7 @@ func _run_staged_bootstrap(started_at_ms: int) -> void:
 
 	_wire_dialog_module()
 	_wire_audio_orchestrator()
+	_wire_vfx_orchestrator()
 
 	_log_timing("SceneInitTime", "staged_bootstrap.complete", Time.get_ticks_msec() - started_at_ms)
 
@@ -217,7 +222,7 @@ func finish_with_failure() -> void:
 
 func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
-	var pct := _turn_manager.get_clean_percent() if _turn_manager != null else 0
+	var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
 	if _dialog_module != null:
 		if _dialog_module.present_success_then(pct, Callable(self, "_open_floor_complete_overlay")):
 			return
@@ -234,7 +239,7 @@ func _open_floor_complete_overlay() -> void:
 	if _overlay_module != null:
 		var overlay := _overlay_module.active_overlay()
 		if overlay != null and overlay.has_method("configure_result"):
-			var pct := _turn_manager.get_clean_percent() if _turn_manager != null else 0
+			var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
 			overlay.call("configure_result", pct)
 
 
@@ -282,6 +287,34 @@ func _wire_audio_orchestrator() -> void:
 		audio_wiring_profile,
 	)
 	_log_task_timing("_wire_audio_orchestrator", Time.get_ticks_msec() - task_started)
+
+
+func _wire_vfx_orchestrator() -> void:
+	var task_started := Time.get_ticks_msec()
+	if _player == null or _turn_manager == null:
+		return
+
+	if _vfx_orchestrator == null:
+		var vfx_orchestrator_script := load(
+			"res://scenes/world/modules/world_vfx_orchestrator.gd",
+		) as Script
+		if vfx_orchestrator_script == null:
+			return
+		_vfx_orchestrator = vfx_orchestrator_script.new()
+		_vfx_orchestrator.name = "VFXOrchestrator"
+		add_child(_vfx_orchestrator)
+
+	_vfx_orchestrator.configure(
+		_player,
+		_turn_manager,
+		self,
+		_resolve_vfx_profile(),
+	)
+	_log_task_timing("_wire_vfx_orchestrator", Time.get_ticks_msec() - task_started)
+
+
+func _resolve_vfx_profile() -> Resource:
+	return vfx_wiring_profile
 
 
 func _setup_game_state_machine() -> void:
@@ -601,7 +634,7 @@ func _wire_turn_manager() -> void:
 	if _player == null:
 		return
 
-	_turn_manager = WorldTurnManager.new()
+	_turn_manager = WORLD_TURN_MANAGER_SCRIPT.new()
 	_turn_manager.name = "TurnManager"
 	add_child(_turn_manager)
 	_turn_manager.configure(_player, _encounter_module, _grid_module, self)

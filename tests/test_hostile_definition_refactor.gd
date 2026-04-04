@@ -8,7 +8,7 @@ const CursedHostile = preload("res://resources/hostiles/cursed_hazard.tres")
 const WorldPickupScript = preload("res://scenes/world/world_pickup.gd")
 const WorldTurnManagerScript = preload("res://scenes/world/modules/world_turn_manager.gd")
 const WorldEncounterModuleScript = preload("res://scenes/world/modules/world_encounter_module.gd")
-const WorldMainScript = preload("res://scenes/world/main.gd")
+const WorldMainScene = preload("res://scenes/world/main.tscn")
 const PlayerScene = preload("res://scenes/player/player.tscn")
 
 
@@ -66,7 +66,6 @@ class FakeInventory:
 class NonCorrosiveHostile:
 	extends Hostile
 
-
 	func _init(cell: Vector2i) -> void:
 		initial_cell = cell
 		initial_facing = GridDefinitions.Facing.NORTH
@@ -91,7 +90,7 @@ func test_definitions_use_resource_driven_hostile_visuals() -> void:
 
 
 func test_spawn_uses_shared_hostile_scene_with_definition_visual_data() -> void:
-	var world := WorldMainScript.new()
+	var world := WorldMainScene.instantiate()
 	var actor: Hostile = world.call("_spawn_hostile", Vector2i(3, 2), BurningHostile) as Hostile
 
 	assert_not_null(actor)

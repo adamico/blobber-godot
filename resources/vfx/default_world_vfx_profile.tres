@@ -1,0 +1,101 @@
+[gd_resource type="Resource" script_class="VFXWiringProfile" format=3]
+
+[ext_resource type="Script" path="res://models/vfx_wiring_profile.gd" id="1_profile"]
+[ext_resource type="Script" path="res://models/vfx_wiring_entry.gd" id="2_entry"]
+[ext_resource type="PackedScene" path="res://scenes/vfx/particles/item_used_particles.tscn" id="3_item_used"]
+[ext_resource type="PackedScene" path="res://scenes/vfx/particles/item_dropped_particles.tscn" id="4_item_dropped"]
+[ext_resource type="PackedScene" path="res://scenes/vfx/particles/hostile_killed_particles.tscn" id="5_hostile_killed"]
+[ext_resource type="PackedScene" path="res://scenes/vfx/particles/hostile_respawned_particles.tscn" id="6_hostile_respawned"]
+[ext_resource type="PackedScene" path="res://scenes/vfx/particles/debris_disposed_particles.tscn" id="7_debris_disposed"]
+
+[sub_resource type="Resource" id="VFXWiringEntry_item_used"]
+script = ExtResource("2_entry")
+signal_key = &"item.used"
+effect_type = 3
+duration = 0.35
+intensity = 0.55
+color = Color(0.980392, 0.827451, 0.309804, 1)
+particle_amount = 12
+particle_scene = ExtResource("3_item_used")
+position_offset = Vector3(0, 0.2, 0)
+
+[sub_resource type="Resource" id="VFXWiringEntry_item_dropped"]
+script = ExtResource("2_entry")
+signal_key = &"item.dropped"
+effect_type = 3
+duration = 0.28
+intensity = 0.4
+color = Color(0.839216, 0.839216, 0.839216, 1)
+particle_amount = 8
+particle_scene = ExtResource("4_item_dropped")
+position_offset = Vector3(0, 0.15, 0)
+
+[sub_resource type="Resource" id="VFXWiringEntry_hostile_killed"]
+script = ExtResource("2_entry")
+signal_key = &"hostile.killed"
+effect_type = 3
+duration = 0.45
+intensity = 0.8
+color = Color(1, 0.482353, 0.305882, 1)
+particle_amount = 18
+particle_scene = ExtResource("5_hostile_killed")
+position_offset = Vector3(0, 0.2, 0)
+
+[sub_resource type="Resource" id="VFXWiringEntry_hostile_respawned"]
+script = ExtResource("2_entry")
+signal_key = &"hostile.respawned"
+effect_type = 3
+duration = 0.45
+intensity = 0.75
+color = Color(0.447059, 0.760784, 0.980392, 1)
+particle_amount = 16
+particle_scene = ExtResource("6_hostile_respawned")
+position_offset = Vector3(0, 0.15, 0)
+
+[sub_resource type="Resource" id="VFXWiringEntry_debris_disposed"]
+script = ExtResource("2_entry")
+signal_key = &"debris.disposed"
+effect_type = 3
+duration = 0.3
+intensity = 0.5
+color = Color(0.666667, 1, 0.67451, 1)
+particle_scene = ExtResource("7_debris_disposed")
+position_offset = Vector3(0, 0.1, 0)
+
+[sub_resource type="Resource" id="VFXWiringEntry_player_bumped"]
+script = ExtResource("2_entry")
+signal_key = &"player.bumped"
+effect_type = 0
+cooldown_ms = 40
+duration = 0.08
+intensity = 0.018
+
+[sub_resource type="Resource" id="VFXWiringEntry_player_hit_shake"]
+script = ExtResource("2_entry")
+signal_key = &"player.hit"
+effect_type = 0
+cooldown_ms = 80
+duration = 0.16
+intensity = 0.05
+
+[sub_resource type="Resource" id="VFXWiringEntry_player_hit_flash"]
+script = ExtResource("2_entry")
+signal_key = &"player.hit"
+effect_type = 1
+cooldown_ms = 80
+duration = 0.2
+intensity = 1.0
+color = Color(1, 0.27451, 0.27451, 1)
+flash_peak_alpha = 0.22
+
+[sub_resource type="Resource" id="VFXWiringEntry_hostile_hit_flash"]
+script = ExtResource("2_entry")
+signal_key = &"hostile.hit"
+effect_type = 2
+cooldown_ms = 50
+duration = 0.12
+intensity = 1.0
+
+[resource]
+script = ExtResource("1_profile")
+entries = [SubResource("VFXWiringEntry_item_used"), SubResource("VFXWiringEntry_item_dropped"), SubResource("VFXWiringEntry_hostile_killed"), SubResource("VFXWiringEntry_hostile_respawned"), SubResource("VFXWiringEntry_debris_disposed"), SubResource("VFXWiringEntry_player_bumped"), SubResource("VFXWiringEntry_player_hit_shake"), SubResource("VFXWiringEntry_player_hit_flash"), SubResource("VFXWiringEntry_hostile_hit_flash")]

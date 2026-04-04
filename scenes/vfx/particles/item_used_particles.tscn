@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://e4cfjiiqjwbp"]
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_proc"]
+emission_shape = 1
+emission_sphere_radius = 0.15
+velocity_pivot = Vector3(0, 1, 0)
+direction = Vector3(0, 0, 1)
+initial_velocity_min = 1.2
+initial_velocity_max = 2.8
+gravity = Vector3(0, -1.2, 0)
+scale_min = 0.35
+scale_max = 0.85
+color = Color(0.980392, 0.827451, 0.309804, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mat"]
+shading_mode = 0
+albedo_color = Color(0.980392, 0.827451, 0.309804, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_mesh"]
+material = SubResource("StandardMaterial3D_mat")
+radius = 0.03
+height = 0.06
+
+[node name="ItemUsedParticles" type="GPUParticles3D" unique_id=1041711171]
+emitting = false
+amount = 14
+lifetime = 0.45
+one_shot = true
+explosiveness = 1.0
+process_material = SubResource("ParticleProcessMaterial_proc")
+draw_pass_1 = SubResource("SphereMesh_mesh")

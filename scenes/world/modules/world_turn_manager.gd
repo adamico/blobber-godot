@@ -10,7 +10,9 @@ signal debris_reverted(cell: Vector2i, hostile_definition_id: StringName)
 signal debris_dropped(cell: Vector2i)
 signal debris_countdown_ticked(cell: Vector2i, turns_remaining: int)
 signal debris_respawned(cell: Vector2i, hostile_definition_id: StringName)
+signal debris_disposed(cell: Vector2i, item: ItemData)
 signal item_dropped(cell: Vector2i)
+signal item_used(item: ItemData, cell: Vector2i)
 signal disposal_registered(item: ItemData)
 signal floor_exit_reached
 signal hostile_hit(
@@ -20,6 +22,8 @@ signal hostile_hit(
 		item_consumed: bool,
 		item_is_aoe: bool,
 )
+signal hostile_impacted(hostile: Hostile, cell: Vector2i)
+signal hostile_killed(cell: Vector2i, hostile_definition_id: StringName)
 signal aoe_multi_hit(item_name: String, hit_count: int)
 signal action_feedback(text: String, is_positive: bool)
 signal analysis_target_changed(target: Dictionary)
@@ -94,11 +98,14 @@ func process_slot_use(slot_index: int) -> void:
 	var item = _player.inventory.get_item_at(slot_index) as ItemData
 	if item == null:
 		return
+	var effect_cell := _effect_cell_for_item_use(item)
 
 	if item.item_type == ItemData.ItemType.CONSUMABLE:
 		_player.inventory.use_item(slot_index, _player.stats)
 	else:
 		_use_tool_on_facing(item, slot_index)
+
+	item_used.emit(item, effect_cell)
 
 	_advance_turn()
 
@@ -165,6 +172,7 @@ func process_player_drop(slot_index: int) -> void:
 			return
 		if _player.inventory.remove_at(slot_index):
 			disposal_registered.emit(item)
+			debris_disposed.emit(target_cell, item)
 			_register_disposal(item)
 			action_feedback.emit("DISPOSED", true)
 			turn_completed.emit()
@@ -343,6 +351,7 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 
 			# Normal tool logic
 			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hostile_property)
+			hostile_impacted.emit(hostile, cell)
 			var cleared = hostile.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
 			hit_count += 1
@@ -473,6 +482,7 @@ func _connect_hostile_signals() -> void:
 
 func _on_hostile_cleared(hostile) -> void:
 	if hostile != null and hostile.grid_state != null:
+		hostile_killed.emit(hostile.grid_state.cell, hostile.hostile_definition_id)
 		var dupe := DEBRIS_ITEM.duplicate() as ItemData
 		dupe.origin_hostile_definition_id = hostile.hostile_definition_id
 		dupe.revert_turns_base = int(hostile.revert_turns_base)
@@ -557,6 +567,17 @@ func _register_hostile_tool_interaction(hostile, is_effective: bool, cleared: bo
 	_ensure_analysis_module()
 	if _analysis_module != null:
 		_analysis_module.register_hostile_tool_interaction(hostile, is_effective, cleared)
+
+
+func _effect_cell_for_item_use(item: ItemData) -> Vector2i:
+	if _player == null or _player.grid_state == null:
+		return Vector2i.ZERO
+	if item == null:
+		return _player.grid_state.cell
+	if item.item_type == ItemData.ItemType.CONSUMABLE:
+		return _player.grid_state.cell
+	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
+	return _player.grid_state.cell + facing_vec
 
 
 func _ensure_analysis_module() -> void:

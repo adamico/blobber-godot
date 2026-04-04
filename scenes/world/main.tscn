@@ -27,6 +27,7 @@
 [ext_resource type="Script" uid="uid://y417gem2mn6i" path="res://scenes/world/modules/world_event_bus.gd" id="19_1n8yf"]
 [ext_resource type="Script" uid="uid://rc3uc1iyffmw" path="res://scenes/world/modules/world_event_router_orchestrator.gd" id="20_v0w2m"]
 [ext_resource type="Resource" uid="uid://b54xiw0dwonaq" path="res://resources/audio/default_audio_wiring.tres" id="21_audio_profile"]
+[ext_resource type="Resource" path="res://resources/vfx/default_world_vfx_profile.tres" id="22_vfx_profile"]
 [ext_resource type="Material" uid="uid://wk1fk8ywws1j" path="res://assets/textures/Tiles085_1K-PNG.tres" id="22_8ap0l"]
 [ext_resource type="PackedScene" uid="uid://xn65te06dv" path="res://scenes/world/floor_exit.tscn" id="32_r3w6i"]
 
@@ -53,6 +54,7 @@ potion_item = ExtResource("12_potion")
 disposal_chute_scene = ExtResource("13_28gua")
 chest_scene = ExtResource("13_chest")
 audio_wiring_profile = ExtResource("21_audio_profile")
+vfx_wiring_profile = ExtResource("22_vfx_profile")
 
 [node name="CRTLayer" type="CanvasLayer" parent="." unique_id=1964865318]
 
