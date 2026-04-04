@@ -5,3 +5,4 @@
 - author music and sounds
 - author graphics
 - decorate dungeon
+- voiceover dialogs
