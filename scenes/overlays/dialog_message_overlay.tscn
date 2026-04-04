@@ -1,8 +1,8 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bn728ab2bs747"]
 
-[ext_resource type="Script" path="res://scenes/overlays/dialog_message_overlay.gd" id="1_dialog"]
+[ext_resource type="Script" uid="uid://qtic4ntrf77b" path="res://scenes/overlays/dialog_message_overlay.gd" id="1_dialog"]
 
-[node name="DialogMessageOverlay" type="Control"]
+[node name="DialogMessageOverlay" type="Control" unique_id=2033049873]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_dialog")
 
-[node name="Dimmer" type="ColorRect" parent="."]
+[node name="Dimmer" type="ColorRect" parent="." unique_id=882364246]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -21,7 +21,7 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 0.72)
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Center" type="CenterContainer" parent="." unique_id=1048031984]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -29,37 +29,38 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="Center"]
+[node name="Panel" type="PanelContainer" parent="Center" unique_id=123565554]
 custom_minimum_size = Vector2(560, 340)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="Center/Panel"]
+[node name="Margin" type="MarginContainer" parent="Center/Panel" unique_id=1232255614]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Center/Panel/Margin" unique_id=22190640]
 layout_mode = 2
 theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="Title" type="Label" parent="Center/Panel/Margin/VBox" unique_id=1981008070]
+custom_minimum_size = Vector2(512, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-horizontal_alignment = 1
 text = "Operational Briefing"
+horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="Divider" type="HSeparator" parent="Center/Panel/Margin/VBox"]
+[node name="Divider" type="HSeparator" parent="Center/Panel/Margin/VBox" unique_id=1565938773]
 layout_mode = 2
 
-[node name="Body" type="Label" parent="Center/Panel/Margin/VBox"]
+[node name="Body" type="Label" parent="Center/Panel/Margin/VBox" unique_id=1041277180]
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 size_flags_vertical = 3
 autowrap_mode = 3
 
-[node name="ContinueButton" type="Button" parent="Center/Panel/Margin/VBox"]
+[node name="ContinueButton" type="Button" parent="Center/Panel/Margin/VBox" unique_id=2145765011]
 layout_mode = 2
 text = "Acknowledge"

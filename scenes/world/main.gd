@@ -30,6 +30,8 @@ signal controls_ready
 @export_file("*.tscn") \
 var overlay_floor_complete_scene_path := "res://scenes/overlays/floor_complete_overlay.tscn"
 @export_file("*.tscn") \
+var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
+@export_file("*.tscn") \
 var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") \
 var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.tscn"
@@ -43,6 +45,7 @@ var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.t
 @export var vfx_wiring_profile: Resource
 
 const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
+const OVERLAY_VICTORY := &"victory"
 const OVERLAY_DEFEAT := &"defeat"
 const OVERLAY_DIALOG := &"dialog_message"
 const GAME_STATE_MENU := &"menu"
@@ -224,13 +227,31 @@ func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
 	var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
 	if _dialog_module != null:
-		if _dialog_module.present_success_then(pct, Callable(self, "_open_floor_complete_overlay")):
+		if _dialog_module.present_success_then(pct, Callable(self, "_open_victory_overlay")):
 			return
-	_open_floor_complete_overlay()
+	_open_victory_overlay()
 
 
 func _open_defeat_overlay() -> void:
 	open_overlay(OVERLAY_DEFEAT)
+	if _overlay_module != null:
+		var overlay := _overlay_module.active_overlay()
+		if overlay != null and overlay.has_method("configure_summary"):
+			var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
+			var cleaned: int = _turn_manager.get_clean_cleared() if _turn_manager != null else 0
+			var total: int = _turn_manager.get_clean_total() if _turn_manager != null else 0
+			overlay.call("configure_summary", pct, cleaned, total)
+
+
+func _open_victory_overlay() -> void:
+	open_overlay(OVERLAY_VICTORY)
+	if _overlay_module != null:
+		var overlay := _overlay_module.active_overlay()
+		if overlay != null and overlay.has_method("configure_summary"):
+			var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
+			var cleaned: int = _turn_manager.get_clean_cleared() if _turn_manager != null else 0
+			var total: int = _turn_manager.get_clean_total() if _turn_manager != null else 0
+			overlay.call("configure_summary", pct, cleaned, total)
 
 
 func _open_floor_complete_overlay() -> void:
