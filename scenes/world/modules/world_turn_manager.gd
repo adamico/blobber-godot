@@ -6,6 +6,16 @@ signal turn_completed
 signal clean_status_changed(cleared: int, total: int)
 signal player_died
 signal debris_consumed_as_weapon(cell: Vector2i)
+signal debris_reverted(cell: Vector2i, hostile_definition_id: StringName)
+signal debris_dropped(cell: Vector2i)
+signal hostile_hit(
+	definition_id: StringName,
+	used_item_name: String,
+	is_effective: bool,
+	item_consumed: bool,
+	item_is_aoe: bool,
+)
+signal aoe_multi_hit(item_name: String, hit_count: int)
 signal action_feedback(text: String, is_positive: bool)
 signal analysis_target_changed(target: Dictionary)
 signal analysis_result_ready(result: Dictionary)
@@ -163,6 +173,8 @@ func process_player_drop(slot_index: int) -> void:
 		var p = spawn_pickup(target_cell, item)
 		if p != null and item.origin_hostile_definition_id != StringName():
 			p.setup_revert(item.revert_turns_base, item.origin_hostile_definition_id)
+		if item.item_type == ItemData.ItemType.DEBRIS:
+			debris_dropped.emit(target_cell)
 		# Free action: no turn tick, but emit completion for UI sync
 		turn_completed.emit()
 
@@ -293,6 +305,7 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 
 	var hit_any := false
 	var debris_consumed := false
+	var hit_count := 0
 
 	for cell in cells_to_check:
 		for hostile in _get_hostiles_at(cell):
@@ -320,6 +333,15 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 			var is_effective := RpsSystem.is_effective(item.tool_property, hostile.hostile_property)
 			var cleared = hostile.receive_tool_hit(item.tool_property, _player.stats) as bool
 			hit_any = true
+			hit_count += 1
+			var will_consume := (not item.is_reusable)
+			hostile_hit.emit(
+				hostile.hostile_definition_id,
+				item.item_name,
+				is_effective,
+				will_consume,
+				item.is_aoe,
+			)
 			_register_hostile_tool_interaction(hostile, is_effective, cleared)
 
 			if is_effective:
@@ -332,6 +354,9 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 
 	if (hit_any and not item.is_reusable) or debris_consumed:
 		_player.inventory.remove_at(slot_index)
+
+	if item.is_aoe and hit_count > 1:
+		aoe_multi_hit.emit(item.item_name, hit_count)
 
 
 func _get_hostiles_at(cell: Vector2i) -> Array:
@@ -454,6 +479,7 @@ func _tick_debris_revert() -> void:
 			continue
 		if node is WorldPickup and node.revert_turns_remaining > 0:
 			if node.tick_revert():
+				debris_reverted.emit(node.grid_cell, node.origin_hostile_definition_id)
 				_respawn_hostile_from_revert(node)
 				node.queue_free()
 

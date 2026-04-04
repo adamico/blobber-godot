@@ -29,7 +29,16 @@ static func grade_label(grade: Grade) -> String:
 
 static func flavor_text(grade: Grade) -> String:
 	match grade:
-		Grade.A: return "Outstanding sanitation. Veridian is pleased."
+		Grade.A:
+			return (
+				"Floor certified clean. Impressive. The dungeon hasn't seen this level "
+				+ "of professional conduct since... well. Ever, actually."
+			)
 		Grade.B: return "Acceptable. Some biohazard residue remains."
-		Grade.C: return "Marginal. The union will be hearing about this."
-		_: return "Unsatisfactory. Please update your safety waiver."
+		Grade.C:
+			return "Floor cleared. Technically. The word 'thorough' does not apply here. Moving on."
+		_:
+			return (
+				"This is not what was agreed upon. The remaining hazards will be someone "
+				+ "else's problem. You know this. You did it anyway."
+			)

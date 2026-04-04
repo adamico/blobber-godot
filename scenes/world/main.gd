@@ -33,10 +33,16 @@ extends Node3D
 var overlay_floor_complete_scene_path := "res://scenes/overlays/floor_complete_overlay.tscn"
 @export_file("*.tscn") \
 var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
+@export_file("*.tscn") \
+var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
+@export_group("Dialog")
+@export var floor_number := 1
+@export var max_floor_number := 1
 
 const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
 const OVERLAY_DEFEAT := &"defeat"
+const OVERLAY_DIALOG := &"dialog_message"
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
@@ -46,6 +52,7 @@ const NODE_CONTEXT_ORCHESTRATOR := "ContextOrchestrator"
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
+const WORLD_DIALOG_MODULE_SCRIPT := preload("res://scenes/world/modules/world_dialog_module.gd")
 const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hostiles/hostile.tscn")
 const DEFAULT_HOSTILE_DEFINITIONS := [
 	preload("res://resources/hostiles/burning_hazard.tres"),
@@ -64,6 +71,7 @@ var _composition_orchestrator: WorldCompositionOrchestrator
 var _movement_orchestrator: WorldMovementOrchestrator
 var _context_orchestrator: WorldContextOrchestrator
 var _turn_manager: WorldTurnManager
+var _dialog_module: Node
 var _hostile_definitions_by_id: Dictionary = { }
 
 
@@ -104,6 +112,7 @@ func _ready() -> void:
 	_initialize_floor.call_deferred()
 	_refresh_minimap_overlay()
 	_add_huds.call_deferred()
+	_wire_dialog_module.call_deferred()
 
 
 func _add_world_environment() -> void:
@@ -119,9 +128,8 @@ func active_overlay_kind() -> StringName:
 
 
 func open_overlay(kind: StringName) -> void:
-	if kind == OVERLAY_FLOOR_COMPLETE or kind == OVERLAY_DEFEAT:
-		if _overlay_module != null:
-			_overlay_module.open_overlay(kind)
+	if _overlay_module != null:
+		_overlay_module.open_overlay(kind)
 
 
 func close_active_overlay() -> void:
@@ -147,11 +155,26 @@ func start_gameplay() -> void:
 
 func finish_with_failure() -> void:
 	_state_orchestrator.finish_with_failure()
-	open_overlay(OVERLAY_DEFEAT)
+	if _dialog_module != null:
+		if _dialog_module.present_failure_then(Callable(self, "_open_defeat_overlay")):
+			return
+	_open_defeat_overlay()
 
 
 func finish_with_success() -> void:
 	_state_orchestrator.finish_with_success()
+	var pct := _turn_manager.get_clean_percent() if _turn_manager != null else 0
+	if _dialog_module != null:
+		if _dialog_module.present_success_then(pct, Callable(self, "_open_floor_complete_overlay")):
+			return
+	_open_floor_complete_overlay()
+
+
+func _open_defeat_overlay() -> void:
+	open_overlay(OVERLAY_DEFEAT)
+
+
+func _open_floor_complete_overlay() -> void:
 	open_overlay(OVERLAY_FLOOR_COMPLETE)
 	# Pass the final clean% to the dedicated overlay so it can show the job rating.
 	if _overlay_module != null:
@@ -159,6 +182,26 @@ func finish_with_success() -> void:
 		if overlay != null and overlay.has_method("configure_result"):
 			var pct := _turn_manager.get_clean_percent() if _turn_manager != null else 0
 			overlay.call("configure_result", pct)
+
+
+func _wire_dialog_module() -> void:
+	if _overlay_module == null:
+		return
+	if _turn_manager == null:
+		return
+	if _encounter_module == null:
+		return
+	if _player == null:
+		return
+
+	if _dialog_module == null:
+		_dialog_module = WORLD_DIALOG_MODULE_SCRIPT.new()
+		_dialog_module.name = "DialogModule"
+		add_child(_dialog_module)
+
+	_dialog_module.configure(_overlay_module, _turn_manager, _encounter_module, _player, self)
+	_dialog_module.present_intro_then(Callable())
+	_dialog_module.begin_floor(floor_number, max_floor_number)
 
 
 func _setup_game_state_machine() -> void:
