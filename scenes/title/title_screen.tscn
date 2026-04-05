@@ -83,6 +83,11 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Start Game"
 
+[node name="ResetProgressButton" type="Button" parent="Center/Panel/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset Progress"
+
 [node name="QuitButton" type="Button" parent="Center/Panel/Margin/VBox" unique_id=891641472]
 unique_name_in_owner = true
 layout_mode = 2

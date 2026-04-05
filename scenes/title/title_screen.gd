@@ -8,6 +8,7 @@ const KEY_DIALOG_CONTINUE := &"ui.dialog_continue"
 
 @onready var _start_button: Button = %StartButton
 @onready var _quit_button: Button = %QuitButton
+@onready var _reset_progress_button: Button = %ResetProgressButton
 
 var _music_player: AudioStreamPlayer
 var _ui_sfx_player: AudioStreamPlayer
@@ -20,6 +21,8 @@ func _ready() -> void:
 		_start_button.call_deferred("grab_focus")
 	if _quit_button != null:
 		_quit_button.pressed.connect(_on_quit_pressed)
+	if _reset_progress_button != null:
+		_reset_progress_button.pressed.connect(_on_reset_progress_pressed)
 
 	_play_menu_music()
 	_ensure_ui_sfx_player()
@@ -54,6 +57,15 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_start_pressed() -> void:
 	_start_game()
+
+
+func _on_reset_progress_pressed() -> void:
+	_play_ui_signal_key(KEY_DIALOG_CONTINUE)
+	var game_boot := get_node_or_null("/root/GameBoot")
+	if game_boot != null and game_boot.has_method("clear_dialog_persistence"):
+		game_boot.clear_dialog_persistence()
+	if _reset_progress_button != null:
+		_reset_progress_button.text = "Progress Reset!"
 
 
 func _on_quit_pressed() -> void:

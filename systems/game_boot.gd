@@ -22,16 +22,13 @@ func _ready() -> void:
 	if enable_timing_logs:
 		print("[BootSequence] GameBoot._ready() | ticks_ms=%d" % [elapsed])
 
-	# Clear dialog persistence on fresh boot
-	_clear_dialog_persistence()
-
 	_prime_gameplay_scene()
 	elapsed = Time.get_ticks_msec() - _game_start_time
 	if enable_timing_logs:
 		print("[BootSequence] GameBoot prime_requested | ticks_ms=%d" % [elapsed])
 
 
-func _clear_dialog_persistence() -> void:
+func clear_dialog_persistence() -> void:
 	var file_path := "user://dialog_seen.cfg"
 	var dir := DirAccess.open("user://")
 	if dir != null:

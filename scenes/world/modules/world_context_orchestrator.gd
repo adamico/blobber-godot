@@ -65,6 +65,7 @@ func build_overlay_paths_from_world(world: Node) -> Dictionary:
 		&"victory": world.get("overlay_victory_scene_path"),
 		&"defeat": world.get("overlay_defeat_scene_path"),
 		&"dialog_message": world.get("overlay_dialog_scene_path"),
+		&"pause": world.get("overlay_pause_scene_path"),
 	}
 
 

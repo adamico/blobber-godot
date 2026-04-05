@@ -16,6 +16,7 @@ func test_required_actions_exist() -> void:
         &"analyze_target",
         &"cycle_target_prev",
         &"cycle_target_next",
+        &"pause_menu",
     ]
 
     for action in required_actions:
@@ -37,8 +38,20 @@ func test_required_actions_have_at_least_one_binding() -> void:
         &"analyze_target",
         &"cycle_target_prev",
         &"cycle_target_next",
+        &"pause_menu",
     ]
 
     for action in required_actions:
         var events := InputMap.action_get_events(action)
         assert_gt(events.size(), 0, "Action has no bindings: %s" % [action])
+
+
+func test_pause_menu_is_bound_to_escape() -> void:
+    var events := InputMap.action_get_events(&"pause_menu")
+
+    for event in events:
+        if event is InputEventKey and event.physical_keycode == KEY_ESCAPE:
+            pass_test("pause_menu is bound to Escape")
+            return
+
+    fail_test("pause_menu is not bound to Escape")

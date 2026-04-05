@@ -20,3 +20,4 @@ mono_crash.*.json
 assets/dungeon/
 assets/monster/
 assets/sounds/
+.build/

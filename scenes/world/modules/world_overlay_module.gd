@@ -3,6 +3,7 @@ extends Node
 
 signal restart_requested
 signal return_to_title_requested
+signal quit_game_requested
 signal overlay_opened(kind: StringName)
 signal overlay_closed(previous_kind: StringName)
 
@@ -59,6 +60,8 @@ func open_overlay(kind: StringName) -> bool:
 		overlay.connect("restart_requested", _on_overlay_restart_requested)
 	if overlay.has_signal("return_to_title_requested"):
 		overlay.connect("return_to_title_requested", _on_overlay_return_to_title_requested)
+	if overlay.has_signal("quit_game_requested"):
+		overlay.connect("quit_game_requested", _on_overlay_quit_game_requested)
 
 	_active_overlay = overlay
 	_active_overlay_kind = kind
@@ -108,3 +111,7 @@ func _on_overlay_restart_requested() -> void:
 
 func _on_overlay_return_to_title_requested() -> void:
 	return_to_title_requested.emit()
+
+
+func _on_overlay_quit_game_requested() -> void:
+	quit_game_requested.emit()

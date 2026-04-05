@@ -39,6 +39,8 @@ var overlay_victory_scene_path := "res://scenes/overlays/victory_overlay.tscn"
 var overlay_defeat_scene_path := "res://scenes/overlays/defeat_overlay.tscn"
 @export_file("*.tscn") \
 var overlay_dialog_scene_path := "res://scenes/overlays/dialog_message_overlay.tscn"
+@export_file("*.tscn") \
+var overlay_pause_scene_path := "res://scenes/overlays/pause_menu_overlay.tscn"
 @export_file("*.tscn") var title_scene_path := "res://scenes/title/title_screen.tscn"
 @export_group("Dialog")
 @export var floor_number := 1
@@ -51,6 +53,8 @@ const OVERLAY_FLOOR_COMPLETE := &"floor_complete"
 const OVERLAY_VICTORY := &"victory"
 const OVERLAY_DEFEAT := &"defeat"
 const OVERLAY_DIALOG := &"dialog_message"
+const OVERLAY_PAUSE := &"pause"
+const ACTION_PAUSE_MENU := &"pause_menu"
 const GAME_STATE_MENU := &"menu"
 const GAME_STATE_GAMEPLAY := &"gameplay"
 const GAME_STATE_GAMEOVER_FAILURE := &"gameover_failure"
@@ -156,6 +160,7 @@ func _ready() -> void:
 	):
 		return
 	_log_timing("Instantiation", "bootstrap_world complete", Time.get_ticks_msec() - phase_marker)
+	_wire_pause_overlay_events()
 
 	phase_marker = Time.get_ticks_msec()
 	_setup_game_state_machine()
@@ -242,6 +247,37 @@ func open_overlay(kind: StringName) -> void:
 func close_active_overlay() -> void:
 	if _overlay_module != null:
 		_overlay_module.close_overlay()
+
+
+func is_pause_menu_open() -> bool:
+	if _overlay_module == null:
+		return false
+	return (
+		_overlay_module.active_overlay_kind() == OVERLAY_PAUSE
+		and _overlay_module.has_active_overlay()
+	)
+
+
+func open_pause_menu() -> bool:
+	if _overlay_module == null:
+		return false
+	if not is_gameplay_state_active():
+		return false
+	if has_active_overlay():
+		return false
+
+	if not _overlay_module.open_overlay(OVERLAY_PAUSE):
+		return false
+
+	if _state_orchestrator != null:
+		_state_orchestrator.go_to_menu()
+	return true
+
+
+func close_pause_menu() -> bool:
+	if not is_pause_menu_open():
+		return false
+	return _overlay_module.close_overlay()
 
 
 func _refresh_minimap_overlay(cell: Vector2i = Vector2i.ZERO) -> void:
@@ -432,6 +468,15 @@ func apply_state_side_effects() -> void:
 			_player.pause_exploration_commands()
 
 
+func _wire_pause_overlay_events() -> void:
+	if _overlay_module == null:
+		return
+	if not _overlay_module.overlay_closed.is_connected(_on_overlay_closed):
+		_overlay_module.overlay_closed.connect(_on_overlay_closed)
+	if not _overlay_module.quit_game_requested.is_connected(_on_overlay_quit_game_requested):
+		_overlay_module.quit_game_requested.connect(_on_overlay_quit_game_requested)
+
+
 func apply_movement_preset(preset_name: String = "") -> bool:
 	var result := _movement_orchestrator.apply_preset(
 		_player,
@@ -452,6 +497,23 @@ func return_to_title() -> void:
 		scene_transition.call("change_scene_to_file", title_scene_path)
 		return
 	get_tree().change_scene_to_file(title_scene_path)
+
+
+func _quit_game() -> void:
+	var tree := get_tree()
+	if tree != null:
+		tree.quit()
+
+
+func _on_overlay_closed(previous_kind: StringName) -> void:
+	if previous_kind != OVERLAY_PAUSE:
+		return
+	if _state_orchestrator != null:
+		_state_orchestrator.start_gameplay()
+
+
+func _on_overlay_quit_game_requested() -> void:
+	call_deferred("_quit_game")
 
 
 func restart_current_run() -> void:
@@ -1056,6 +1118,8 @@ func _check_exit_condition() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _handle_pause_menu_input(event):
+		return
 	if not is_gameplay_state_active():
 		return
 	if _turn_manager == null or _player == null:
@@ -1087,6 +1151,20 @@ func _input(event: InputEvent) -> void:
 		# Ensure the click location becomes the active target before analysis.
 		_turn_manager.process_hover_target(mouse_event.position, camera)
 		_turn_manager.process_analyze_target()
+
+
+func _handle_pause_menu_input(event: InputEvent) -> bool:
+	if event is InputEventKey and event.echo:
+		return false
+	if not event.is_pressed():
+		return false
+	if not event.is_action_pressed(ACTION_PAUSE_MENU):
+		return false
+	if not open_pause_menu():
+		return false
+
+	get_viewport().set_input_as_handled()
+	return true
 
 
 func _on_belt_slot_clicked(slot_index: int, is_drop: bool) -> void:
