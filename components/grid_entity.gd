@@ -67,6 +67,8 @@ func apply_canonical_transform() -> void:
 
 # Virtual — subclasses must call super()
 func _on_action_completed(cmd: GridCommand.Type, new_state: GridState) -> void:
+	if movement_controller != null:
+		movement_controller.grid_state = new_state
 	grid_state = new_state
 	apply_canonical_transform()
 	command_completed.emit(cmd, new_state)

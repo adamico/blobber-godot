@@ -10,6 +10,8 @@ signal action_started(
 signal action_completed(cmd: GridCommand.Type, new_state: GridState)
 signal movement_outcome(outcome)
 
+const DEBUG_HOSTILE_OVERLAP := true
+
 var grid_state: GridState
 var movement_config: MovementConfig
 var is_busy: bool = false
@@ -37,8 +39,20 @@ func execute_command(cmd: GridCommand.Type) -> bool:
 		return false
 
 	var previous_state := _clone_state(grid_state)
+	var target_cell := _compute_target_cell(cmd)
+	var has_passability := not passability_fn.is_null() and passability_fn.is_valid()
+	_debug_overlap_log(
+		"execute cmd=%s from=%s target=%s smooth=%s has_passability=%s" % [
+			cmd,
+			previous_state.cell,
+			target_cell,
+			_is_smooth_mode_enabled(),
+			has_passability,
+		]
+	)
 
 	if not _is_command_passable(cmd):
+		_debug_overlap_log("blocked cmd=%s target=%s" % [cmd, target_cell])
 		_emit_outcome(
 			cmd,
 			MovementOutcome.TYPE_BLOCKED,
@@ -95,6 +109,15 @@ func execute_command(cmd: GridCommand.Type) -> bool:
 		)
 		action_completed.emit(cmd, new_state)
 
+	_debug_overlap_log(
+		"accepted cmd=%s from=%s to=%s duration=%.3f" % [
+			cmd,
+			previous_state.cell,
+			new_state.cell,
+			duration,
+		]
+	)
+
 	return true
 
 
@@ -105,9 +128,13 @@ func _compute_target_cell(cmd: GridCommand.Type) -> Vector2i:
 		GridCommand.Type.STEP_BACK:
 			return grid_state.cell - GridDefinitions.facing_to_vec2i(grid_state.facing)
 		GridCommand.Type.MOVE_LEFT:
-			return grid_state.cell + GridDefinitions.facing_to_vec2i(GridDefinitions.rotate_left(grid_state.facing))
+			return grid_state.cell + GridDefinitions.facing_to_vec2i(
+				GridDefinitions.rotate_left(grid_state.facing)
+			)
 		GridCommand.Type.MOVE_RIGHT:
-			return grid_state.cell + GridDefinitions.facing_to_vec2i(GridDefinitions.rotate_right(grid_state.facing))
+			return grid_state.cell + GridDefinitions.facing_to_vec2i(
+				GridDefinitions.rotate_right(grid_state.facing)
+			)
 		_:
 			return grid_state.cell # turns stay in place
 
@@ -216,3 +243,9 @@ func _emit_outcome(
 		duration,
 	)
 	movement_outcome.emit(outcome)
+
+
+func _debug_overlap_log(message: String) -> void:
+	if not DEBUG_HOSTILE_OVERLAP:
+		return
+	print("[MovementDebug] %s" % message)

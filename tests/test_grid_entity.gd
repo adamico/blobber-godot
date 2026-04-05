@@ -66,6 +66,21 @@ func test_queue_accepts_one_command_while_busy() -> void:
 	assert_eq(player.grid_state.facing, GridDefinitions.Facing.EAST)
 
 
+func test_smooth_mode_keeps_entity_and_controller_grid_state_shared() -> void:
+	var player := _spawn_player()
+	player.movement_config.smooth_mode = true
+	player.movement_config.step_duration = 0.05
+
+	assert_true(player.execute_command(GridCommand.Type.STEP_FORWARD))
+	assert_true(player.movement_controller.is_busy)
+	assert_same(player.grid_state, player.movement_controller.grid_state)
+	assert_eq(player.grid_state.cell, Vector2i(0, -1))
+
+	await _wait_until_not_busy(player)
+	assert_same(player.grid_state, player.movement_controller.grid_state)
+	assert_eq(player.grid_state.cell, Vector2i(0, -1))
+
+
 func test_canonical_transform_applied_after_command() -> void:
 	var player := _spawn_player()
 	player.execute_command(GridCommand.Type.STEP_FORWARD)

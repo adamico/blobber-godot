@@ -14,7 +14,8 @@ enum Behavior {
 @export_range(1, 8, 1) var patrol_length: int = 3
 ## Max tiles away the hostile can spot the player (requires LOS too).
 @export_range(1, 20, 1) var view_distance: int = 5
-
+## Turn order priority. Lower values act first (0 = highest priority).
+@export_range(0, 100, 1) var initiative: int = 50
 
 ## Turns the hostile can pursue without re-acquiring LOS before giving up the chase.
 const CHASE_MEMORY_TURNS := 3
@@ -62,7 +63,8 @@ func _choose_chase_command(hostile, player) -> int:
 		var occ := _grid_module.occupancy()
 		if occ != null:
 			var dist := absi(player_cell.x - hostile_cell.x) + absi(player_cell.y - hostile_cell.y)
-			var spotted := dist <= view_distance and occ.is_line_of_sight_clear(hostile_cell, player_cell)
+			var spotted := dist <= view_distance \
+			and occ.is_line_of_sight_clear(hostile_cell, player_cell)
 			if spotted:
 				_last_seen_player_pos = player_cell
 				_los_lost_turns = 0
@@ -198,7 +200,8 @@ func _is_cell_passable(cell: Vector2i) -> bool:
 				continue
 			if other.get("stats") != null and other.stats.is_dead():
 				continue
-			if other.get("grid_state") != null and other.grid_state.cell == cell:
+			if other.get("grid_state") != null \
+			and (other.grid_state.cell == cell or other.grid_state.previous_cell == cell):
 				return false
 
 	return true

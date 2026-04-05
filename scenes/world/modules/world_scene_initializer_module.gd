@@ -5,7 +5,7 @@ extends Node
 @export var ceiling_material: StandardMaterial3D
 
 const GRID_PLANE_SUBDIVISIONS := 9
-const GRID_PLANE_SIZE := Vector2(64, 64)
+const GRID_PLANE_SIZE := Vector2(128, 128)
 const CEILING_HEIGHT := 1.0
 
 

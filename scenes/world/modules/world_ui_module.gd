@@ -8,6 +8,15 @@ var _minimap_overlay: Control
 var _hp_bar: ProgressBar
 var _show_minimap := false
 var _analysis_hud: Control
+var _last_known_enemy_cell := Vector2i.ZERO
+var _has_last_known_enemy_cell := false
+# Marker discovery caching: cells we've seen via LOS
+var _discovered_exit_cells: Dictionary = {}
+var _discovered_chute_cells: Dictionary = {}
+var _discovered_pickup_cells: Dictionary = {}
+var _discovered_chest_cells: Dictionary = {}
+# Hostile tracking: instance ID -> last known position
+var _hostile_last_seen_positions: Dictionary = {}
 
 
 func configure(
@@ -111,6 +120,121 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 		_minimap_overlay.call("set_occupancy", occupancy)
 	if _minimap_overlay.has_method("set_player_state"):
 		_minimap_overlay.call("set_player_state", coords, facing)
+
+	var enemy_marker := _collect_last_known_enemy_cell(coords, occupancy)
+	if enemy_marker.get("has_cell", false):
+		_has_last_known_enemy_cell = true
+		_last_known_enemy_cell = enemy_marker.get("cell", Vector2i.ZERO) as Vector2i
+
+	if _minimap_overlay.has_method("set_marker_cells"):
+		_minimap_overlay.call(
+			"set_marker_cells",
+			_collect_group_cells_with_los(
+				&"world_exit_cells",
+				coords,
+				occupancy,
+				_discovered_exit_cells,
+			),
+			_collect_group_cells_with_los(
+				&"disposal_chutes",
+				coords,
+				occupancy,
+				_discovered_chute_cells,
+			),
+			_collect_group_cells_with_los(
+				&"world_pickups",
+				coords,
+				occupancy,
+				_discovered_pickup_cells,
+			),
+			_collect_group_cells_with_los(
+				&"world_chests",
+				coords,
+				occupancy,
+				_discovered_chest_cells,
+			),
+			_last_known_enemy_cell,
+			_has_last_known_enemy_cell,
+		)
+
+
+func _collect_group_cells_with_los(
+		group_name: StringName,
+		player_cell: Vector2i,
+		occupancy: GridOccupancyMap,
+		discovery_cache: Dictionary,
+	) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	if _player == null or _player.get_tree() == null or occupancy == null:
+		return cells
+
+	for node in _player.get_tree().get_nodes_in_group(group_name):
+		if node == null or not is_instance_valid(node):
+			continue
+		if not ("grid_cell" in node):
+			continue
+
+		var marker_cell := node.grid_cell as Vector2i
+		# Check if currently visible via LOS
+		if occupancy.is_line_of_sight_clear(player_cell, marker_cell):
+			cells.append(marker_cell)
+			discovery_cache[marker_cell] = true
+		# Include discovered cells (persist on minimap)
+		elif marker_cell in discovery_cache:
+			cells.append(marker_cell)
+
+	return cells
+
+
+func _collect_last_known_enemy_cell(
+		player_cell: Vector2i,
+		occupancy: GridOccupancyMap,
+	) -> Dictionary:
+	if _player == null or _player.get_tree() == null:
+		return {"has_cell": false}
+
+	var nearest_cell := Vector2i.ZERO
+	var best_distance := INF
+	var found := false
+
+	for node in _player.get_tree().get_nodes_in_group(&"grid_hostiles"):
+		if node == null or not is_instance_valid(node):
+			continue
+
+		var stats: Variant = node.get("stats")
+		if stats != null and stats.has_method("is_dead") and bool(stats.call("is_dead")):
+			continue
+
+		if not ("grid_state" in node):
+			continue
+		var grid_state = node.grid_state
+		if grid_state == null:
+			continue
+
+		var hostile_id: int = node.get_instance_id()
+		var cell := grid_state.cell as Vector2i
+		var dist := absf(float(cell.x - player_cell.x)) + absf(float(cell.y - player_cell.y))
+
+		# Only update cache if we have LOS to this hostile
+		if occupancy != null and occupancy.is_line_of_sight_clear(player_cell, cell):
+			_hostile_last_seen_positions[hostile_id] = cell
+			# Only consider for nearest if we're currently seeing it
+			if not found or dist < best_distance:
+				nearest_cell = cell
+				best_distance = dist
+				found = true
+
+	# Fall back to cached hostile if none currently visible
+	if not found and not _hostile_last_seen_positions.is_empty():
+		for cached_cell in _hostile_last_seen_positions.values():
+			nearest_cell = cached_cell
+			found = true
+			break
+
+	return {
+		"has_cell": found,
+		"cell": nearest_cell,
+	}
 
 
 func refresh_debug_buttons(_overlay_open: bool) -> void:
