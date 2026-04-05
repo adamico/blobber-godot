@@ -10,5 +10,6 @@ definition_id = &"cursed_hazard"
 display_name = "Cursed"
 sprite_texture = ExtResource("2_sprite")
 hostile_property = 2
+speed = 2
 ai_behavior = 2
 analysis_profile = ExtResource("3_analysis")

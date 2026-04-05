@@ -9,6 +9,6 @@ script = ExtResource("1_def")
 definition_id = &"burning_hazard"
 display_name = "Burning"
 sprite_texture = ExtResource("2_sprite")
-speed = 2
+speed = 3
 ai_behavior = 1
 analysis_profile = ExtResource("3_analysis")
