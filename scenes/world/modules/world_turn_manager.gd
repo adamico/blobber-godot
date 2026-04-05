@@ -94,8 +94,6 @@ func initialize_floor() -> void:
 
 func process_player_move(_new_state: GridState) -> void:
 	## Called after player successfully moved/turned on the grid.
-	if _player != null and _player.grid_state != null:
-		_check_contact_damage_from_tile(_player.grid_state.cell)
 	_advance_turn()
 
 
@@ -121,15 +119,6 @@ func process_slot_use(slot_index: int) -> void:
 
 func process_wall_bump() -> void:
 	## Pass turn when player bumps a wall or stationary hostile.
-	if _player != null and _player.stats != null:
-		var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
-		var target_cell := _player.grid_state.cell + facing_vec
-		var hostiles = _get_hostiles_at(target_cell)
-
-		if hostiles.size() > 0:
-			for h in hostiles:
-				h.deal_contact_damage(_player.stats)
-
 	_advance_turn()
 
 
@@ -450,9 +439,7 @@ func _check_contact_damage_from_enemies() -> void:
 		var is_mobile := false
 		if ai != null and "behavior" in ai and ai.behavior != 0: # 0 = STATIONARY
 			is_mobile = true
-		if not is_mobile:
-			continue
-		if _hostile_moved_this_turn(hostile):
+		if is_mobile and _hostile_moved_this_turn(hostile):
 			continue
 
 		var delta: Vector2i = hostile.grid_state.cell - _player.grid_state.cell

@@ -53,7 +53,7 @@ func _ready() -> void:
 func tick_ai(player) -> bool:
 	if not ai_enabled or _ai == null:
 		return false
-	if movement_controller == null or movement_controller.is_busy:
+	if movement_controller == null:
 		return false
 
 	var cadence := maxi(speed, 1)
@@ -65,6 +65,7 @@ func tick_ai(player) -> bool:
 	if cmd == HostileAI.NO_COMMAND:
 		return false
 
+	# If animation is still in-flight, GridEntity.execute_command will queue one command.
 	return execute_command(cmd as GridCommand.Type)
 
 

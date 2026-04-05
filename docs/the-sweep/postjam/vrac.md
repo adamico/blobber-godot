@@ -6,3 +6,6 @@
 - author graphics
 - decorate dungeon
 - voiceover dialogs
+- room doors
+- fake walls with secrets
+- hidden levers, buttons

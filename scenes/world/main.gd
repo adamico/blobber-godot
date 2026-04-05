@@ -92,6 +92,7 @@ var _belt_hud: Control
 var _hostile_definitions_by_id: Dictionary = { }
 var _authored_floor_layout: Dictionary = { }
 var _controls_ready_emitted := false
+var _floor_complete_heal_applied := false
 
 
 func _ready() -> void:
@@ -117,6 +118,15 @@ func _ready() -> void:
 	phase_marker = Time.get_ticks_msec()
 	_ensure_player_instance()
 	_log_timing("Instantiation", "player ensured", Time.get_ticks_msec() - phase_marker)
+
+	# Restore persisted HP from inter-floor heal (set by _advance_to_next_floor)
+	if game_boot != null and "persisted_health" in game_boot and game_boot.persisted_health > 0:
+		var restored_player := _player
+		if restored_player == null:
+			restored_player = get_node_or_null(NODE_PLAYER) as Player
+		if restored_player != null and restored_player.stats != null:
+			restored_player.stats.health = game_boot.persisted_health
+		game_boot.persisted_health = 0
 
 	phase_marker = Time.get_ticks_msec()
 	var resolved_context := _context_orchestrator.resolve_world_context(
@@ -275,6 +285,12 @@ func _advance_to_next_floor() -> void:
 	var game_boot := get_node_or_null("/root/GameBoot")
 	if game_boot != null:
 		game_boot.current_floor_number = floor_number
+		if _player != null and _player.stats != null:
+			game_boot.persisted_health = clampi(
+				_player.stats.health,
+				1,
+				_player.stats.max_health,
+			)
 	if _player != null:
 		_player.input_actions_enabled = false
 	var tree := get_tree()
@@ -307,6 +323,7 @@ func _open_victory_overlay() -> void:
 
 
 func _open_floor_complete_overlay() -> void:
+	_apply_floor_complete_heal_preview()
 	open_overlay(OVERLAY_FLOOR_COMPLETE)
 	# Pass the final clean% to the dedicated overlay so it can show the job rating.
 	if _overlay_module != null:
@@ -314,6 +331,15 @@ func _open_floor_complete_overlay() -> void:
 		if overlay != null and overlay.has_method("configure_result"):
 			var pct: int = _turn_manager.get_clean_percent() if _turn_manager != null else 0
 			overlay.call("configure_result", pct)
+
+
+func _apply_floor_complete_heal_preview() -> void:
+	if _floor_complete_heal_applied:
+		return
+	if _player == null or _player.stats == null:
+		return
+	_player.stats.heal(3)
+	_floor_complete_heal_applied = true
 
 
 func _wire_dialog_module() -> void:

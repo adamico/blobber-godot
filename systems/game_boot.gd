@@ -5,6 +5,7 @@ extends Node
 
 var _game_start_time := 0
 var current_floor_number := 1
+var persisted_health: int = 0
 
 
 func _notification(what: int) -> void:
@@ -20,10 +21,10 @@ func _ready() -> void:
 	var elapsed := Time.get_ticks_msec() - _game_start_time
 	if enable_timing_logs:
 		print("[BootSequence] GameBoot._ready() | ticks_ms=%d" % [elapsed])
-	
+
 	# Clear dialog persistence on fresh boot
 	_clear_dialog_persistence()
-	
+
 	_prime_gameplay_scene()
 	elapsed = Time.get_ticks_msec() - _game_start_time
 	if enable_timing_logs:
@@ -51,4 +52,3 @@ func _prime_gameplay_scene() -> void:
 
 func get_start_time() -> int:
 	return Time.get_ticks_msec() - _game_start_time
-

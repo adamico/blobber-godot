@@ -4,6 +4,7 @@ extends Control
 @onready var _label: Label = %Label
 
 var _turn_manager: WorldTurnManager
+var _bump_tween: Tween
 
 
 func configure(turn_manager: WorldTurnManager) -> void:
@@ -33,3 +34,14 @@ func _refresh() -> void:
 
 func _on_clean_changed(_cleared: int, _total: int) -> void:
 	_refresh()
+	_bump_label()
+
+
+func _bump_label() -> void:
+	if _label == null:
+		return
+	if _bump_tween != null:
+		_bump_tween.kill()
+	_bump_tween = create_tween()
+	_bump_tween.tween_property(_label, "modulate", Color(0.4, 1.0, 0.5), 0.0)
+	_bump_tween.tween_property(_label, "modulate", Color.WHITE, 0.5).set_ease(Tween.EASE_OUT)

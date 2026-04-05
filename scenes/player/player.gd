@@ -218,10 +218,18 @@ func _on_action_completed(cmd: GridCommand.Type, new_state: GridState) -> void:
 		_active_tween.kill()
 	_active_tween = null
 
-	super(cmd, new_state)
+	# Keep turn resolution serialized: finish this command, emit its turn action,
+	# then allow one queued command to begin.
+	if movement_controller != null:
+		movement_controller.grid_state = new_state
+	grid_state = new_state
+	apply_canonical_transform()
+	command_completed.emit(cmd, new_state)
 
 	# Emit turn action for the turn manager to process
 	turn_action_performed.emit(cmd)
+
+	_drain_queued_command()
 
 	if debug_log_input_actions:
 		print(

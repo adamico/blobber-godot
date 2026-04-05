@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://f6uxlx3iu6mg"]
 
+[ext_resource type="Material" uid="uid://cik42vibq4xqs" path="res://assets/textures/Bricks068_1K-PNG.tres" id="1_4edgs"]
+
 [sub_resource type="BoxMesh" id="BoxMesh_12b2v"]
+material = ExtResource("1_4edgs")
 
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_psbse"]
 points = PackedVector3Array(0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5)
@@ -12,6 +15,7 @@ albedo_color = Color(0.9666667, 1, 0, 1)
 material = SubResource("StandardMaterial3D_3kfhh")
 
 [sub_resource type="BoxMesh" id="BoxMesh_4edgs"]
+material = ExtResource("1_4edgs")
 
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_opljq"]
 points = PackedVector3Array(0.5, 0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5, -0.5)
@@ -74,6 +78,21 @@ material = SubResource("StandardMaterial3D_krbyx")
 radius = 0.2
 height = 0.4
 
+[sub_resource type="TorusMesh" id="TorusMesh_4edgs"]
+material = SubResource("StandardMaterial3D_ofa4f")
+inner_radius = 0.2
+outer_radius = 0.4
+
+[sub_resource type="TorusMesh" id="TorusMesh_krbyx"]
+material = SubResource("StandardMaterial3D_krbyx")
+inner_radius = 0.2
+outer_radius = 0.4
+
+[sub_resource type="TorusMesh" id="TorusMesh_ofa4f"]
+material = SubResource("StandardMaterial3D_4edgs")
+inner_radius = 0.2
+outer_radius = 0.4
+
 [sub_resource type="CylinderMesh" id="CylinderMesh_12b2v"]
 material = SubResource("StandardMaterial3D_krbyx")
 top_radius = 0.2
@@ -88,12 +107,12 @@ height = 0.4
 
 [node name="Root" type="Node3D" unique_id=930480147]
 
-[node name="wall" type="MeshInstance3D" parent="." unique_id=364132170]
+[node name="Wall" type="MeshInstance3D" parent="." unique_id=364132170]
 mesh = SubResource("BoxMesh_12b2v")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="wall" unique_id=1933085191]
+[node name="StaticBody3D" type="StaticBody3D" parent="Wall" unique_id=1933085191]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="wall/StaticBody3D" unique_id=1894125918]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall/StaticBody3D" unique_id=1894125918]
 shape = SubResource("ConvexPolygonShape3D_psbse")
 
 [node name="PlayerSpawn" type="MeshInstance3D" parent="." unique_id=880506620]
@@ -105,13 +124,13 @@ mesh = SubResource("PrismMesh_63ov8")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerSpawn/StaticBody3D" unique_id=1745657677]
 shape = SubResource("ConvexPolygonShape3D_psbse")
 
-[node name="floor" type="MeshInstance3D" parent="." unique_id=1559104155]
+[node name="FakeWall" type="MeshInstance3D" parent="." unique_id=1559104155]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2)
 mesh = SubResource("BoxMesh_4edgs")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="floor" unique_id=348833400]
+[node name="StaticBody3D" type="StaticBody3D" parent="FakeWall" unique_id=348833400]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="floor/StaticBody3D" unique_id=322252474]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FakeWall/StaticBody3D" unique_id=322252474]
 shape = SubResource("ConvexPolygonShape3D_opljq")
 
 [node name="DisposalChute" type="MeshInstance3D" parent="." unique_id=1641087874]
@@ -150,13 +169,22 @@ mesh = SubResource("BoxMesh_ofa4f")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="corrosive/StaticBody3D" unique_id=690395166]
 shape = SubResource("ConvexPolygonShape3D_opljq")
 
-[node name="burning" type="MeshInstance3D" parent="." unique_id=306932914]
+[node name="BurningZMoving" type="MeshInstance3D" parent="." unique_id=306932914]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
 mesh = SubResource("BoxMesh_r5lgr")
 
-[node name="StaticBody3D" type="StaticBody3D" parent="burning" unique_id=1284058511]
+[node name="StaticBody3D" type="StaticBody3D" parent="BurningZMoving" unique_id=1284058511]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="burning/StaticBody3D" unique_id=1251046819]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BurningZMoving/StaticBody3D" unique_id=1251046819]
+shape = SubResource("ConvexPolygonShape3D_opljq")
+
+[node name="BurningXMoving" type="MeshInstance3D" parent="." unique_id=688511003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -8)
+mesh = SubResource("BoxMesh_r5lgr")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="BurningXMoving" unique_id=1239130644]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BurningXMoving/StaticBody3D" unique_id=603397572]
 shape = SubResource("ConvexPolygonShape3D_opljq")
 
 [node name="Potion" type="MeshInstance3D" parent="." unique_id=230348061]
@@ -193,6 +221,42 @@ mesh = SubResource("SphereMesh_4edgs")
 [node name="StaticBody3D" type="StaticBody3D" parent="Mop" unique_id=2378683]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Mop/StaticBody3D" unique_id=470061665]
+shape = SubResource("ConvexPolygonShape3D_opljq")
+
+[node name="DebrisCursed" type="MeshInstance3D" parent="." unique_id=1130955566]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -12)
+mesh = SubResource("TorusMesh_4edgs")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DebrisCursed" unique_id=102377753]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebrisCursed/StaticBody3D" unique_id=1701853402]
+shape = SubResource("ConvexPolygonShape3D_opljq")
+
+[node name="DebrisBurningXMoving" type="MeshInstance3D" parent="." unique_id=503897703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -12)
+mesh = SubResource("TorusMesh_krbyx")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DebrisBurningXMoving" unique_id=1969739364]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebrisBurningXMoving/StaticBody3D" unique_id=1475708322]
+shape = SubResource("ConvexPolygonShape3D_opljq")
+
+[node name="DebrisBurningZMoving" type="MeshInstance3D" parent="." unique_id=1335073564]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, -14)
+mesh = SubResource("TorusMesh_krbyx")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DebrisBurningZMoving" unique_id=1329146671]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebrisBurningZMoving/StaticBody3D" unique_id=80941901]
+shape = SubResource("ConvexPolygonShape3D_opljq")
+
+[node name="DebrisCorrosive" type="MeshInstance3D" parent="." unique_id=1847575667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -12)
+mesh = SubResource("TorusMesh_ofa4f")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="DebrisCorrosive" unique_id=900308353]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DebrisCorrosive/StaticBody3D" unique_id=499288917]
 shape = SubResource("ConvexPolygonShape3D_opljq")
 
 [node name="SplashFlask" type="MeshInstance3D" parent="." unique_id=1910115102]
