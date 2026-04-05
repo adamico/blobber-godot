@@ -180,8 +180,6 @@ func _choose_best_step(_enemy, target: Vector2i) -> Vector2i:
 func _is_cell_passable(cell: Vector2i) -> bool:
 	if _grid_module == null:
 		return true # Fallback if not wired
-	# For AI choice, we check basic grid passability.
-	# The move will still be fully validated by MovementController anyway.
 	var occ := _grid_module.occupancy()
 	if occ != null and not occ.is_passable(cell):
 		return false
@@ -193,6 +191,15 @@ func _is_cell_passable(cell: Vector2i) -> bool:
 			if pickup != null and is_instance_valid(pickup):
 				if pickup.get("grid_cell") == cell and pickup.get("blocks_movement"):
 					return false
+
+		var self_hostile = get_parent()
+		for other in _world_root.get_tree().get_nodes_in_group(&"grid_hostiles"):
+			if other == null or other == self_hostile or not is_instance_valid(other):
+				continue
+			if other.get("stats") != null and other.stats.is_dead():
+				continue
+			if other.get("grid_state") != null and other.grid_state.cell == cell:
+				return false
 
 	return true
 
