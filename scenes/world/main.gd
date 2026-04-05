@@ -175,9 +175,9 @@ func _run_staged_bootstrap(started_at_ms: int) -> void:
 		return
 
 	# Keep turn-facing visuals warm before enabling controls.
+	_wire_turn_manager()
 	_author_floor_1()
 	_wire_occupancy()
-	_wire_turn_manager()
 	_wire_hostiles()
 	_initialize_floor()
 	_configure_huds()
@@ -699,6 +699,25 @@ func _spawn_authored_floor_entities(layout: Dictionary) -> void:
 			continue
 		_spawn_chest(chest_cell, item)
 
+	for debris_spawn in layout.get("debris_spawns", []):
+		if not (debris_spawn is Dictionary):
+			continue
+		if _turn_manager == null or not _turn_manager.has_method("spawn_pickup"):
+			push_warning("Skipping debris marker because turn manager is unavailable.")
+			continue
+		var debris_cell := debris_spawn.get("cell", Vector2i.ZERO) as Vector2i
+		var debris_marker_id := int(debris_spawn.get("marker_id", -1))
+		var debris_spawn_item := _item_for_marker(debris_marker_id)
+		if debris_spawn_item == null:
+			push_warning("Skipping debris marker with unknown item mapping at %s." % debris_cell)
+			continue
+		var pickup := _turn_manager.spawn_pickup(debris_cell, debris_spawn_item) as WorldPickup
+		if pickup != null and debris_spawn_item.origin_hostile_definition_id != StringName():
+			pickup.setup_revert(
+				debris_spawn_item.revert_turns_base,
+				debris_spawn_item.origin_hostile_definition_id,
+			)
+
 
 func _clear_authored_positioning_cells(layout: Dictionary) -> void:
 	var gm := get_node_or_null("GridMap") as GridMap
@@ -742,7 +761,7 @@ func _item_for_marker(marker_id: int) -> ItemData:
 		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_BURNING_Z,
 		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_CORROSIVE,
 	]:
-		return debris_item
+		return _debris_item_for_marker(marker_id)
 	return null
 
 
@@ -754,6 +773,35 @@ func _hostile_initial_facing_for_marker(marker_id: int) -> int:
 	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING_Z:
 		return GridDefinitions.Facing.NORTH
 	return -1
+
+
+func _debris_item_for_marker(marker_id: int) -> ItemData:
+	if debris_item == null:
+		return null
+
+	# Create a duplicate of the base debris item
+	var item := debris_item.duplicate() as ItemData
+	if item == null:
+		return null
+
+	# Set the origin hostile based on debris marker type
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_CURSED:
+		item.origin_hostile_definition_id = HOSTILE_ID_CURSED
+		item.item_name = "Cursed Debris"
+	elif marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_BURNING_X:
+		item.origin_hostile_definition_id = HOSTILE_ID_BURNING
+		item.item_name = "Burning Debris (X-Axis)"
+	elif marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_BURNING_Z:
+		item.origin_hostile_definition_id = HOSTILE_ID_BURNING
+		item.item_name = "Burning Debris (Z-Axis)"
+	elif marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_CORROSIVE:
+		item.origin_hostile_definition_id = HOSTILE_ID_CORROSIVE
+		item.item_name = "Corrosive Debris"
+	else:
+		# Generic debris
+		item.item_name = "Debris"
+
+	return item
 
 
 func _index_hostile_definitions() -> void:

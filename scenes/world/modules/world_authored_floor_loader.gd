@@ -101,10 +101,16 @@ func parse_grid_map(grid_map: GridMap) -> Dictionary:
 					"marker_id": marker_id,
 				})
 			MARKER_POTION, MARKER_HOLY_SYMBOL, MARKER_IRON_WARD, MARKER_MOP, \
-			MARKER_SPLASH_FLASK, MARKER_DEBRIS, MARKER_DEBRIS_CURSED, \
-			MARKER_DEBRIS_BURNING_X, MARKER_DEBRIS_BURNING_Z, MARKER_DEBRIS_CORROSIVE:
+			MARKER_SPLASH_FLASK:
 				result.positioning_cells_3d.append(cell_3d)
 				result.chest_spawns.append({
+					"cell": cell,
+					"marker_id": marker_id,
+				})
+			MARKER_DEBRIS, MARKER_DEBRIS_CURSED, MARKER_DEBRIS_BURNING_X, \
+			MARKER_DEBRIS_BURNING_Z, MARKER_DEBRIS_CORROSIVE:
+				result.positioning_cells_3d.append(cell_3d)
+				result.debris_spawns.append({
 					"cell": cell,
 					"marker_id": marker_id,
 				})
@@ -155,6 +161,7 @@ func _empty_result() -> Dictionary:
 		"exit_cells": [],
 		"hostile_spawns": [],
 		"chest_spawns": [],
+		"debris_spawns": [],
 		"positioning_cells_3d": [],
 		"warnings": [],
 		"errors": [],

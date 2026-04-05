@@ -64,6 +64,7 @@ var _total_cleanup_value: int = 0
 var _disposed_cleanup_value: int = 0
 var _spotted_hostiles: Dictionary = { }
 var _spotted_chests: Dictionary = { }
+var _debris_revert_activated: Dictionary = { }
 
 
 func configure(
@@ -86,6 +87,8 @@ func initialize_floor() -> void:
 	_spotted_hostiles.clear()
 	_spotted_chests.clear()
 	_connect_hostile_signals()
+	if _player != null and _player.grid_state != null:
+		_refresh_debris_timer_labels(_player.grid_state.cell)
 	_refresh_distance_tinted_sprites()
 	if _encounter_module != null:
 		_encounter_module.check_combat_trigger()
@@ -224,6 +227,8 @@ func process_analyze_target() -> void:
 
 
 func _advance_turn() -> void:
+	if _player != null and _player.grid_state != null:
+		_refresh_debris_timer_labels(_player.grid_state.cell)
 	_tick_hostiles()
 	_tick_debris_revert()
 	if _encounter_module != null:
@@ -278,6 +283,8 @@ func spawn_pickup(cell: Vector2i, item: ItemData) -> WorldPickup:
 			sprite_mat.set_shader_parameter("sprite_texture", sprite.texture)
 
 	_world_root.add_child(p)
+	if _player != null and _player.grid_state != null:
+		p.set_timer_visibility_from_player(_player.grid_state.cell, 4)
 	return p
 
 
@@ -519,17 +526,36 @@ func _on_hostile_cleared(hostile) -> void:
 
 
 func _tick_debris_revert() -> void:
-	if _world_root == null:
+	if _world_root == null or _player == null or _player.grid_state == null:
 		return
+	var occupancy := _grid_module.occupancy() if _grid_module != null else null
+	if occupancy == null:
+		return
+	var player_cell := _player.grid_state.cell
 	var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
 	for node in pickups:
 		if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+			if node != null:
+				_debris_revert_activated.erase(node.get_instance_id())
 			continue
 		if node is WorldPickup and node.revert_turns_remaining > 0:
+			if node.origin_hostile_definition_id == StringName():
+				continue
+			var pickup_id := node.get_instance_id()
+			var activated := bool(_debris_revert_activated.get(pickup_id, false))
+			if not activated:
+				if not occupancy.is_line_of_sight_clear(player_cell, node.grid_cell):
+					continue
+				var delta: Vector2i = node.grid_cell - player_cell
+				var manhattan := absi(delta.x) + absi(delta.y)
+				if manhattan >= 4:
+					continue
+				_debris_revert_activated[pickup_id] = true
 			var did_revert: bool = node.tick_revert()
 			if node.revert_turns_remaining > 0:
 				debris_countdown_ticked.emit(node.grid_cell, node.revert_turns_remaining)
 			if did_revert:
+				_debris_revert_activated.erase(node.get_instance_id())
 				debris_respawned.emit(
 					node.grid_cell,
 					node.origin_hostile_definition_id,
@@ -537,6 +563,18 @@ func _tick_debris_revert() -> void:
 				debris_reverted.emit(node.grid_cell, node.origin_hostile_definition_id)
 				_respawn_hostile_from_revert(node)
 				node.queue_free()
+
+
+func _refresh_debris_timer_labels(player_cell: Vector2i) -> void:
+	if _world_root == null:
+		return
+	var pickups = _world_root.get_tree().get_nodes_in_group(&"world_pickups")
+	for node in pickups:
+		if node == null or not is_instance_valid(node) or node.is_queued_for_deletion():
+			continue
+		if not (node is WorldPickup):
+			continue
+		node.set_timer_visibility_from_player(player_cell, 4)
 
 
 func _respawn_hostile_from_revert(pickup: WorldPickup) -> void:

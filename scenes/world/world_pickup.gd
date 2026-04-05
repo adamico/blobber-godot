@@ -11,6 +11,7 @@ var blocks_movement: bool = false
 var revert_turns_remaining: int = 0
 var origin_hostile_definition_id: StringName = StringName()
 var spawned_from_player_drop: bool = false
+var _timer_visible_by_distance: bool = true
 
 var _timer_label: Label3D
 
@@ -41,8 +42,19 @@ func tick_revert() -> bool:
 	return revert_turns_remaining <= 0
 
 
+func set_timer_visibility_from_player(
+		player_cell: Vector2i,
+		max_manhattan_exclusive: int = 4,
+) -> void:
+	var delta: Vector2i = grid_cell - player_cell
+	var manhattan := absi(delta.x) + absi(delta.y)
+	_timer_visible_by_distance = manhattan < max_manhattan_exclusive
+	_update_label()
+
+
 func _update_label() -> void:
 	if _timer_label != null:
+		_timer_label.visible = revert_turns_remaining > 0 and _timer_visible_by_distance
 		if revert_turns_remaining > 0:
 			_timer_label.text = str(revert_turns_remaining)
 		else:
