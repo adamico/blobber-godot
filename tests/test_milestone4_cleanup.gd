@@ -79,6 +79,41 @@ class FakeHostileTarget:
 		return false
 
 
+class FakeMobileHostileAI:
+	extends Node
+
+	var behavior: int = 1
+
+
+class FakeMobileHostile:
+	extends Node3D
+
+	var grid_state: GridState
+	var hostile_property: int = RpsSystem.HostileProperty.BURNING
+	var contact_damage: int = 2
+
+
+	func _init(cell: Vector2i, previous_cell: Vector2i) -> void:
+		grid_state = GridState.new(cell, GridDefinitions.Facing.NORTH)
+		grid_state.previous_cell = previous_cell
+
+
+	func _ready() -> void:
+		var ai := FakeMobileHostileAI.new()
+		ai.name = "HostileAI"
+		add_child(ai)
+
+
+	func is_cleared() -> bool:
+		return false
+
+
+	func deal_contact_damage(target_stats: CharacterStats) -> void:
+		if target_stats == null:
+			return
+		target_stats.take_damage(contact_damage)
+
+
 class TestWorldTurnManager:
 	extends WorldTurnManager
 
@@ -92,6 +127,10 @@ class TestWorldTurnManager:
 
 	func tick_debris_revert_for_test() -> void:
 		_tick_debris_revert()
+
+
+	func check_contact_damage_from_enemies_for_test() -> void:
+		_check_contact_damage_from_enemies()
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -231,6 +270,36 @@ func test_world_pickup_revert_tracks_definition_id() -> void:
 func test_burning_definition_uses_shared_scene_pattern_data() -> void:
 	assert_null(BurningHostileDefinition.actor_scene)
 	assert_not_null(BurningHostileDefinition.sprite_texture)
+
+
+func test_mobile_hostile_that_moved_adjacent_does_not_deal_contact_damage() -> void:
+	var world: Node = add_child_autofree(Node.new())
+	var player := _make_player(Vector2i.ZERO)
+	var manager := _make_turn_manager()
+	manager.configure(player, null, null, world)
+
+	var hostile := FakeMobileHostile.new(Vector2i(1, 0), Vector2i(2, 0))
+	world.add_child(hostile)
+	hostile.add_to_group(&"grid_hostiles")
+
+	manager.check_contact_damage_from_enemies_for_test()
+
+	assert_eq(player.stats.health, player.stats.max_health)
+
+
+func test_mobile_hostile_that_stays_adjacent_deals_contact_damage() -> void:
+	var world: Node = add_child_autofree(Node.new())
+	var player := _make_player(Vector2i.ZERO)
+	var manager := _make_turn_manager()
+	manager.configure(player, null, null, world)
+
+	var hostile := FakeMobileHostile.new(Vector2i(1, 0), Vector2i(1, 0))
+	world.add_child(hostile)
+	hostile.add_to_group(&"grid_hostiles")
+
+	manager.check_contact_damage_from_enemies_for_test()
+
+	assert_eq(player.stats.health, player.stats.max_health - hostile.contact_damage)
 
 # ---------------------------------------------------------------------------
 # WorldTurnManager — disposal and debris reversion

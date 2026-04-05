@@ -431,14 +431,22 @@ func _check_contact_damage_from_enemies() -> void:
 		var is_mobile := false
 		if ai != null and "behavior" in ai and ai.behavior != 0: # 0 = STATIONARY
 			is_mobile = true
+		if not is_mobile:
+			continue
+		if _hostile_moved_this_turn(hostile):
+			continue
 
 		var delta: Vector2i = hostile.grid_state.cell - _player.grid_state.cell
-		var prev_delta: Vector2i = hostile.grid_state.previous_cell - _player.grid_state.cell
 		var manhattan := absi(delta.x) + absi(delta.y)
-		var prev_manhattan := absi(prev_delta.x) + absi(prev_delta.y)
 
-		if is_mobile and (manhattan <= 1 or prev_manhattan <= 1):
+		if manhattan <= 1:
 			hostile.deal_contact_damage(_player.stats)
+
+
+func _hostile_moved_this_turn(hostile) -> bool:
+	if hostile == null or hostile.grid_state == null:
+		return false
+	return hostile.grid_state.cell != hostile.grid_state.previous_cell
 
 
 func _post_turn_checks() -> void:
