@@ -37,27 +37,24 @@ var _flash_tween: Tween
 
 func receive_tool_hit(
 		_tool_property: RpsSystem.ToolProperty,
-		target_stats: CharacterStats = null,
+		_target_stats: CharacterStats = null,
 ) -> bool:
 	if is_cleared():
 		return false
 
 	# Jam balancing: dragon ignores RPS and takes flat damage from any tool.
+	# No retaliation on hit — dragon already has breath + adjacency contact damage.
 	_current_hp -= 1
 	if _current_hp <= 0:
 		_clear()
 		return true
 
-	if target_stats != null:
-		deal_contact_damage(target_stats)
-
 	return false
 
 
-func deal_contact_damage(target_stats: CharacterStats) -> void:
-	if _breath_acted_this_turn:
-		return
-	super.deal_contact_damage(target_stats)
+func deal_contact_damage(_target_stats: CharacterStats) -> void:
+	# Dragon deals damage only through breath, never through adjacency contact.
+	return
 
 
 func tick_ai(player) -> bool:

@@ -38,6 +38,7 @@ breath_particle_lifetime = 0.5
 breath_particle_amount = 20
 breath_particle_radius = 0.08
 breath_particle_height = 0.06
+contact_damage = 0
 
 [node name="Label3D" parent="." index="2" unique_id=391576828]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94646287, 0)
