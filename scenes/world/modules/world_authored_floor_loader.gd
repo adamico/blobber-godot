@@ -8,13 +8,19 @@ const MARKER_DISPOSAL_CHUTE := 3
 const MARKER_FLOOR_EXIT := 4
 const MARKER_HOSTILE_CURSED := 5
 const MARKER_HOSTILE_CORROSIVE := 6
-const MARKER_HOSTILE_BURNING := 7
-const MARKER_POTION := 8
-const MARKER_HOLY_SYMBOL := 9
-const MARKER_IRON_WARD := 10
-const MARKER_MOP := 11
-const MARKER_SPLASH_FLASK := 12
-const MARKER_DEBRIS := 13
+const MARKER_HOSTILE_BURNING_Z := 7
+const MARKER_HOSTILE_BURNING_X := 8
+const MARKER_HOSTILE_BURNING := MARKER_HOSTILE_BURNING_Z
+const MARKER_POTION := 9
+const MARKER_HOLY_SYMBOL := 10
+const MARKER_IRON_WARD := 11
+const MARKER_MOP := 12
+const MARKER_DEBRIS_CURSED := 13
+const MARKER_DEBRIS_BURNING_X := 14
+const MARKER_DEBRIS_BURNING_Z := 15
+const MARKER_DEBRIS_CORROSIVE := 16
+const MARKER_SPLASH_FLASK := 17
+const MARKER_DEBRIS := 18
 
 const GRIDMAP_NODE_NAME := "GridMap"
 
@@ -87,14 +93,16 @@ func parse_grid_map(grid_map: GridMap) -> Dictionary:
 			MARKER_FLOOR_EXIT:
 				result.positioning_cells_3d.append(cell_3d)
 				result.exit_cells.append(cell)
-			MARKER_HOSTILE_CURSED, MARKER_HOSTILE_CORROSIVE, MARKER_HOSTILE_BURNING:
+			MARKER_HOSTILE_CURSED, MARKER_HOSTILE_CORROSIVE, MARKER_HOSTILE_BURNING_Z, \
+			MARKER_HOSTILE_BURNING_X:
 				result.positioning_cells_3d.append(cell_3d)
 				result.hostile_spawns.append({
 					"cell": cell,
 					"marker_id": marker_id,
 				})
 			MARKER_POTION, MARKER_HOLY_SYMBOL, MARKER_IRON_WARD, MARKER_MOP, \
-			MARKER_SPLASH_FLASK, MARKER_DEBRIS:
+			MARKER_SPLASH_FLASK, MARKER_DEBRIS, MARKER_DEBRIS_CURSED, \
+			MARKER_DEBRIS_BURNING_X, MARKER_DEBRIS_BURNING_Z, MARKER_DEBRIS_CORROSIVE:
 				result.positioning_cells_3d.append(cell_3d)
 				result.chest_spawns.append({
 					"cell": cell,

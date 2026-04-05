@@ -681,11 +681,13 @@ func _spawn_authored_floor_entities(layout: Dictionary) -> void:
 		if not (hostile_spawn is Dictionary):
 			continue
 		var hostile_cell := hostile_spawn.get("cell", Vector2i.ZERO) as Vector2i
-		var hostile_id := _hostile_definition_id_for_marker(int(hostile_spawn.get("marker_id", -1)))
+		var marker_id := int(hostile_spawn.get("marker_id", -1))
+		var hostile_id := _hostile_definition_id_for_marker(marker_id)
 		if hostile_id == StringName():
 			push_warning("Skipping hostile marker with unknown mapping at %s." % hostile_cell)
 			continue
-		_spawn_hostile_by_id(hostile_cell, hostile_id)
+		var initial_facing := _hostile_initial_facing_for_marker(marker_id)
+		_spawn_hostile_by_id(hostile_cell, hostile_id, initial_facing)
 
 	for chest_spawn in layout.get("chest_spawns", []):
 		if not (chest_spawn is Dictionary):
@@ -711,33 +713,47 @@ func _clear_authored_positioning_cells(layout: Dictionary) -> void:
 
 
 func _hostile_definition_id_for_marker(marker_id: int) -> StringName:
-	match marker_id:
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING:
-			return HOSTILE_ID_BURNING
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CURSED:
-			return HOSTILE_ID_CURSED
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CORROSIVE:
-			return HOSTILE_ID_CORROSIVE
-		_:
-			return StringName()
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING:
+		return HOSTILE_ID_BURNING
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING_X:
+		return HOSTILE_ID_BURNING
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CURSED:
+		return HOSTILE_ID_CURSED
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CORROSIVE:
+		return HOSTILE_ID_CORROSIVE
+	return StringName()
 
 
 func _item_for_marker(marker_id: int) -> ItemData:
-	match marker_id:
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_MOP:
-			return mop_item
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOLY_SYMBOL:
-			return holy_symbol_item
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_SPLASH_FLASK:
-			return flask_item
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_IRON_WARD:
-			return ward_item
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_POTION:
-			return potion_item
-		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS:
-			return debris_item
-		_:
-			return null
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_MOP:
+		return mop_item
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOLY_SYMBOL:
+		return holy_symbol_item
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_SPLASH_FLASK:
+		return flask_item
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_IRON_WARD:
+		return ward_item
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_POTION:
+		return potion_item
+	if marker_id in [
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS,
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_CURSED,
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_BURNING_X,
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_BURNING_Z,
+		WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_DEBRIS_CORROSIVE,
+	]:
+		return debris_item
+	return null
+
+
+func _hostile_initial_facing_for_marker(marker_id: int) -> int:
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING_X:
+		return GridDefinitions.Facing.EAST
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING:
+		return GridDefinitions.Facing.NORTH
+	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING_Z:
+		return GridDefinitions.Facing.NORTH
+	return -1
 
 
 func _index_hostile_definitions() -> void:
@@ -758,19 +774,27 @@ func _index_hostile_definitions() -> void:
 		_hostile_definitions_by_id[def.definition_id] = def
 
 
-func _spawn_hostile_by_id(cell: Vector2i, definition_id: StringName) -> void:
+func _spawn_hostile_by_id(
+		cell: Vector2i,
+		definition_id: StringName,
+		initial_facing: int = -1,
+) -> void:
 	var def := _hostile_definitions_by_id.get(definition_id) as HostileActorDefinition
 	if def == null:
 		push_warning("Missing hostile definition id: %s" % String(definition_id))
 		return
-	_spawn_hostile(cell, def)
+	_spawn_hostile(cell, def, initial_facing)
 
 
 func _get_hostile_definition_by_id(definition_id: StringName) -> HostileActorDefinition:
 	return _hostile_definitions_by_id.get(definition_id) as HostileActorDefinition
 
 
-func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Hostile:
+func _spawn_hostile(
+		cell: Vector2i,
+		definition: HostileActorDefinition,
+		initial_facing: int = -1,
+) -> Hostile:
 	if definition == null:
 		return null
 
@@ -784,6 +808,8 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Hosti
 
 	actor.hostile_definition_id = definition.definition_id
 	actor.initial_cell = cell
+	if initial_facing >= 0:
+		actor.initial_facing = initial_facing as GridDefinitions.Facing
 	actor.speed = maxi(definition.speed, 1)
 	actor.hostile_property = definition.hostile_property
 	actor.contact_damage = definition.contact_damage
