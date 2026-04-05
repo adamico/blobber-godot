@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://cpr5yi2bvq733"]
+
+[ext_resource type="PackedScene" uid="uid://b6c28hw6dv34b" path="res://scenes/hostiles/hostile.tscn" id="1_base"]
+[ext_resource type="Script" uid="uid://b7c0syjqks7b" path="res://scenes/hostiles/dragon_hostile.gd" id="2_script"]
+[ext_resource type="Shader" uid="uid://b51gp6ykjtgkh" path="res://resources/shaders/outline.gdshader" id="3_peops"]
+[ext_resource type="Texture2D" uid="uid://bao6wjhk10haq" path="res://assets/shadow_dragon.png" id="4_ggg61"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_kgn7n"]
+render_priority = 0
+shader = ExtResource("3_peops")
+shader_parameter/sprite_texture = ExtResource("4_ggg61")
+shader_parameter/line_color = Color(0.6509804, 1, 0.5882353, 1)
+shader_parameter/glowSize = 0.0
+shader_parameter/glowDensity = 1
+shader_parameter/glowRadialCoverage = 5
+shader_parameter/glowAngle = 1.57
+shader_parameter/glowSharpness = 1.0000000475
+shader_parameter/alphaThreshold = 0.218000010355
+
+[node name="DragonHostile" unique_id=1678710361 instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+breath_enabled = true
+breath_windup_turns = 3
+breath_cooldown_turns = 2
+breath_damage = 2
+breath_trigger_distance = 4
+breath_requires_line_of_sight = true
+breath_flash_color = Color(1, 0.45, 0.2, 1)
+breath_flash_intensity = 0.75
+breath_flash_duration = 0.12
+breath_label_enabled = true
+breath_label_show_cooldown = false
+breath_particles_enabled = true
+breath_particles_on_windup = false
+breath_particles_on_strike = true
+breath_particle_color = Color(1, 0.35, 0.12, 1)
+breath_particle_lifetime = 0.5
+breath_particle_amount = 20
+breath_particle_radius = 0.08
+breath_particle_height = 0.06
+
+[node name="Label3D" parent="." index="2" unique_id=391576828]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94646287, 0)
+visible = true
+modulate = Color(1, 0, 0, 1)
+outline_modulate = Color(1, 0.9843137, 0, 1)
+text = "3"
+
+[node name="Sprite3D" parent="." index="3" unique_id=605638997]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43980053, -0.06616944)
+material_override = SubResource("ShaderMaterial_kgn7n")
+pixel_size = 0.03
+texture = ExtResource("4_ggg61")

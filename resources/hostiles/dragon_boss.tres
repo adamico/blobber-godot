@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="HostileActorDefinition" format=3 uid="uid://cmbn7o4mnt0wp"]
+
+[ext_resource type="Script" uid="uid://dx087llvdwy6g" path="res://models/hostile_actor_definition.gd" id="1_def"]
+[ext_resource type="PackedScene" path="res://scenes/hostiles/dragon_hostile.tscn" id="2_actor"]
+[ext_resource type="Texture2D" uid="uid://bao6wjhk10haq" path="res://assets/shadow_dragon.png" id="3_ifiy2"]
+[ext_resource type="Resource" path="res://resources/analysis/hostiles/dragon_hostile_analysis.tres" id="4_analysis"]
+
+[resource]
+script = ExtResource("1_def")
+definition_id = &"dragon_boss"
+display_name = "Dragon"
+actor_scene = ExtResource("2_actor")
+sprite_texture = ExtResource("3_ifiy2")
+ai_behavior = 2
+view_distance = 8
+hostile_hp = 12
+revert_turns_base = 8
+cleanup_value = 3
+analysis_profile = ExtResource("4_analysis")

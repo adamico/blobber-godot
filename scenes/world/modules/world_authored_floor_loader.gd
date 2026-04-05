@@ -21,6 +21,7 @@ const MARKER_DEBRIS_BURNING_Z := 15
 const MARKER_DEBRIS_CORROSIVE := 16
 const MARKER_SPLASH_FLASK := 17
 const MARKER_DEBRIS := 18
+const MARKER_HOSTILE_DRAGON := 19
 
 const GRIDMAP_NODE_NAME := "GridMap"
 
@@ -94,7 +95,7 @@ func parse_grid_map(grid_map: GridMap) -> Dictionary:
 				result.positioning_cells_3d.append(cell_3d)
 				result.exit_cells.append(cell)
 			MARKER_HOSTILE_CURSED, MARKER_HOSTILE_CORROSIVE, MARKER_HOSTILE_BURNING_Z, \
-			MARKER_HOSTILE_BURNING_X:
+			MARKER_HOSTILE_BURNING_X, MARKER_HOSTILE_DRAGON:
 				result.positioning_cells_3d.append(cell_3d)
 				result.hostile_spawns.append({
 					"cell": cell,

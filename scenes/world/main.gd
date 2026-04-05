@@ -66,12 +66,15 @@ const DEFAULT_PLAYER_SCENE := preload("res://scenes/player/player.tscn")
 const HOSTILE_ID_BURNING := &"burning_hazard"
 const HOSTILE_ID_CURSED := &"cursed_hazard"
 const HOSTILE_ID_CORROSIVE := &"corrosive_hazard"
+const HOSTILE_ID_DRAGON := &"dragon_boss"
+const MARKER_HOSTILE_DRAGON := 19
 const WORLD_DIALOG_MODULE_SCRIPT := preload("res://scenes/world/modules/world_dialog_module.gd")
 const DEFAULT_HOSTILE_SCENE := preload("res://scenes/hostiles/hostile.tscn")
 const DEFAULT_HOSTILE_DEFINITIONS := [
 	preload("res://resources/hostiles/burning_hazard.tres"),
 	preload("res://resources/hostiles/cursed_hazard.tres"),
 	preload("res://resources/hostiles/corrosive_hazard.tres"),
+	preload("res://resources/hostiles/dragon_boss.tres"),
 ]
 
 var _player: Player
@@ -740,6 +743,8 @@ func _hostile_definition_id_for_marker(marker_id: int) -> StringName:
 		return HOSTILE_ID_CURSED
 	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_CORROSIVE:
 		return HOSTILE_ID_CORROSIVE
+	if marker_id == MARKER_HOSTILE_DRAGON:
+		return HOSTILE_ID_DRAGON
 	return StringName()
 
 
@@ -771,6 +776,8 @@ func _hostile_initial_facing_for_marker(marker_id: int) -> int:
 	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING:
 		return GridDefinitions.Facing.NORTH
 	if marker_id == WORLD_AUTHORED_FLOOR_LOADER_SCRIPT.MARKER_HOSTILE_BURNING_Z:
+		return GridDefinitions.Facing.NORTH
+	if marker_id == MARKER_HOSTILE_DRAGON:
 		return GridDefinitions.Facing.NORTH
 	return -1
 
