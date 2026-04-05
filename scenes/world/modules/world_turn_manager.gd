@@ -326,13 +326,7 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 	if _player == null or _player.grid_state == null:
 		return
 
-	var facing_vec := GridDefinitions.facing_to_vec2i(_player.grid_state.facing)
-	var target_cell := _player.grid_state.cell + facing_vec
-
-	# Check range 2 items
-	var cells_to_check: Array[Vector2i] = [target_cell]
-	if item.use_range >= 2:
-		cells_to_check.append(target_cell + facing_vec)
+	var cells_to_check := _tool_target_cells(item)
 
 	var hit_any := false
 	var debris_consumed := false
@@ -390,6 +384,31 @@ func _use_tool_on_facing(item: ItemData, slot_index: int) -> void:
 
 	if item.is_aoe and hit_count > 1:
 		aoe_multi_hit.emit(item.item_name, hit_count)
+
+
+func _tool_target_cells(item: ItemData) -> Array[Vector2i]:
+	var cells_to_check: Array[Vector2i] = []
+	if _player == null or _player.grid_state == null:
+		return cells_to_check
+	if item == null:
+		return cells_to_check
+
+	var facing := _player.grid_state.facing
+	var forward_vec := GridDefinitions.facing_to_vec2i(facing)
+	var target_cell := _player.grid_state.cell + forward_vec
+	cells_to_check.append(target_cell)
+
+	if item.is_aoe:
+		var left_vec := GridDefinitions.facing_to_vec2i(GridDefinitions.rotate_left(facing))
+		var right_vec := GridDefinitions.facing_to_vec2i(GridDefinitions.rotate_right(facing))
+		cells_to_check.append(target_cell + left_vec)
+		cells_to_check.append(target_cell + right_vec)
+		return cells_to_check
+
+	if item.use_range >= 2:
+		cells_to_check.append(target_cell + forward_vec)
+
+	return cells_to_check
 
 
 func _get_hostiles_at(cell: Vector2i) -> Array:
