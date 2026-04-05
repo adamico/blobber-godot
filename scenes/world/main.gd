@@ -773,6 +773,8 @@ func _spawn_hostile(cell: Vector2i, definition: HostileActorDefinition) -> Hosti
 			ai.set("behavior", definition.ai_behavior)
 		if "patrol_length" in ai:
 			ai.set("patrol_length", definition.patrol_length)
+		if "view_distance" in ai:
+			ai.set("view_distance", definition.view_distance)
 
 	var mcfg = preset_smooth_config if active_movement_preset == "Smooth" else preset_snap_config
 	if mcfg != null:

@@ -12,11 +12,17 @@ enum Behavior {
 
 @export var behavior: Behavior = Behavior.CHASE
 @export_range(1, 8, 1) var patrol_length: int = 3
+## Max tiles away the hostile can spot the player (requires LOS too).
+@export_range(1, 20, 1) var view_distance: int = 5
 
+
+## Turns the hostile can pursue without re-acquiring LOS before giving up the chase.
+const CHASE_MEMORY_TURNS := 3
 
 var _grid_module: WorldGridModule
 var _world_root: Node
 var _last_seen_player_pos: Vector2i = Vector2i(-1, -1)
+var _los_lost_turns: int = 0
 var _patrol_steps_taken: int = 0
 var _patrol_direction: int = 1
 var _triggered: bool = false
@@ -50,19 +56,29 @@ func _choose_chase_command(hostile, player) -> int:
 	var hostile_cell: Vector2i = hostile.grid_state.cell
 	var player_cell: Vector2i = player.grid_state.cell
 
-	# Re-acquire LOS or update memory
+	# Acquire or maintain target only when player is within view_distance AND LOS is clear.
+	# Out-of-range counts the same as LOS-blocked — both increment the memory timer.
 	if _grid_module != null:
 		var occ := _grid_module.occupancy()
-		if occ != null and occ.is_line_of_sight_clear(hostile_cell, player_cell):
-			_last_seen_player_pos = player_cell
+		if occ != null:
+			var dist := absi(player_cell.x - hostile_cell.x) + absi(player_cell.y - hostile_cell.y)
+			var spotted := dist <= view_distance and occ.is_line_of_sight_clear(hostile_cell, player_cell)
+			if spotted:
+				_last_seen_player_pos = player_cell
+				_los_lost_turns = 0
+			else:
+				_los_lost_turns += 1
+				if _los_lost_turns > CHASE_MEMORY_TURNS:
+					_last_seen_player_pos = Vector2i(-1, -1)
 
 	# If we have no target, or have reached our last seen breadcrumb, give up.
 	if _last_seen_player_pos == Vector2i(-1, -1):
 		return NO_COMMAND
 
 	if hostile_cell == _last_seen_player_pos:
-		# We reached the corner but still can't see the player
+		# Reached the breadcrumb — clear memory regardless of whether LOS re-established.
 		_last_seen_player_pos = Vector2i(-1, -1)
+		_los_lost_turns = 0
 		return NO_COMMAND
 
 	# Target the breadcrumb

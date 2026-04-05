@@ -11,6 +11,7 @@ extends Resource
 @export_range(1, 6, 1) var speed: int = 1
 @export_range(0, 3, 1) var ai_behavior: int = 0
 @export_range(1, 8, 1) var patrol_length: int = 3
+@export_range(1, 20, 1) var view_distance: int = 5
 
 @export_range(0, 10, 1) var contact_damage: int = 1
 @export_range(1, 20, 1) var hostile_hp: int = 3
