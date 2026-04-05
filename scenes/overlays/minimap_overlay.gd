@@ -22,8 +22,7 @@ var _exit_cells: Array[Vector2i] = []
 var _chute_cells: Array[Vector2i] = []
 var _pickup_cells: Array[Vector2i] = []
 var _chest_cells: Array[Vector2i] = []
-var _last_known_enemy_cell := Vector2i.ZERO
-var _has_last_known_enemy_cell := false
+var _hostile_cells: Array[Vector2i] = []
 
 
 func _ready() -> void:
@@ -46,15 +45,13 @@ func set_marker_cells(
 		chute_cells: Array[Vector2i],
 		pickup_cells: Array[Vector2i],
 		chest_cells: Array[Vector2i],
-		last_known_enemy_cell: Vector2i,
-		has_last_known_enemy_cell: bool,
+		hostile_cells: Array[Vector2i],
 ) -> void:
 	_exit_cells = exit_cells.duplicate()
 	_chute_cells = chute_cells.duplicate()
 	_pickup_cells = pickup_cells.duplicate()
 	_chest_cells = chest_cells.duplicate()
-	_last_known_enemy_cell = last_known_enemy_cell
-	_has_last_known_enemy_cell = has_last_known_enemy_cell
+	_hostile_cells = hostile_cells.duplicate()
 	queue_redraw()
 
 
@@ -107,9 +104,9 @@ func _draw() -> void:
 			center,
 		)
 
-	if _has_last_known_enemy_cell:
+	for cell in _hostile_cells:
 		_draw_cross_marker(
-			_last_known_enemy_cell,
+			cell,
 			enemy_last_known_marker_color,
 			cell_px * 0.52,
 			radius,

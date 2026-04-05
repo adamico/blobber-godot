@@ -8,8 +8,6 @@ var _minimap_overlay: Control
 var _hp_bar: ProgressBar
 var _show_minimap := false
 var _analysis_hud: Control
-var _last_known_enemy_cell := Vector2i.ZERO
-var _has_last_known_enemy_cell := false
 # Marker discovery caching: cells we've seen via LOS
 var _discovered_exit_cells: Dictionary = {}
 var _discovered_chute_cells: Dictionary = {}
@@ -121,10 +119,7 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 	if _minimap_overlay.has_method("set_player_state"):
 		_minimap_overlay.call("set_player_state", coords, facing)
 
-	var enemy_marker := _collect_last_known_enemy_cell(coords, occupancy)
-	if enemy_marker.get("has_cell", false):
-		_has_last_known_enemy_cell = true
-		_last_known_enemy_cell = enemy_marker.get("cell", Vector2i.ZERO) as Vector2i
+	var hostile_cells := _collect_last_known_enemy_cells(coords, occupancy)
 
 	if _minimap_overlay.has_method("set_marker_cells"):
 		_minimap_overlay.call(
@@ -153,8 +148,7 @@ func refresh_minimap(cell_hint: Vector2i, occupancy: GridOccupancyMap) -> void:
 				occupancy,
 				_discovered_chest_cells,
 			),
-			_last_known_enemy_cell,
-			_has_last_known_enemy_cell,
+			hostile_cells,
 		)
 
 
@@ -186,16 +180,15 @@ func _collect_group_cells_with_los(
 	return cells
 
 
-func _collect_last_known_enemy_cell(
+func _collect_last_known_enemy_cells(
 		player_cell: Vector2i,
 		occupancy: GridOccupancyMap,
-	) -> Dictionary:
+	) -> Array[Vector2i]:
 	if _player == null or _player.get_tree() == null:
-		return {"has_cell": false}
+		return []
 
-	var nearest_cell := Vector2i.ZERO
-	var best_distance := INF
-	var found := false
+	var active_hostile_ids: Dictionary = {}
+	var visible_or_cached_cells: Dictionary = {}
 
 	for node in _player.get_tree().get_nodes_in_group(&"grid_hostiles"):
 		if node == null or not is_instance_valid(node):
@@ -212,29 +205,25 @@ func _collect_last_known_enemy_cell(
 			continue
 
 		var hostile_id: int = node.get_instance_id()
+		active_hostile_ids[hostile_id] = true
 		var cell := grid_state.cell as Vector2i
-		var dist := absf(float(cell.x - player_cell.x)) + absf(float(cell.y - player_cell.y))
 
 		# Only update cache if we have LOS to this hostile
 		if occupancy != null and occupancy.is_line_of_sight_clear(player_cell, cell):
 			_hostile_last_seen_positions[hostile_id] = cell
-			# Only consider for nearest if we're currently seeing it
-			if not found or dist < best_distance:
-				nearest_cell = cell
-				best_distance = dist
-				found = true
 
-	# Fall back to cached hostile if none currently visible
-	if not found and not _hostile_last_seen_positions.is_empty():
-		for cached_cell in _hostile_last_seen_positions.values():
-			nearest_cell = cached_cell
-			found = true
-			break
+	for hostile_id in _hostile_last_seen_positions.keys():
+		if not active_hostile_ids.has(hostile_id):
+			_hostile_last_seen_positions.erase(hostile_id)
 
-	return {
-		"has_cell": found,
-		"cell": nearest_cell,
-	}
+	for cached_cell in _hostile_last_seen_positions.values():
+		visible_or_cached_cells[cached_cell] = true
+
+	var hostile_cells: Array[Vector2i] = []
+	for hostile_cell in visible_or_cached_cells.keys():
+		hostile_cells.append(hostile_cell as Vector2i)
+
+	return hostile_cells
 
 
 func refresh_debug_buttons(_overlay_open: bool) -> void:
